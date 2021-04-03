@@ -1,11 +1,22 @@
 [package]
 name = "opensubdiv"
 version = "0.1.0"
-authors = ["Anders Langlands <anderslanglands@gmail.com>"]
+authors = ["Anders Langlands <anderslanglands@gmail.com>", "Moritz Moeller <virtualritz@protonmail.com>"]
 edition = "2018"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[features]
+clew = ["opensubdiv-sys/clew"]
+cuda = ["opensubdiv-sys/cuda"]
+metal = ["opensubdiv-sys/metal"]
+omp = ["opensubdiv-sys/omp"]
+opencl = ["opensubdiv-sys/opencl"]
+ptex = ["opensubdiv-sys/ptex"]
 
 [dependencies]
 opensubdiv-sys = {path="../opensubdiv-sys"}
-derive_more = "0.15.0"
+derive_more = "0.99.13"
+
+[[example]]
+path = "examples/osd_tutorial_0_cuda.rs"
+name = "osd_tutorial_0_cuda"
+required-features = [ "cuda" ]

@@ -1,4 +1,5 @@
 use opensubdiv_sys as sys;
+use std::convert::TryInto;
 
 use super::TopologyRefiner;
 
@@ -33,7 +34,7 @@ impl PrimvarRefiner {
 
     pub fn interpolate<B1: PrimvarBufferSrc, B2: PrimvarBufferDst>(
         &self,
-        level: i32,
+        level: u32,
         src: &B1,
         dst: &mut B2,
     ) {
@@ -41,7 +42,7 @@ impl PrimvarRefiner {
             sys::far::PrimvarRefiner_Interpolate(
                 self.ptr,
                 B1::NUM_ELEMENTS,
-                level,
+                level.try_into().unwrap(),
                 src.as_f32().as_ptr(),
                 dst.as_f32_mut().as_mut_ptr(),
             );

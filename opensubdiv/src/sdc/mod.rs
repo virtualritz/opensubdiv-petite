@@ -1,3 +1,3 @@
 pub use opensubdiv_sys::sdc::{
-    Options, OptionsBuilder, SchemeType, VtxBoundaryInterpolation,
+    Options, OptionsBuilder, Scheme, VtxBoundaryInterpolation,
 };

@@ -1,8 +1,8 @@
 #[repr(u32)]
 #[derive(Copy, Clone, Debug)]
-pub enum SchemeType {
+pub enum Scheme {
     Bilinear,
-    Catmark,
+    CatmullClark,
     Loop,
 }
 

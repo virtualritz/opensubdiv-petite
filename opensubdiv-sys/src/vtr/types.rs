@@ -1,24 +1,24 @@
 #[repr(C)]
 #[derive(PartialEq, PartialOrd, Display, Copy, Clone)]
-pub struct Index(pub i32);
+pub struct Index(pub u32);
 
 #[repr(C)]
 #[derive(PartialEq, PartialOrd, Display, Copy, Clone)]
 pub struct LocalIndex(pub u16);
 
-pub const VALENCE_LIMIT: i32 = ((1 << 16) - 1);
+pub const VALENCE_LIMIT: u32 = (1 << 16) - 1;
 
 #[repr(C)]
 pub struct ConstIndexArray {
     begin: *const Index,
-    size: i32,
+    size: u32,
 }
 
 impl ConstIndexArray {
     pub fn begin(&self) -> *const Index {
         self.begin
     }
-    pub fn size(&self) -> i32 {
+    pub fn size(&self) -> u32 {
         self.size
     }
 }
@@ -26,26 +26,26 @@ impl ConstIndexArray {
 #[repr(C)]
 pub struct ConstLocalIndexArray {
     begin: *const LocalIndex,
-    size: i32,
+    size: u32,
 }
 
 impl ConstLocalIndexArray {
     pub fn begin(&self) -> *const LocalIndex {
         self.begin
     }
-    pub fn size(&self) -> i32 {
+    pub fn size(&self) -> u32 {
         self.size
     }
 }
 
 #[repr(C)]
 pub struct IntVectorRef {
-    pub(crate) data: *const i32,
+    pub(crate) data: *const u32,
     pub(crate) size: usize,
 }
 
 impl IntVectorRef {
-    pub fn data(&self) -> *const i32 {
+    pub fn data(&self) -> *const u32 {
         self.data
     }
     pub fn size(&self) -> usize {

@@ -30,7 +30,7 @@ fn it_works() {
         0, 1, 3, 2, 2, 3, 5, 4, 4, 5, 7, 6, 6, 7, 1, 0, 1, 7, 5, 3, 6, 0, 2, 4,
     ];
 
-    let scheme_type = sdc::SchemeType::Catmark;
+    let scheme_type = sdc::Scheme::CatmullClark;
 
     let mut options = sdc::Options::default();
     options.set_vtx_bound_interp(
@@ -56,7 +56,7 @@ fn it_works() {
     // uniformly refine the topology up to max level
     unsafe {
         let opt = UniformOptions::new(2, false, false);
-        let asu = unsafe { std::mem::transmute::<UniformOptions, u32>(opt) };
+        let asu = std::mem::transmute::<UniformOptions, u32>(opt);
         println!("refine options bits: {}", asu);
         TopologyRefiner_RefineUniform(
             refiner,

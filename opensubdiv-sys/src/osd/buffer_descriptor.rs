@@ -21,10 +21,11 @@ impl BufferDescriptor {
         } else {
             0
         }
-    }   
-    
-     /// True if the descriptor values are internally consistent
-     pub fn is_valid(&self) -> bool {
-         (self.length > 0) && (self.length <= self.stride - self.get_local_offset())
-     }
+    }
+
+    /// True if the descriptor values are internally consistent
+    pub fn is_valid(&self) -> bool {
+        (self.length > 0)
+            && (self.length <= self.stride - self.get_local_offset())
+    }
 }

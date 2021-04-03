@@ -1,7 +1,7 @@
 #[repr(u32)]
 #[derive(Copy, Clone, Debug)]
 pub enum VtxBoundaryInterpolation {
-    None=0,
+    None = 0,
     EdgeOnly,
     EdgeAndCorner,
 }
@@ -9,7 +9,7 @@ pub enum VtxBoundaryInterpolation {
 #[repr(u32)]
 #[derive(Copy, Clone, Debug)]
 pub enum FVarLinearInterpolation {
-    None=0,
+    None = 0,
     CornersOnly,
     CornersPlus1,
     CornersPlus2,
@@ -20,14 +20,14 @@ pub enum FVarLinearInterpolation {
 #[repr(u32)]
 #[derive(Copy, Clone, Debug)]
 pub enum CreasingMethod {
-    Uniform=0,
+    Uniform = 0,
     Chaikin,
 }
 
 #[repr(u32)]
 #[derive(Copy, Clone, Debug)]
 pub enum TriangleSubdivision {
-    Catmark=0,
+    CatmullClark = 0,
     Smooth,
 }
 
@@ -61,26 +61,38 @@ impl OptionsBuilder {
             vtx_bound_interp: VtxBoundaryInterpolation::None,
             fvar_lin_interp: FVarLinearInterpolation::All,
             creasing_method: CreasingMethod::Uniform,
-            triangle_sub: TriangleSubdivision::Catmark,
+            triangle_sub: TriangleSubdivision::CatmullClark,
         }
     }
 
-    pub fn vtx_boundary_interpolation<'a>(&'a mut self, vtx_bound_interp: VtxBoundaryInterpolation) -> &'a OptionsBuilder {
+    pub fn vtx_boundary_interpolation<'a>(
+        &'a mut self,
+        vtx_bound_interp: VtxBoundaryInterpolation,
+    ) -> &'a OptionsBuilder {
         self.vtx_bound_interp = vtx_bound_interp;
         self
     }
 
-    pub fn fvar_linear_interpolation<'a>(&'a mut self, fvar_lin_interp: FVarLinearInterpolation) -> &'a OptionsBuilder {
+    pub fn fvar_linear_interpolation<'a>(
+        &'a mut self,
+        fvar_lin_interp: FVarLinearInterpolation,
+    ) -> &'a OptionsBuilder {
         self.fvar_lin_interp = fvar_lin_interp;
         self
     }
 
-    pub fn creasing_method<'a>(&'a mut self, creasing_method: CreasingMethod) -> &'a OptionsBuilder {
+    pub fn creasing_method<'a>(
+        &'a mut self,
+        creasing_method: CreasingMethod,
+    ) -> &'a OptionsBuilder {
         self.creasing_method = creasing_method;
         self
     }
 
-    pub fn triangle_subdivision<'a>(&'a mut self, triangle_sub: TriangleSubdivision) -> &'a OptionsBuilder {
+    pub fn triangle_subdivision<'a>(
+        &'a mut self,
+        triangle_sub: TriangleSubdivision,
+    ) -> &'a OptionsBuilder {
         self.triangle_sub = triangle_sub;
         self
     }

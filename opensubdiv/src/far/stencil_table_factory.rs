@@ -18,7 +18,6 @@ pub fn options() -> OptionsBuilder {
 /// ## Parameters
 /// * `refiner` - The [TopologyRefiner] containing the topology.
 /// * `options` -  [Options] controlling the creation of the table.
-///
 pub fn create(
     refiner: &TopologyRefiner,
     options: sys::far::stencil_table_factory::Options,

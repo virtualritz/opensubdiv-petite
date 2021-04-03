@@ -1,3 +1,5 @@
+#![cfg(not(target_os = "macos"))]
+
 use opensubdiv::{far, osd, sdc};
 
 fn main() {
@@ -26,7 +28,7 @@ fn main() {
     let mut refiner = far::topology_refiner_factory::create(
         descriptor,
         far::topology_refiner_factory::Options::new(
-            sdc::SchemeType::Catmark,
+            sdc::Scheme::CatmullClark,
             sdc::OptionsBuilder::new()
                 .vtx_boundary_interpolation(
                     sdc::VtxBoundaryInterpolation::EdgeOnly,
@@ -46,8 +48,8 @@ fn main() {
             .build(),
     );
 
-    let n_coarse_verts = refiner.get_level(0).unwrap().get_num_vertices();
-    let n_refined_verts = stencil_table.get_num_stencils();
+    let n_coarse_verts = refiner.level(0).unwrap().num_vertices();
+    let n_refined_verts = stencil_table.num_stencils();
 
     // set up a buffer for primvar data
     let mut src_buffer = osd::CudaVertexBuffer::new(3, n_coarse_verts);
@@ -85,4 +87,3 @@ fn main() {
         println!("-c 1;");
     }
 }
-

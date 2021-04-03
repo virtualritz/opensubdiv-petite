@@ -23,25 +23,29 @@ pub struct StencilTable {
 }
 
 impl Drop for StencilTable {
+    #[inline]
     fn drop(&mut self) {
         unsafe { sys::far::StencilTable_destroy(self.ptr) }
     }
 }
 
 impl StencilTable {
-    /// Returns the number of stencils in the table
-    pub fn get_num_stencils(&self) -> i32 {
-        unsafe { sys::far::StencilTable_GetNumStencils(self.ptr) }
+    /// Returns the number of stencils in the table.
+    #[inline]
+    pub fn num_stencils(&self) -> u32 {
+        unsafe { sys::far::StencilTable_GetNumStencils(self.ptr) as _ }
     }
 
-    /// Returns the number of control vertices indexed in the table
-    pub fn get_num_control_vertices(&self) -> i32 {
-        unsafe { sys::far::StencilTable_GetNumControlVertices(self.ptr) }
+    /// Returns the number of control vertices indexed in the table.
+    #[inline]
+    pub fn num_control_vertices(&self) -> u32 {
+        unsafe { sys::far::StencilTable_GetNumControlVertices(self.ptr) as _ }
     }
 
-    /// Returns a Stencil at index i in the table
-    pub fn get_stencil(&self, i: Index) -> Option<Stencil> {
-        if i < Index(0) || i >= Index(self.get_num_stencils()) {
+    /// Returns a Stencil at index i in the table.
+    #[inline]
+    pub fn stencil(&self, i: Index) -> Option<Stencil> {
+        if i < Index(0) || i >= Index(self.num_stencils()) {
             None
         } else {
             unsafe {
@@ -60,32 +64,36 @@ impl StencilTable {
         }
     }
 
-    /// Returns the number of control vertices of each stencil in the table
-    pub fn get_sizes(&self) -> &[i32] {
+    /// Returns the number of control vertices of each stencil in the table.
+    #[inline]
+    pub fn sizes(&self) -> &[i32] {
         unsafe {
             let vr = sys::far::StencilTable_GetSizes(self.ptr);
-            std::slice::from_raw_parts(vr.data(), vr.size())
+            std::slice::from_raw_parts(vr.data() as _, vr.size())
         }
     }
 
-    /// Returns the offset to a given stencil (factory may leave empty)
-    pub fn get_offsets(&self) -> &[Index] {
+    /// Returns the offset to a given stencil (factory may leave empty).
+    #[inline]
+    pub fn offsets(&self) -> &[Index] {
         unsafe {
             let vr = sys::far::StencilTable_GetOffsets(self.ptr);
-            std::slice::from_raw_parts(vr.data(), vr.size())
+            std::slice::from_raw_parts(vr.data() as _, vr.size())
         }
     }
 
-    /// Returns the indices of the control vertices
-    pub fn get_control_indices(&self) -> &[Index] {
+    /// Returns the indices of the control vertices.
+    #[inline]
+    pub fn control_indices(&self) -> &[Index] {
         unsafe {
             let vr = sys::far::StencilTable_GetControlIndices(self.ptr);
             std::slice::from_raw_parts(vr.data(), vr.size())
         }
     }
 
-    /// Returns the stencil interpolation weights
-    pub fn get_weights(&self) -> &[f32] {
+    /// Returns the stencil interpolation weights.
+    #[inline]
+    pub fn weights(&self) -> &[f32] {
         unsafe {
             let vr = sys::far::StencilTable_GetWeights(self.ptr);
             std::slice::from_raw_parts(vr.data(), vr.size())

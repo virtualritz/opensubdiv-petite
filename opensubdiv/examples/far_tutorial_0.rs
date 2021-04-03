@@ -1,5 +1,4 @@
-use opensubdiv::Index;
-use opensubdiv::{far, osd, sdc};
+use opensubdiv::{far, sdc, Index};
 
 #[derive(Copy, Clone)]
 struct Vertex {
@@ -68,7 +67,7 @@ fn main() {
     let mut refiner = far::topology_refiner_factory::create(
         descriptor,
         far::topology_refiner_factory::Options::new(
-            sdc::SchemeType::Catmark,
+            sdc::Scheme::CatmullClark,
             sdc::OptionsBuilder::new()
                 .vtx_boundary_interpolation(
                     sdc::VtxBoundaryInterpolation::EdgeOnly,
@@ -78,18 +77,15 @@ fn main() {
     )
     .expect("Could not create TopologyRefiner");
 
-    let max_level = 2i32;
+    let max_level = 2;
     // uniformly refine up to 'max level' of 2
     refiner.refine_uniform(
-        far::uniform_options()
-            .refinement_level(max_level as u32)
-            .build(),
+        far::uniform_options().refinement_level(max_level).build(),
     );
 
     // Allocate a buffer for the control vertices
-    let mut vbuffer = Vec::with_capacity(
-        refiner.get_level(0).unwrap().get_num_vertices() as usize,
-    );
+    let mut vbuffer =
+        Vec::with_capacity(refiner.level(0).unwrap().num_vertices() as usize);
 
     // initialize coarse mesh positions
     for v in vertices.chunks(3) {
@@ -112,7 +108,7 @@ fn main() {
                 y: 0.0,
                 z: 0.0
             };
-            refiner.get_level(level).unwrap().get_num_vertices()
+            refiner.level(level).unwrap().num_vertices()
                 as usize
         ];
 
@@ -134,17 +130,17 @@ fn main() {
     }
 
     // output an OBJ of the highest level
-    let last_level = refiner.get_level(max_level).unwrap();
-    let nfaces = last_level.get_num_faces();
+    let last_level = refiner.level(max_level).unwrap();
+
     // print vertex positions
     for v in refined_verts.last().unwrap().iter() {
         println!("v {} {} {}", v.x, v.y, v.z);
     }
 
     // for f in 0..nfaces {
-    //     let face_vert_indices = last_level.get_face_vertices(Index(f)).unwrap();
+    //     let face_vert_indices =
+    // last_level.face_vertices(Index(f)).unwrap();
     for face_vert_indices in last_level.face_vertices_iter() {
-
         // all refined cat-clark faces should be quads
         assert!(face_vert_indices.len() == 4);
         print!("f ");

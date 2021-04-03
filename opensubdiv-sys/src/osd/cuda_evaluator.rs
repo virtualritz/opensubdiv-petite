@@ -2,8 +2,6 @@ use crate::far::StencilTablePtr;
 use crate::osd::BufferDescriptor;
 use crate::osd::CudaVertexBufferPtr;
 
-use std::os::raw::c_void;
-
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct CudaStencilTable_obj {
@@ -12,9 +10,10 @@ pub struct CudaStencilTable_obj {
 pub type CudaStencilTablePtr = *mut CudaStencilTable_obj;
 
 extern "C" {
-pub fn CudaStencilTable_Create(st: StencilTablePtr) -> CudaStencilTablePtr;
-// pub fn CudaStencilTable_CreateFromLimit(st: LimitStencilTablePtr) -> CudaStencilTablePtr;
-pub fn CudaStencilTable_destroy(st: CudaStencilTablePtr);
+    pub fn CudaStencilTable_Create(st: StencilTablePtr) -> CudaStencilTablePtr;
+    // pub fn CudaStencilTable_CreateFromLimit(st: LimitStencilTablePtr) ->
+    // CudaStencilTablePtr;
+    pub fn CudaStencilTable_destroy(st: CudaStencilTablePtr);
 }
 
 #[repr(C)]

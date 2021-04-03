@@ -1,9 +1,9 @@
-use super::topology_refiner::TopologyRefinerPtr;
 use super::stencil_table::StencilTablePtr;
+use super::topology_refiner::TopologyRefinerPtr;
 
 #[repr(u32)]
 pub enum InterpolationMode {
-    Vertex=0,
+    Vertex = 0,
     Varying,
     FaceVarying,
 }
@@ -62,7 +62,10 @@ impl OptionsBuilder {
         }
     }
 
-    pub fn interpolation_mode(mut self, interpolation_mode: InterpolationMode) -> Self {
+    pub fn interpolation_mode(
+        mut self,
+        interpolation_mode: InterpolationMode,
+    ) -> Self {
         self.interpolation_mode = interpolation_mode;
         self
     }
@@ -72,17 +75,26 @@ impl OptionsBuilder {
         self
     }
 
-    pub fn generate_control_verts(mut self, generate_control_verts: bool) -> Self {
+    pub fn generate_control_verts(
+        mut self,
+        generate_control_verts: bool,
+    ) -> Self {
         self.generate_control_verts = generate_control_verts;
         self
     }
 
-    pub fn generate_intermediate_levels(mut self, generate_intermediate_levels: bool) -> Self {
+    pub fn generate_intermediate_levels(
+        mut self,
+        generate_intermediate_levels: bool,
+    ) -> Self {
         self.generate_intermediate_levels = generate_intermediate_levels;
         self
     }
 
-    pub fn factorize_intermediate_levels(mut self, factorize_intermediate_levels: bool) -> Self {
+    pub fn factorize_intermediate_levels(
+        mut self,
+        factorize_intermediate_levels: bool,
+    ) -> Self {
         self.factorize_intermediate_levels = factorize_intermediate_levels;
         self
     }
@@ -97,17 +109,24 @@ impl OptionsBuilder {
         fields.set_interpolation_mode(self.interpolation_mode as u32);
         fields.set_generate_offsets(self.generate_offsets);
         fields.set_generate_control_verts(self.generate_control_verts);
-        fields.set_generate_intermediate_levels(self.generate_intermediate_levels);
-        fields.set_factorize_intermediate_levels(self.factorize_intermediate_levels);
+        fields.set_generate_intermediate_levels(
+            self.generate_intermediate_levels,
+        );
+        fields.set_factorize_intermediate_levels(
+            self.factorize_intermediate_levels,
+        );
         fields.set_max_level(self.max_level);
         Options {
             fields,
-            fvar_channel: self.fvar_channel
+            fvar_channel: self.fvar_channel,
         }
     }
 }
 
-extern "C" { 
-    pub fn StencilTableFactory_Create(refiner: TopologyRefinerPtr, options: Options) -> StencilTablePtr;
+extern "C" {
+    pub fn StencilTableFactory_Create(
+        refiner: TopologyRefinerPtr,
+        options: Options,
+    ) -> StencilTablePtr;
 
 }

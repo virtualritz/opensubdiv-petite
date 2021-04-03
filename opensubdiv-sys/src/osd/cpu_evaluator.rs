@@ -1,6 +1,6 @@
+use crate::far::StencilTablePtr;
 use crate::osd::BufferDescriptor;
 use crate::osd::CpuVertexBufferPtr;
-use crate::far::StencilTablePtr;
 
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -8,7 +8,6 @@ pub struct CpuEvaluator_obj {
     _unused: [u8; 0],
 }
 pub type CpuEvaluatorPtr = *mut CpuEvaluator_obj;
-
 
 extern "C" {
     pub fn CpuEvaluator_EvalStencils(

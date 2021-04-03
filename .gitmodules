@@ -1,0 +1,6 @@
+[submodule "opensubdiv-sys/dependencies/OpenSubdiv"]
+	path = opensubdiv-sys/dependencies/OpenSubdiv
+	url = https://github.com/PixarAnimationStudios/OpenSubdiv.git
+[submodule "opensubdiv-sys/dependencies/glfw"]
+	path = opensubdiv-sys/dependencies/glfw
+	url = https://github.com/glfw/glfw.git

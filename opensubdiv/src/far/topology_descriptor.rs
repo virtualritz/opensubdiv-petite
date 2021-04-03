@@ -34,6 +34,7 @@ impl<'a> TopologyDescriptor<'a> {
     /// each face in the mesh.
     /// * `vert_indices_per_face` - A flat list of the vertex indices for each
     /// face in the mesh.
+    #[inline]
     pub fn new(
         num_vertices: i32,
         num_faces: i32,
@@ -52,15 +53,42 @@ impl<'a> TopologyDescriptor<'a> {
             is_left_handed: false,
         }
     }
+
+    #[inline]
+    pub fn set_crease_vertex_index_pairs(
+        &mut self,
+        creases: &'a [i32],
+    ) -> &mut Self {
+        self.crease_vertex_index_pairs = Some(creases);
+        self
+    }
+
+    #[inline]
+    pub fn set_crease_weights(&mut self, weights: &'a [f32]) -> &mut Self {
+        self.crease_weights = Some(weights);
+        self
+    }
+
+    #[inline]
+    pub fn set_hole_indices(&mut self, holes: &'a [i32]) -> &mut Self {
+        self.hole_indices = Some(holes);
+        self
+    }
+
+    #[inline]
+    pub fn set_left_handed(&mut self, left_handed: bool) -> &mut Self {
+        self.is_left_handed = left_handed;
+        self
+    }
 }
 
-impl<'a> Into<sys::far::TopologyDescriptor> for TopologyDescriptor<'a> {
-    fn into(self) -> sys::far::TopologyDescriptor {
+impl<'a> From<TopologyDescriptor<'a>> for sys::far::TopologyDescriptor {
+    fn from(topo_desc: TopologyDescriptor<'a>) -> sys::far::TopologyDescriptor {
         sys::far::TopologyDescriptor::new(
-            self.num_vertices,
-            self.num_faces,
-            self.num_verts_per_face.as_ptr(),
-            self.vert_indices_per_face.as_ptr(),
+            topo_desc.num_vertices,
+            topo_desc.num_faces,
+            topo_desc.num_verts_per_face.as_ptr(),
+            topo_desc.vert_indices_per_face.as_ptr(),
         )
     }
 }

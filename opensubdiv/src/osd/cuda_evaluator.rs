@@ -48,9 +48,7 @@ pub struct CudaStencilTable<'a> {
 
 impl<'a> CudaStencilTable<'a> {
     pub fn new(st: &StencilTable) -> CudaStencilTable {
-        let ptr = unsafe {
-            sys::osd::CudaStencilTable_Create(st.ptr)
-        };
+        let ptr = unsafe { sys::osd::CudaStencilTable_Create(st.ptr) };
         if ptr.is_null() {
             panic!("Could not create CudaStencilTable");
         }

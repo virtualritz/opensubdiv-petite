@@ -86,7 +86,7 @@ extern "C" {
     /// \brief Returns the subdivision scheme
     pub fn TopologyRefiner_GetSchemeType(
         refiner: TopologyRefinerPtr,
-    ) -> sdc::SchemeType;
+    ) -> sdc::Scheme;
     /// \brief Returns the subdivision options
     pub fn TopologyRefiner_GetSchemeOptions(
         refiner: TopologyRefinerPtr,
