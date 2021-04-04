@@ -1,5 +1,5 @@
 #![allow(unreachable_code)]
-use std::path::PathBuf;
+use std::{env, path::PathBuf};
 
 static MAC_OS_BREW_CLANG_PATH: &str = "/usr/local/opt/llvm/bin";
 
@@ -20,12 +20,14 @@ pub fn main() {
     let mut open_subdiv = cmake::Config::new("dependencies/OpenSubdiv");
 
     open_subdiv
+        .always_configure(true)
+        .define("GLFW_LOCATION", glfw)
         .define("NO_PTEX", "1")
         .define("NO_DOC", "1")
         .define("NO_OPENCL", "1")
         .define("NO_CLEW", "1")
-        .define("NO_TBB", "1")
-        .define("GLFW_LOCATION", glfw);
+        .define("NO_TBB", "1");
+
 
     #[cfg(any(target_os = "macos", not(feature = "cuda")))]
     open_subdiv.define("NO_CUDA", "1");
@@ -42,16 +44,9 @@ pub fn main() {
 
         if clang.exists() && clang_pp.exists() {
             open_subdiv
-                .define(
-                    "CMAKE_C_COMPILER",
-                    clang,
-                )
-                .define(
-                    "CMAKE_CXX_COMPILER",
-                    clang_pp,
-                );
-        }
-        else {
+                .define("CMAKE_C_COMPILER", clang)
+                .define("CMAKE_CXX_COMPILER", clang_pp);
+        } else {
             // No clang installed via Homebrew – we can't build with OpenMP
             // support on macOS as Apple's Clang has no support for it.
             open_subdiv.define("NO_OMP", "1");
@@ -69,7 +64,9 @@ pub fn main() {
 
     let mut dst_capi = cmake::Config::new("osd-capi");
 
-    dst_capi.define("OSD_INCLUDE_PATH", &osd_inlude_path);
+    dst_capi
+        .always_configure(true)
+        .define("OSD_INCLUDE_PATH", &osd_inlude_path);
 
     #[cfg(any(target_os = "macos", not(feature = "cuda")))]
     dst_capi.define("NO_CUDA", "1");
@@ -89,4 +86,33 @@ pub fn main() {
     println!("cargo:rustc-link-lib=dylib=stdc++");
     #[cfg(target_os = "macos")]
     println!("cargo:rustc-link-lib=dylib=c++");
+
+    println!("cargo:rerun-if-changed=wrapper.hpp");
+
+    let bindings = bindgen::Builder::default()
+        .header("wrapper.hpp")
+        .parse_callbacks(Box::new(bindgen::CargoCallbacks))
+        .allowlist_type("OpenSubdiv.*")
+        //.disable_name_namespacing()
+        //.whitelist_type("Osd.*")
+        //.whitelist_function("ai.*")
+        //.whitelist_var("ai.*")
+        //.whitelist_var("AI_.*")
+        .derive_partialeq(true)
+        .derive_eq(true)
+        .derive_hash(true)
+        .derive_debug(true);
+
+    let out_path = PathBuf::from(env::var_os("OUT_DIR").unwrap());
+    let bindings = bindings
+        .clang_args(&["-F", osd_inlude_path.to_str().unwrap()])
+        .generate()
+        .expect("Unable to generate bindings");
+
+    let bindings_path = out_path.join("bindings.rs");
+    bindings
+        .write_to_file(&bindings_path)
+        .expect("Couldn't write bindings");
+
+    println!("cargo:rerun-if-changed=build.rs");
 }

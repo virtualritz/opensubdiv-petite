@@ -125,7 +125,7 @@ impl OptionsBuilder {
 
 extern "C" {
     pub fn StencilTableFactory_Create(
-        refiner: TopologyRefinerPtr,
+        refiner: *mut crate::OpenSubdiv_v3_4_4_Far_TopologyRefiner,
         options: Options,
     ) -> StencilTablePtr;
 

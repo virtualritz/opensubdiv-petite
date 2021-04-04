@@ -23,7 +23,7 @@ pub fn create(
     options: sys::far::stencil_table_factory::Options,
 ) -> StencilTable {
     let ptr =
-        unsafe { sys::far::StencilTableFactory_Create(refiner.ptr, options) };
+        unsafe { sys::far::StencilTableFactory_Create(refiner.0, options) };
 
     if ptr.is_null() {
         panic!("StencilTableFactory_Create() returned null");

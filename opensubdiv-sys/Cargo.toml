@@ -18,3 +18,4 @@ derive_more = "0.99.13"
 
 [build-dependencies]
 cmake = "0.1.45"
+bindgen = "0.58.0"

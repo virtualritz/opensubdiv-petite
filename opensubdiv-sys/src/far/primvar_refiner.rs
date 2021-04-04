@@ -5,10 +5,12 @@ use super::topology_refiner::TopologyRefinerPtr;
 pub struct PrimvarRefiner_obj {
     _unused: [u8; 0],
 }
-pub type PrimvarRefinerPtr = *mut PrimvarRefiner_obj;
+pub type PrimvarRefinerPtr = *mut crate::OpenSubdiv_v3_4_4_Far_PrimvarRefiner;
 
 extern "C" {
-    pub fn PrimvarRefiner_create(tr: TopologyRefinerPtr) -> PrimvarRefinerPtr;
+    pub fn PrimvarRefiner_create(
+        tr: *mut crate::OpenSubdiv_v3_4_4_Far_TopologyRefiner,
+    ) -> PrimvarRefinerPtr;
     pub fn PrimvarRefiner_destroy(pr: PrimvarRefinerPtr);
     pub fn PrimvarRefiner_GetTopologyRefiner(pr: PrimvarRefinerPtr);
     pub fn PrimvarRefiner_Interpolate(

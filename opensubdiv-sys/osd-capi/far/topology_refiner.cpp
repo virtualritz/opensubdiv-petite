@@ -9,28 +9,6 @@ typedef OpenSubdiv::Sdc::SchemeType SdcSchemeType;
 typedef OpenSubdiv::Sdc::Options SdcOptions;
 
 extern "C" {
-void TopologyRefiner_destroy(TopologyRefiner* refiner) { delete refiner; }
-
-void TopologyRefiner_RefineUniform(TopologyRefiner* refiner,
-                                   UniformOptions options) {
-    refiner->RefineUniform(options);
-}
-
-/// \brief Returns the subdivision scheme
-SdcSchemeType TopologyRefiner_GetSchemeType(TopologyRefiner* refiner) {
-    return refiner->GetSchemeType();
-}
-
-/// \brief Returns the subdivision options
-SdcOptions TopologyRefiner_GetSchemeOptions(TopologyRefiner* refiner) {
-    return refiner->GetSchemeOptions();
-}
-
-/// \brief Returns true if uniform refinement has been applied
-bool TopologyRefiner_IsUniform(TopologyRefiner* refiner) {
-    return refiner->IsUniform();
-}
-
 /// \brief Returns the number of refinement levels
 int TopologyRefiner_GetNumLevels(TopologyRefiner* refiner) {
     return refiner->GetNumLevels();
@@ -44,11 +22,6 @@ int TopologyRefiner_GetMaxLevel(TopologyRefiner* refiner) {
 /// \brief Returns the maximum vertex valence in all levels
 int TopologyRefiner_GetMaxValence(TopologyRefiner* refiner) {
     return refiner->GetMaxValence();
-}
-
-/// \brief Returns true if faces have been tagged as holes
-bool TopologyRefiner_HasHoles(TopologyRefiner* refiner) {
-    return refiner->HasHoles();
 }
 
 /// \brief Returns the total number of vertices in all levels

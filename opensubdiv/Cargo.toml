@@ -13,8 +13,9 @@ opencl = ["opensubdiv-sys/opencl"]
 ptex = ["opensubdiv-sys/ptex"]
 
 [dependencies]
-opensubdiv-sys = {path="../opensubdiv-sys"}
 derive_more = "0.99.13"
+opensubdiv-sys = { path="../opensubdiv-sys" }
+num_enum = "0.5.1"
 
 [[example]]
 path = "examples/osd_tutorial_0_cuda.rs"

@@ -1,94 +1,103 @@
+use super::topology_refiner::TopologyRefiner;
 use opensubdiv_sys as sys;
+use std::{convert::TryInto, marker::PhantomData};
 
-/// A simple reference to raw topology data for use with TopologyRefinerFactory
+use crate::Error;
+type Result<T, E = Error> = std::result::Result<T, E>;
+
+use crate::far::topology_refiner::Options;
+
+/// A container holding references to raw topology data.
 ///
-/// TopologyDescriptor is a simple struct containing references to raw topology
-/// data used to construct a TopologyRefiner.  It is not a requirement but a
-/// convenience for use with TopologyRefinerFactory when mesh topology is not
-/// available in an existing mesh data structure.  It should be functionally
-/// complete and simple to use, but for more demanding situations, writing a
-/// custom Factory is usually warranted.
+/// `TopologyDescriptor` contains references to raw topology data as flat index
+/// buffers.  This is used to construct a [`TopologyRefiner`].
 pub struct TopologyDescriptor<'a> {
-    num_vertices: i32,
-    num_faces: i32,
-
-    num_verts_per_face: &'a [i32],
-    vert_indices_per_face: &'a [i32],
-
-    num_creases: i32,
-    crease_vertex_index_pairs: Option<&'a [i32]>,
-    crease_weights: Option<&'a [f32]>,
-
-    hole_indices: Option<&'a [i32]>,
-
-    is_left_handed: bool,
+    pub(crate) descriptor: sys::OpenSubdiv_v3_4_4_Far_TopologyDescriptor,
+    // _marker needs to be invariant in 'a.
+    // See "Making a struct outlive a parameter given to a method of
+    // that struct": https://stackoverflow.com/questions/62374326/
+    _marker: PhantomData<*mut &'a ()>,
 }
 
 impl<'a> TopologyDescriptor<'a> {
-    /// Create a new [TopologyDescriptor]
+    /// Describes a mesh topology including creases, corners, holes and
+    /// handedness.  This can be used as a builder to create a new
+    /// [TopologyRefiner] by calling
+    /// [`into_refiner()`](TopologyDescriptor::into_refiner()).
     ///
     /// ## Parameters
     /// * `num_vertices` - The number of vertices in the mesh.
-    /// * `num_faces` - The number of faces in the mesh.
     /// * `num_verts_per_face` - A slice containing the number of vertices for
-    /// each face in the mesh.
+    ///   each face in the mesh. The length of this is the number of faces in
+    ///   the mesh.
     /// * `vert_indices_per_face` - A flat list of the vertex indices for each
-    /// face in the mesh.
+    ///   face in the mesh.
     #[inline]
     pub fn new(
-        num_vertices: i32,
-        num_faces: i32,
-        num_verts_per_face: &'a [i32],
-        vert_indices_per_face: &'a [i32],
+        num_vertices: u32,
+        num_verts_per_face: &'a [u32],
+        vert_indices_per_face: &'a [u32],
     ) -> TopologyDescriptor<'a> {
+        let mut descriptor =
+            unsafe { sys::OpenSubdiv_v3_4_4_Far_TopologyDescriptor::new() };
+
+        descriptor.numVertices = num_vertices.try_into().unwrap();
+        descriptor.numFaces = num_verts_per_face.len().try_into().unwrap();
+        descriptor.numVertsPerFace = num_verts_per_face.as_ptr() as _;
+        descriptor.vertIndicesPerFace = vert_indices_per_face.as_ptr() as _;
+
         TopologyDescriptor {
-            num_vertices,
-            num_faces,
-            num_verts_per_face,
-            vert_indices_per_face,
-            num_creases: 0,
-            crease_vertex_index_pairs: None,
-            crease_weights: None,
-            hole_indices: None,
-            is_left_handed: false,
+            descriptor,
+            _marker: PhantomData,
         }
     }
 
     #[inline]
-    pub fn set_crease_vertex_index_pairs(
+    pub fn creases(
         &mut self,
-        creases: &'a [i32],
+        creases: &'a [u32],
+        weights: &'a [f32],
     ) -> &mut Self {
-        self.crease_vertex_index_pairs = Some(creases);
+        debug_assert!(0 == creases.len() % 2);
+        debug_assert!(weights.len() == creases.len() / 2);
+
+        self.descriptor.numCreases = weights.len().try_into().unwrap();
+        self.descriptor.creaseVertexIndexPairs = creases.as_ptr() as _;
+        self.descriptor.creaseWeights = weights.as_ptr();
         self
     }
 
     #[inline]
-    pub fn set_crease_weights(&mut self, weights: &'a [f32]) -> &mut Self {
-        self.crease_weights = Some(weights);
+    pub fn corners(
+        &mut self,
+        corners: &'a [u32],
+        weights: &'a [f32],
+    ) -> &mut Self {
+        debug_assert!(weights.len() == corners.len());
+
+        self.descriptor.numCorners = weights.len().try_into().unwrap();
+        self.descriptor.cornerVertexIndices = corners.as_ptr() as _;
+        self.descriptor.cornerWeights = weights.as_ptr();
         self
     }
 
     #[inline]
-    pub fn set_hole_indices(&mut self, holes: &'a [i32]) -> &mut Self {
-        self.hole_indices = Some(holes);
+    pub fn holes(&mut self, holes: &'a [u32]) -> &mut Self {
+        self.descriptor.numHoles = holes.len().try_into().unwrap();
+        self.descriptor.holeIndices = holes.as_ptr() as _;
         self
     }
 
     #[inline]
-    pub fn set_left_handed(&mut self, left_handed: bool) -> &mut Self {
-        self.is_left_handed = left_handed;
+    pub fn left_handed(&mut self, left_handed: bool) -> &mut Self {
+        self.descriptor.isLeftHanded = left_handed;
         self
     }
-}
 
-impl<'a> From<TopologyDescriptor<'a>> for sys::far::TopologyDescriptor {
-    fn from(topo_desc: TopologyDescriptor<'a>) -> sys::far::TopologyDescriptor {
-        sys::far::TopologyDescriptor::new(
-            topo_desc.num_vertices,
-            topo_desc.num_faces,
-            topo_desc.num_verts_per_face.as_ptr(),
-            topo_desc.vert_indices_per_face.as_ptr(),
-        )
+    /// Converts a `TopologyDescriptor` into a [`TopologyRefiner`].
+    ///
+    /// * `options` - Options controlling the creation of the `TopologyRefiner`.
+    pub fn into_refiner(self, options: Options) -> Result<TopologyRefiner> {
+        TopologyRefiner::new(self, options)
     }
 }

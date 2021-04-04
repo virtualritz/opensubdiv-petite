@@ -1,4 +1,4 @@
-use opensubdiv::{far, sdc, Index};
+use opensubdiv::{far, sdc};
 
 #[derive(Copy, Clone)]
 struct Vertex {
@@ -46,8 +46,7 @@ fn main() {
         -0.5, -0.5, 0.5, 0.5, -0.5, 0.5, -0.5, 0.5, 0.5, 0.5, 0.5, 0.5, -0.5,
         0.5, -0.5, 0.5, 0.5, -0.5, -0.5, -0.5, -0.5, 0.5, -0.5, -0.5,
     ];
-    let num_vertices = 8;
-    let num_faces = 6;
+    let num_vertices = vertices.len() / 3;
 
     let verts_per_face = [4, 4, 4, 4, 4, 4];
 
@@ -56,50 +55,42 @@ fn main() {
     ];
 
     // populate a descriptor with our raw data
-    let descriptor = far::TopologyDescriptor::new(
-        num_vertices,
-        num_faces,
+    let mut refiner = far::TopologyDescriptor::new(
+        num_vertices as _,
         &verts_per_face,
         &vert_indices,
-    );
-
-    // instantiate a TopologyRefiner from the descriptor
-    let mut refiner = far::topology_refiner_factory::create(
-        descriptor,
-        far::topology_refiner_factory::Options::new(
-            sdc::Scheme::CatmullClark,
-            sdc::OptionsBuilder::new()
-                .vtx_boundary_interpolation(
-                    sdc::VtxBoundaryInterpolation::EdgeOnly,
-                )
-                .build(),
-        ),
+    )
+    .into_refiner(
+        far::topology_refiner::Options::new()
+            .with_scheme(far::Scheme::CatmullClark)
+            .with_boundary_interpolation(far::BoundaryInterpolation::EdgeOnly)
+            .finalize(),
     )
     .expect("Could not create TopologyRefiner");
 
     let max_level = 2;
     // uniformly refine up to 'max level' of 2
     refiner.refine_uniform(
-        far::uniform_options().refinement_level(max_level).build(),
+        far::topology_refiner::UniformRefinementOptions::default()
+            .refinement_level(max_level)
+            .finalize(),
     );
 
-    // Allocate a buffer for the control vertices
-    let mut vbuffer =
-        Vec::with_capacity(refiner.level(0).unwrap().num_vertices() as usize);
-
     // initialize coarse mesh positions
-    for v in vertices.chunks(3) {
-        vbuffer.push(Vertex {
+    let vbuffer = vertices
+        .chunks(3)
+        .map(|v| Vertex {
             x: v[0],
             y: v[1],
             z: v[2],
-        });
-    }
+        })
+        .collect::<Vec<_>>();
 
     // interpolate vertex primvar data
     let primvar_refiner = far::PrimvarRefiner::new(&refiner);
 
     let mut refined_verts = Vec::with_capacity(max_level as usize);
+
     refined_verts.push(vbuffer);
     for level in 1..=max_level {
         let mut dst_vec = vec![

@@ -20,7 +20,7 @@ pub struct PrimvarRefiner {
 impl PrimvarRefiner {
     pub fn new(tr: &TopologyRefiner) -> PrimvarRefiner {
         unsafe {
-            let ptr = sys::far::PrimvarRefiner_create(tr.ptr);
+            let ptr = sys::far::PrimvarRefiner_create(tr.0);
             if ptr.is_null() {
                 panic!("PrimvarRefiner_create() returned null");
             }
