@@ -1,14 +1,20 @@
 #include <opensubdiv/far/topologyRefiner.h>
-#include <opensubdiv/sdc/options.h>
-#include <opensubdiv/sdc/types.h>
+#include <opensubdiv/far/topologyRefinerFactory.h>
+#include <opensubdiv/far/topologyDescriptor.h>
 
 typedef OpenSubdiv::Far::TopologyRefiner TopologyRefiner;
 typedef OpenSubdiv::Far::TopologyLevel TopologyLevel;
-typedef OpenSubdiv::Far::TopologyRefiner::UniformOptions UniformOptions;
-typedef OpenSubdiv::Sdc::SchemeType SdcSchemeType;
-typedef OpenSubdiv::Sdc::Options SdcOptions;
+typedef OpenSubdiv::Far::TopologyDescriptor TopologyDescriptor;
+typedef OpenSubdiv::Far::TopologyRefinerFactory<TopologyDescriptor>::Options Options;
 
 extern "C" {
+TopologyRefiner* TopologyRefinerFactory_TopologyDescriptor_Create(
+    TopologyDescriptor* descriptor,
+    Options options
+) {
+    return OpenSubdiv::Far::TopologyRefinerFactory<TopologyDescriptor>::Create(*descriptor, options);
+}
+
 /// \brief Returns the number of refinement levels
 int TopologyRefiner_GetNumLevels(TopologyRefiner* refiner) {
     return refiner->GetNumLevels();

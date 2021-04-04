@@ -17,9 +17,6 @@ pub use far::*;
 
 pub mod osd;
 
-pub mod sdc;
-pub use sdc::*;
-
 pub mod vtr;
 
 #[test]

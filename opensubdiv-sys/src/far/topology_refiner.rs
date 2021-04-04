@@ -3,7 +3,10 @@ use super::topology_level::TopologyLevelPtr;
 pub type TopologyRefinerPtr = *mut crate::OpenSubdiv_v3_4_4_Far_TopologyRefiner;
 
 extern "C" {
-
+    pub fn TopologyRefinerFactory_TopologyDescriptor_Create(
+        descriptor: *const crate::OpenSubdiv_v3_4_4_Far_TopologyDescriptor,
+        options: crate::OpenSubdiv_v3_4_4_Far_TopologyRefinerFactory_Options,
+    ) -> TopologyRefinerPtr;
     /// \brief Returns true if uniform refinement has been applied
     pub fn TopologyRefiner_GetNumLevels(refiner: TopologyRefinerPtr) -> u32;
     /// \brief Returns the maximum vertex valence in all levels

@@ -1,24 +1,18 @@
-use crate::sdc;
 use crate::vtr::types::*;
 
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct TopologyLevel_obj {
-    _unused: [u8; 0],
-}
-pub type TopologyLevelPtr = *mut TopologyLevel_obj;
+pub type TopologyLevelPtr = *mut crate::OpenSubdiv_v3_4_4_Far_TopologyLevel;
 
 extern "C" {
 
     /// \brief Return the number of vertices in this level
-    pub fn TopologyLevel_GetNumVertices(tl: TopologyLevelPtr) -> i32;
+    pub fn TopologyLevel_GetNumVertices(tl: TopologyLevelPtr) -> u32;
     /// \brief Return the number of faces in this level
-    pub fn TopologyLevel_GetNumFaces(tl: TopologyLevelPtr) -> i32;
+    pub fn TopologyLevel_GetNumFaces(tl: TopologyLevelPtr) -> u32;
     /// \brief Return the number of edges in this level
-    pub fn TopologyLevel_GetNumEdges(tl: TopologyLevelPtr) -> i32;
+    pub fn TopologyLevel_GetNumEdges(tl: TopologyLevelPtr) -> u32;
     /// \brief Return the total number of face-vertices, i.e. the sum of all
     /// vertices for all faces
-    pub fn TopologyLevel_GetNumFaceVertices(tl: TopologyLevelPtr) -> i32;
+    pub fn TopologyLevel_GetNumFaceVertices(tl: TopologyLevelPtr) -> u32;
     //@}
 
     //@{
@@ -155,7 +149,7 @@ extern "C" {
 
     /// \brief Return the subdivision rule assigned a given vertex specific to
     /// this level
-    pub fn TopologyLevel_GetVertexRule(v: Index) -> sdc::crease::Rule;
+    pub fn TopologyLevel_GetVertexRule(v: Index) -> u32;
     //@}
 
     //@{
@@ -199,7 +193,7 @@ extern "C" {
     pub fn TopologyLevel_GetNumFVarValues(
         tl: TopologyLevelPtr,
         channel: i32,
-    ) -> i32;
+    ) -> u32;
 
     /// \brief Access the face-varying values associated with a particular face
     pub fn TopologyLevel_GetFaceFVarValues(

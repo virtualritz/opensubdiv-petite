@@ -28,7 +28,6 @@ pub fn main() {
         .define("NO_CLEW", "1")
         .define("NO_TBB", "1");
 
-
     #[cfg(any(target_os = "macos", not(feature = "cuda")))]
     open_subdiv.define("NO_CUDA", "1");
 

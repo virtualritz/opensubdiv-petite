@@ -179,7 +179,7 @@ impl TopologyRefiner {
         options: Options,
     ) -> Result<Self> {
         let ptr = unsafe {
-            sys::far::TopologyRefinerFactory_TopologyDescriptor_Create(
+            sys::TopologyRefinerFactory_TopologyDescriptor_Create(
                 &descriptor.descriptor as _,
                 options.0,
             )

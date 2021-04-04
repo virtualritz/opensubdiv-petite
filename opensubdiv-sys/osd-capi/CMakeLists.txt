@@ -8,7 +8,6 @@ set(SOURCES
     far/primvar_refiner.cpp
     far/stencil_table.cpp
     far/stencil_table_factory.cpp
-    far/topology_refiner_factory.cpp
     far/topology_refiner.cpp
     far/topology_level.cpp
     osd/cpu_vertex_buffer.cpp
