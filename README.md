@@ -1,4 +1,4 @@
-# OpenSubdiv
+# opensubdiv
 A Rust wrapper for *Pixar*’s
 [*OpenSubdiv* library](http://graphics.pixar.com/opensubdiv/docs/intro.html).
 
@@ -7,7 +7,11 @@ The repositoy comes with minimal dependencies. I.e. *OpenSubdiv* and
 `opensubdiv/dependencies`.
 
 Either clone the repository with `--recursive` or, if you already cloned it and
-forgot, simply do a `git submodule update --init` to pull them in.
+forgot, simply do a
+```
+git submodule update --init
+```
+to pull them in.
 ## Features
 There are several features to gate the resp.
 [buildflags](https://github.com/PixarAnimationStudios/OpenSubdiv#useful-cmake-options-and-environment-variable)
