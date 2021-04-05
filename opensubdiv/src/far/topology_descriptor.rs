@@ -11,6 +11,7 @@ use crate::far::topology_refiner::Options;
 ///
 /// `TopologyDescriptor` contains references to raw topology data as flat index
 /// buffers.  This is used to construct a [`TopologyRefiner`].
+#[derive(Clone, Copy, Debug)]
 pub struct TopologyDescriptor<'a> {
     pub(crate) descriptor: sys::OpenSubdiv_v3_4_4_Far_TopologyDescriptor,
     // _marker needs to be invariant in 'a.

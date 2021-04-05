@@ -54,12 +54,17 @@ fn main() {
         0, 1, 3, 2, 2, 3, 5, 4, 4, 5, 7, 6, 6, 7, 1, 0, 1, 7, 5, 3, 6, 0, 2, 4,
     ];
 
+    let creases = [0, 1, 1, 3, 3, 2, 2, 0];
+
+    let crease_weights = [10., 10., 10., 10.];
+
     // populate a descriptor with our raw data
     let mut refiner = far::TopologyDescriptor::new(
         num_vertices as _,
         &verts_per_face,
         &vert_indices,
     )
+    .creases(&creases, &crease_weights)
     .into_refiner(
         far::topology_refiner::Options::new()
             .with_scheme(far::Scheme::CatmullClark)
@@ -121,6 +126,8 @@ fn main() {
 
     // output an OBJ of the highest level
     let last_level = refiner.level(max_level).unwrap();
+
+    println!("o subdivision_cube");
 
     // print vertex positions
     for v in refined_verts.last().unwrap().iter() {
