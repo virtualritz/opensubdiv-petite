@@ -99,8 +99,7 @@ fn main() {
                 y: 0.0,
                 z: 0.0
             };
-            refiner.level(level).unwrap().len_vertices()
-                as _
+            refiner.level(level).unwrap().len_vertices() as _
         ];
 
         let src = unsafe {

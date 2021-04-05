@@ -1,13 +1,12 @@
 use opensubdiv::osd::cpu_evaluator::eval_stencils;
-use opensubdiv::{far, osd, sdc};
+use opensubdiv::{far, osd};
 
 fn main() {
     let vertices = [
         -0.5, -0.5, 0.5, 0.5, -0.5, 0.5, -0.5, 0.5, 0.5, 0.5, 0.5, 0.5, -0.5,
         0.5, -0.5, 0.5, 0.5, -0.5, -0.5, -0.5, -0.5, 0.5, -0.5, -0.5,
     ];
-    let num_vertices = 8;
-    let num_faces = 6;
+    let num_vertices = vertices.len() / 3;
 
     let verts_per_face = [4, 4, 4, 4, 4, 4];
 
@@ -15,40 +14,36 @@ fn main() {
         0, 1, 3, 2, 2, 3, 5, 4, 4, 5, 7, 6, 6, 7, 1, 0, 1, 7, 5, 3, 6, 0, 2, 4,
     ];
 
-    // populate a descriptor with our raw data
-    let descriptor = far::TopologyDescriptor::new(
+    // instantiate a TopologyRefiner from a descriptor
+    let mut refiner = far::TopologyDescriptor::new(
         num_vertices,
-        num_faces,
         &verts_per_face,
         &vert_indices,
-    );
-
-    // instantiate a TopologyRefiner from the descriptor
-    let mut refiner = far::topology_refiner_factory::create(
-        descriptor,
-        far::topology_refiner_factory::Options::new(
-            sdc::Scheme::CatmullClark,
-            sdc::OptionsBuilder::new()
-                .vtx_boundary_interpolation(
-                    sdc::VtxBoundaryInterpolation::EdgeOnly,
-                )
-                .build(),
-        ),
+    )
+    .into_refiner(
+        far::topology_refiner::Options::new()
+            .with_scheme(far::Scheme::CatmullClark)
+            .with_boundary_interpolation(far::BoundaryInterpolation::EdgeOnly)
+            .finalize(),
     )
     .expect("Could not create TopologyRefiner");
 
-    refiner.refine_uniform(far::uniform_options().refinement_level(2).build());
-
-    let stencil_table = far::stencil_table_factory::create(
-        &refiner,
-        far::stencil_table_factory::options()
-            .generate_offsets(true)
-            .generate_intermediate_levels(false)
-            .build(),
+    refiner.refine_uniform(
+        far::topology_refiner::UniformRefinementOptions::default()
+            .refinement_level(2)
+            .finalize(),
     );
 
-    let n_coarse_verts = refiner.level(0).unwrap().num_vertices();
-    let n_refined_verts = stencil_table.num_stencils();
+    let stencil_table = far::stencil_table::StencilTable::new(
+        &refiner,
+        far::stencil_table::Options::default()
+            .generate_offsets(true)
+            .generate_intermediate_levels(false)
+            .finalize(),
+    );
+
+    let n_coarse_verts = refiner.level(0).unwrap().len_vertices();
+    let n_refined_verts = stencil_table.len_stencils();
 
     // set up a buffer for primvar data
     let mut src_buffer = osd::CpuVertexBuffer::new(3, n_coarse_verts);

@@ -86,7 +86,6 @@ impl Default for Options {
 }
 */
 
-
 #[derive(Copy, Clone, Debug)]
 pub struct UniformRefinementOptions(
     sys::far::topology_refiner::UniformRefinementOptions,

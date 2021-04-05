@@ -9,6 +9,7 @@ pub enum InterpolationMode {
 }
 
 #[repr(C)]
+#[derive(Clone, Copy, Debug)]
 pub struct Options {
     interpolation_mode: u32,
     generate_offsets:u32,
