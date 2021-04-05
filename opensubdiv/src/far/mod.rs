@@ -16,7 +16,7 @@
 //! functionality provided in the *vectorized topology representation* (`vtr` –
 //! not exposed in this crate).
 //!
-//! The main classes in Far related to topology refinement are:
+//! The main classes in `far` related to topology refinement are:
 //!
 //! * [`TopologyDescriptor`] – Describes a mesh.
 //! * [`TopologyRefiner`](crate::far::topology_refiner::TopologyRefiner) -
@@ -31,9 +31,9 @@
 //! many advantages gained by distinguishing between topology refinement and
 //! primvar interpolation including the ability to apply a single static
 //! topological refinement to multiple primvar instances or to different
-//! animated primvar time samples. Far supports methods to refine primvar data
+//! animated primvar time samples. `far` supports methods to refine primvar data
 //! at the locations of topological vertices and at arbitrary locations on the
-//! subdivision limit surface. The main classes in Far related to primvar
+//! subdivision limit surface. The main classes in `far` related to primvar
 //! refinement are:
 //! * [`PrimvarRefiner`] –  A class implementing refinement of primvar data at
 //!   the locations of topological vertices.
