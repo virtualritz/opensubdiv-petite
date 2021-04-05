@@ -12,14 +12,12 @@ type Result<T, E = Error> = std::result::Result<T, E>;
 /// This function has a same signature as other device kernels have so that it
 /// can be called in the same way from OsdMesh template interface.
 ///
-/// * `srcBuffer` - Input primvar buffer. Must have BindCpuBuffer() method
-/// returning a const float pointer for read
-/// * `srcDesc` - vertex buffer descriptor for the input buffer
-/// * `dstBuffer` -  Output primvar buffer must have BindCpuBuffer() method
-/// returning a float pointer for write
-/// * `dstDesc` - vertex buffer descriptor for the output buffer
-/// * `stencilTable` - [StencilTable] or equivalent
-pub fn eval_stencils(
+/// * `src_buffer` – Input primvar buffer.
+/// * `src_desc` – Vertex buffer descriptor for the input buffer.
+/// * `dst_buffer` –  Output primvar buffer.
+/// * `dst_desc` – Vertex buffer descriptor for the output buffer.
+/// * `stencil_table` – A [`StencilTable`].
+pub fn evaluate_stencils(
     src_buffer: &CpuVertexBuffer,
     src_desc: BufferDescriptor,
     dst_buffer: &mut CpuVertexBuffer,

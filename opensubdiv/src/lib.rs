@@ -1,3 +1,11 @@
+//! This is a wrapper around parts of [*Pixar’s OpenSubdiv*](https://graphics.pixar.com/opensubdiv/).
+//!
+//! *OpenSubdiv* is a set of open source libraries that implement high
+//! performance [subdivision surface](https://en.wikipedia.org/wiki/Subdivision_surface)
+//! (subdiv) evaluation on massively parallel CPU and GPU architectures.
+//!
+//! This code path is optimized for drawing deforming surfaces with static
+//! topology at interactive framerates.
 pub mod far;
 pub mod osd;
 

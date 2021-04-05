@@ -80,10 +80,6 @@ impl Options {
         self.max_level = max_level;
         self
     }
-
-    pub fn finalize(self) -> Self {
-        self
-    }
 }
 
 pub type Stencil = crate::OpenSubdiv_v3_4_4_Far_StencilReal<f32>;

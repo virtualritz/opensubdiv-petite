@@ -1,15 +1,19 @@
+//! # Feature Adaptive Representation
 //! `Far` is the primary API layer for processing client-supplied mesh data into
 //! subdivided surfaces.
 //!
 //! The `far` interface may be used directly and also may be used to prepare
-//! mesh data for further processing by *OpenSubdiv*. The two main aspects of
-//! the subdivision process are Topology Refinement and Primvar Refinement.
+//! mesh data for further processing by [`osd`](crate::osd).  The two main
+//! aspects of the subdivision process are Topology Refinement and Primvar
+//! Refinement.
 //!
 //! ## Topology Refinement
-//! Topology refinement is the process of splitting the mesh topology according
-//! to the specified subdivison rules to generate new topological vertices,
-//! edges, and faces.  This process is purely topological and does not depend on
-//! the speciific values of any primvar data (point positions, etc).
+//! *Topology refinement* is the process of splitting the mesh topology
+//! according to the specified subdivison rules to generate new topological
+//! vertices, edges, and faces.
+//!
+//! This process is purely topological and does not depend on
+//! the speciific values of any primvar data (point positions, etc.).
 //! Topology refinement can be either uniform or adaptive, where extraordinary
 //! features are automatically isolated (see feature adaptive subdivision).
 //! The `far` topology structs present a public interface for the refinement
@@ -25,9 +29,11 @@
 //!   one level of refinement within a `TopologyRefiner`.
 //!
 //! ## Primitive Variable Refinement
-//! Primitive Variable  (primvar) refinement is the process of computing values
-//! for primvar data (points, colors, normals, texture coordinates, etc) by
-//! applying weights determined by the specified subdivision rules. There are
+//! *Primitive Variable* (primvar) *refinement* is the process of computing
+//! values for primvar data (points, colors, normals, texture coordinates, etc.)
+//! by applying weights determined by the specified subdivision rules.
+//!
+//! There are
 //! many advantages gained by distinguishing between topology refinement and
 //! primvar interpolation including the ability to apply a single static
 //! topological refinement to multiple primvar instances or to different

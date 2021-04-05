@@ -55,20 +55,20 @@ impl StencilTable {
 
     /// Returns the number of stencils in the table.
     #[inline]
-    pub fn len_stencils(&self) -> u32 {
+    pub fn stencils_len(&self) -> u32 {
         unsafe { sys::far::StencilTable_GetNumStencils(self.0) as _ }
     }
 
     /// Returns the number of control vertices indexed in the table.
     #[inline]
-    pub fn len_control_vertices(&self) -> u32 {
+    pub fn control_vertices_len(&self) -> u32 {
         unsafe { sys::far::StencilTable_GetNumControlVertices(self.0) as _ }
     }
 
     /// Returns a Stencil at index i in the table.
     #[inline]
     pub fn stencil(&self, i: Index) -> Option<Stencil> {
-        if unsafe { sys::far::StencilTable_GetNumStencils(self.0) } <= i {
+        if self.stencils_len() <= i {
             None
         } else {
             unsafe {

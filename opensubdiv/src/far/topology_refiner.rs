@@ -50,7 +50,7 @@ impl TopologyRefiner {
 
     /// Returns the number of refinement levels.
     #[inline]
-    pub fn len_levels(&self) -> u32 {
+    pub fn levels_len(&self) -> u32 {
         unsafe { sys::far::TopologyRefiner_GetNumLevels(self.0) as _ }
     }
 
@@ -68,25 +68,25 @@ impl TopologyRefiner {
 
     /// Returns the total number of vertices in all levels.
     #[inline]
-    pub fn len_vertices_total(&self) -> u32 {
+    pub fn vertices_total_len(&self) -> u32 {
         unsafe { sys::far::TopologyRefiner_GetNumVerticesTotal(self.0) as _ }
     }
 
     /// Returns the total number of edges in all levels.
     #[inline]
-    pub fn len_edges_total(&self) -> u32 {
+    pub fn edges_total_len(&self) -> u32 {
         unsafe { sys::far::TopologyRefiner_GetNumEdgesTotal(self.0) as _ }
     }
 
     /// Returns the total number of faces in all levels.
     #[inline]
-    pub fn len_faces_total(&self) -> u32 {
+    pub fn faces_total_len(&self) -> u32 {
         unsafe { sys::far::TopologyRefiner_GetNumFacesTotal(self.0) as _ }
     }
 
     /// Returns the total number of face vertices in all levels.
     #[inline]
-    pub fn len_face_vertices_total(&self) -> u32 {
+    pub fn face_vertices_total_len(&self) -> u32 {
         unsafe {
             sys::far::TopologyRefiner_GetNumFaceVerticesTotal(self.0) as _
         }

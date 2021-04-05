@@ -1,4 +1,3 @@
-use opensubdiv::osd::cpu_evaluator::eval_stencils;
 use opensubdiv::{far, osd};
 
 fn main() {
@@ -17,21 +16,21 @@ fn main() {
     // instantiate a TopologyRefiner from a descriptor
     let mut refiner = far::TopologyRefiner::new(
         far::TopologyDescriptor::new(
-            num_vertices,
+            num_vertices as _,
             &verts_per_face,
             &vert_indices,
         ),
         far::topology_refiner::Options::new()
-            .use_scheme(far::Scheme::CatmullClark)
-            .use_boundary_interpolation(far::BoundaryInterpolation::EdgeOnly)
-            .finalize(),
+            .scheme(far::Scheme::CatmullClark)
+            .boundary_interpolation(far::BoundaryInterpolation::EdgeOnly)
+            .clone(),
     )
     .expect("Could not create TopologyRefiner");
 
     refiner.refine_uniform(
         far::topology_refiner::UniformRefinementOptions::default()
             .refinement_level(2)
-            .finalize(),
+            .clone(),
     );
 
     let stencil_table = far::stencil_table::StencilTable::new(
@@ -39,11 +38,11 @@ fn main() {
         far::stencil_table::Options::default()
             .generate_offsets(true)
             .generate_intermediate_levels(false)
-            .finalize(),
+            .clone(),
     );
 
-    let n_coarse_verts = refiner.level(0).unwrap().len_vertices();
-    let n_refined_verts = stencil_table.len_stencils();
+    let n_coarse_verts = refiner.level(0).unwrap().vertices_len();
+    let n_refined_verts = stencil_table.stencils_len();
 
     // set up a buffer for primvar data
     let mut src_buffer = osd::CpuVertexBuffer::new(3, n_coarse_verts);
@@ -58,7 +57,7 @@ fn main() {
         let dst_desc = osd::BufferDescriptor::new(0, 3, 3);
 
         // launch the computation
-        eval_stencils(
+        osd::cpu_evaluator::evaluate_stencils(
             &src_buffer,
             src_desc,
             &mut dst_buffer,

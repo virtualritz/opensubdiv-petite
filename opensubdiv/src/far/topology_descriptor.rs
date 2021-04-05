@@ -4,7 +4,8 @@ use std::{convert::TryInto, marker::PhantomData};
 /// A container holding references to raw topology data.
 ///
 /// `TopologyDescriptor` contains references to raw topology data as flat index
-/// buffers.  This is used to construct a [`TopologyRefiner`].
+/// buffers.  This is used to construct a
+/// [`TopologyRefiner`](crate::far::TopologyRefiner).
 #[derive(Clone, Copy, Debug)]
 pub struct TopologyDescriptor<'a> {
     pub(crate) descriptor: sys::OpenSubdiv_v3_4_4_Far_TopologyDescriptor,
@@ -16,30 +17,29 @@ pub struct TopologyDescriptor<'a> {
 
 impl<'a> TopologyDescriptor<'a> {
     /// Describes a mesh topology including creases, corners, holes and
-    /// handedness.  This can be used as a builder to create a new
-    /// [TopologyRefiner] by calling
-    /// [`into_refiner()`](TopologyDescriptor::into_refiner()).
+    /// handedness.  This is fed into a
+    /// [`TopologyRefiner`](crate::far::TopologyRefiner).
     ///
     /// ## Parameters
-    /// * `len_vertices` - The number of vertices in the mesh.
-    /// * `len_verts_per_face` - A slice containing the number of vertices for
+    /// * `vertices_len` - The number of vertices in the mesh.
+    /// * `vertices_per_face - A slice containing the number of vertices for
     ///   each face in the mesh. The length of this is the number of faces in
     ///   the mesh.
-    /// * `vert_indices_per_face` - A flat list of the vertex indices for each
+    /// * `vertex_indices_per_face` - A flat list of the vertex indices for each
     ///   face in the mesh.
     #[inline]
     pub fn new(
-        len_vertices: u32,
-        len_verts_per_face: &'a [u32],
-        vert_indices_per_face: &'a [u32],
+        vertices_len: u32,
+        vertices_per_face: &'a [u32],
+        vertex_indices_per_face: &'a [u32],
     ) -> TopologyDescriptor<'a> {
         let mut descriptor =
             unsafe { sys::OpenSubdiv_v3_4_4_Far_TopologyDescriptor::new() };
 
-        descriptor.numVertices = len_vertices.try_into().unwrap();
-        descriptor.numFaces = len_verts_per_face.len().try_into().unwrap();
-        descriptor.numVertsPerFace = len_verts_per_face.as_ptr() as _;
-        descriptor.vertIndicesPerFace = vert_indices_per_face.as_ptr() as _;
+        descriptor.numVertices = vertices_len.try_into().unwrap();
+        descriptor.numFaces = vertices_per_face.len().try_into().unwrap();
+        descriptor.numVertsPerFace = vertices_per_face.as_ptr() as _;
+        descriptor.vertIndicesPerFace = vertex_indices_per_face.as_ptr() as _;
 
         TopologyDescriptor {
             descriptor,

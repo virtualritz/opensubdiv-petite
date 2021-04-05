@@ -5,7 +5,7 @@ use std::convert::TryInto;
 ///
 /// [`CpuVertexBuffer`] implements the VertexBufferInterface. An instance
 /// of this buffer class can be passed to
-/// [`eval_stencils()`](crate::osd::cpu_evaluator::eval_stencils()).
+/// [`evaluate_stencils()`](crate::osd::cpu_evaluator::evaluate_stencils()).
 pub struct CpuVertexBuffer(pub(crate) sys::osd::CpuVertexBufferPtr);
 
 impl Drop for CpuVertexBuffer {
@@ -17,11 +17,11 @@ impl Drop for CpuVertexBuffer {
 
 impl CpuVertexBuffer {
     #[inline]
-    pub fn new(len_elements: u32, len_vertices: u32) -> CpuVertexBuffer {
+    pub fn new(elements_len: u32, vertices_len: u32) -> CpuVertexBuffer {
         let ptr = unsafe {
             sys::osd::CpuVertexBuffer_Create(
-                len_elements.try_into().unwrap(),
-                len_vertices.try_into().unwrap(),
+                elements_len.try_into().unwrap(),
+                vertices_len.try_into().unwrap(),
                 std::ptr::null(),
             )
         };
@@ -33,13 +33,13 @@ impl CpuVertexBuffer {
     }
 
     /// Returns how many elements defined in this vertex buffer.
-    pub fn len_elements(&self) -> u32 {
+    pub fn elements_len(&self) -> u32 {
         unsafe { sys::osd::CpuVertexBuffer_GetNumElements(self.0) as _ }
     }
 
     /// Returns how many vertices allocated in this vertex buffer.
     #[inline]
-    pub fn len_vertices(&self) -> u32 {
+    pub fn vertices_len(&self) -> u32 {
         unsafe { sys::osd::CpuVertexBuffer_GetNumVertices(self.0) as _ }
     }
 
@@ -54,7 +54,7 @@ impl CpuVertexBuffer {
         unsafe {
             std::slice::from_raw_parts(
                 ptr,
-                (self.len_elements() * self.len_vertices()) as usize,
+                (self.elements_len() * self.vertices_len()) as usize,
             )
         }
     }
@@ -66,12 +66,12 @@ impl CpuVertexBuffer {
         &mut self,
         src: &[f32],
         start_vertex: u32,
-        len_vertices: u32,
+        vertices_len: u32,
     ) {
         // do some basic error checking
-        let len_elements = self.len_elements();
+        let elements_len = self.elements_len();
 
-        if (start_vertex * len_elements) as usize > src.len() {
+        if (start_vertex * elements_len) as usize > src.len() {
             panic!(
                 "Start vertex is out of range of the src slice: {} ({})",
                 start_vertex,
@@ -79,10 +79,10 @@ impl CpuVertexBuffer {
             );
         }
 
-        if (len_vertices * len_elements) as usize > src.len() {
+        if (vertices_len * elements_len) as usize > src.len() {
             panic!(
-                "num vertices is out of range of the src slice: {} ({})",
-                len_vertices,
+                "vertices_len is out of range of the src slice: {} ({})",
+                vertices_len,
                 src.len()
             );
         }
@@ -92,7 +92,7 @@ impl CpuVertexBuffer {
                 self.0,
                 src.as_ptr(),
                 start_vertex.try_into().unwrap(),
-                len_vertices.try_into().unwrap(),
+                vertices_len.try_into().unwrap(),
                 std::ptr::null(),
             );
         }

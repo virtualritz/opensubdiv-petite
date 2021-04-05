@@ -78,8 +78,8 @@ fn main() {
     // uniformly refine up to 'max level' of 2
     refiner.refine_uniform(
         far::topology_refiner::UniformRefinementOptions::default()
-            .use_refinement_level(max_level)
-            .finalize(),
+            .refinement_level(max_level)
+            .clone(),
     );
 
     // initialize coarse mesh positions
@@ -105,7 +105,7 @@ fn main() {
                 y: 0.0,
                 z: 0.0
             };
-            refiner.level(level).unwrap().len_vertices() as _
+            refiner.level(level).unwrap().vertices_len() as _
         ];
 
         let src = unsafe {

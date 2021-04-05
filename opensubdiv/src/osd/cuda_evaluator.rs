@@ -19,7 +19,7 @@ type Result<T, E = Error> = std::result::Result<T, E>;
 /// returning a float pointer for write
 /// * `dstDesc` - vertex buffer descriptor for the output buffer
 /// * `stencilTable` - [StencilTable] or equivalent
-pub fn eval_stencils(
+pub fn evaluate_stencils(
     src_buffer: &CudaVertexBuffer,
     src_desc: BufferDescriptor,
     dst_buffer: &mut CudaVertexBuffer,

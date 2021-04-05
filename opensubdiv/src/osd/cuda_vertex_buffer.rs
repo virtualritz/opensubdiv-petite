@@ -5,7 +5,7 @@ use std::convert::TryInto;
 ///
 /// [`CudaVertexBuffer`] implements the VertexBufferInterface. An instance
 /// of this buffer class can be passed to ///
-/// [`eval_stencils()`](crate::osd::cuda_evaluator::eval_stencils()).
+/// [`evaluate_stencils()`](crate::osd::cuda_evaluator::evaluate_stencils()).
 pub struct CudaVertexBuffer(pub(crate) sys::osd::CudaVertexBufferPtr);
 
 impl Drop for CudaVertexBuffer {
@@ -17,11 +17,11 @@ impl Drop for CudaVertexBuffer {
 
 impl CudaVertexBuffer {
     #[inline]
-    pub fn new(len_elements: u32, len_vertices: u32) -> CudaVertexBuffer {
+    pub fn new(elements_len: u32, vertices_len: u32) -> CudaVertexBuffer {
         let ptr = unsafe {
             sys::osd::CudaVertexBuffer_Create(
-                len_elements.try_into().unwrap(),
-                len_vertices.try_into().unwrap(),
+                elements_len.try_into().unwrap(),
+                vertices_len.try_into().unwrap(),
                 std::ptr::null(),
             )
         };
@@ -34,13 +34,13 @@ impl CudaVertexBuffer {
 
     /// Returns how many elements defined in this vertex buffer.
     #[inline]
-    pub fn len_elements(&self) -> u32 {
+    pub fn elements_len(&self) -> u32 {
         unsafe { sys::osd::CudaVertexBuffer_GetNumElements(self.0) as _ }
     }
 
     /// Returns how many vertices allocated in this vertex buffer.
     #[inline]
-    pub fn len_vertices(&self) -> u32 {
+    pub fn vertices_len(&self) -> u32 {
         unsafe { sys::osd::CudaVertexBuffer_GetNumVertices(self.0) as _ }
     }
 
@@ -55,7 +55,7 @@ impl CudaVertexBuffer {
         unsafe {
             std::slice::from_raw_parts(
                 ptr,
-                (self.len_elements() * self.len_vertices()) as usize,
+                (self.elements_len() * self.vertices_len()) as usize,
             )
         }
     }
@@ -67,12 +67,12 @@ impl CudaVertexBuffer {
         &mut self,
         src: &[f32],
         start_vertex: u32,
-        len_vertices: u32,
+        vertices_len: u32,
     ) {
         // do some basic error checking
-        let len_elements = self.len_elements();
+        let elements_len = self.elements_len();
 
-        if (start_vertex * len_elements) as usize > src.len() {
+        if (start_vertex * elements_len) as usize > src.len() {
             panic!(
                 "Start vertex is out of range of the src slice: {} ({})",
                 start_vertex,
@@ -80,10 +80,10 @@ impl CudaVertexBuffer {
             );
         }
 
-        if (len_vertices * len_elements) as usize > src.len() {
+        if (vertices_len * elements_len) as usize > src.len() {
             panic!(
-                "num vertices is out of range of the src slice: {} ({})",
-                len_vertices,
+                "vertices_len is out of range of the src slice: {} ({})",
+                vertices_len,
                 src.len()
             );
         }
@@ -93,7 +93,7 @@ impl CudaVertexBuffer {
                 self.0,
                 src.as_ptr(),
                 start_vertex.try_into().unwrap(),
-                len_vertices.try_into().unwrap(),
+                vertices_len.try_into().unwrap(),
                 std::ptr::null(),
             );
         }
