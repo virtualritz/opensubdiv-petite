@@ -28,9 +28,9 @@ pub fn eval_stencils(
 ) -> Result<()> {
     unsafe {
         if sys::osd::CudaEvaluator_EvalStencils(
-            src_buffer.ptr,
+            src_buffer.0,
             src_desc,
-            dst_buffer.ptr,
+            dst_buffer.0,
             dst_desc,
             stencil_table.ptr,
         ) {
@@ -48,7 +48,7 @@ pub struct CudaStencilTable<'a> {
 
 impl<'a> CudaStencilTable<'a> {
     pub fn new(st: &StencilTable) -> CudaStencilTable {
-        let ptr = unsafe { sys::osd::CudaStencilTable_Create(st.ptr) };
+        let ptr = unsafe { sys::osd::CudaStencilTable_Create(st.0) };
         if ptr.is_null() {
             panic!("Could not create CudaStencilTable");
         }

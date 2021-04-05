@@ -28,11 +28,11 @@ pub fn eval_stencils(
 ) -> Result<()> {
     unsafe {
         if sys::osd::CpuEvaluator_EvalStencils(
-            src_buffer.ptr,
+            src_buffer.0,
             src_desc,
-            dst_buffer.ptr,
+            dst_buffer.0,
             dst_desc,
-            stencil_table.ptr,
+            stencil_table.0,
         ) {
             Ok(())
         } else {

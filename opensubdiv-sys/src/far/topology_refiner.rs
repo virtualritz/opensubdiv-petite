@@ -1,6 +1,54 @@
+use num_enum::TryFromPrimitive;
 use super::topology_level::TopologyLevelPtr;
 
-pub type TopologyRefinerPtr = *mut crate::OpenSubdiv_v3_4_4_Far_TopologyRefiner;
+#[repr(u32)]
+#[derive(TryFromPrimitive, Copy, Clone, Debug)]
+pub enum Scheme {
+    Bilinear = crate::OpenSubdiv_v3_4_4_Sdc_SchemeType_SCHEME_BILINEAR,
+    CatmullClark = crate::OpenSubdiv_v3_4_4_Sdc_SchemeType_SCHEME_CATMARK,
+    Loop = crate::OpenSubdiv_v3_4_4_Sdc_SchemeType_SCHEME_LOOP,
+}
+
+#[repr(u32)]
+#[derive(Copy, Clone, Debug)]
+pub enum BoundaryInterpolation {
+    None = crate::OpenSubdiv_v3_4_4_Sdc_Options_VtxBoundaryInterpolation_VTX_BOUNDARY_NONE,
+    EdgeOnly = crate::OpenSubdiv_v3_4_4_Sdc_Options_VtxBoundaryInterpolation_VTX_BOUNDARY_EDGE_ONLY,
+    EdgeAndCorner = crate::OpenSubdiv_v3_4_4_Sdc_Options_VtxBoundaryInterpolation_VTX_BOUNDARY_EDGE_AND_CORNER,
+}
+
+#[repr(u32)]
+#[derive(Copy, Clone, Debug)]
+pub enum FaceVaryingLinearInterpolation {
+    None = crate::OpenSubdiv_v3_4_4_Sdc_Options_FVarLinearInterpolation_FVAR_LINEAR_NONE,
+    CornersOnly = crate::OpenSubdiv_v3_4_4_Sdc_Options_FVarLinearInterpolation_FVAR_LINEAR_CORNERS_ONLY,
+    CornersPlusOne = crate::OpenSubdiv_v3_4_4_Sdc_Options_FVarLinearInterpolation_FVAR_LINEAR_CORNERS_PLUS1,
+    CornersPlusTwo = crate::OpenSubdiv_v3_4_4_Sdc_Options_FVarLinearInterpolation_FVAR_LINEAR_CORNERS_PLUS2,
+    Boundaries = crate::OpenSubdiv_v3_4_4_Sdc_Options_FVarLinearInterpolation_FVAR_LINEAR_BOUNDARIES,
+    All = crate::OpenSubdiv_v3_4_4_Sdc_Options_FVarLinearInterpolation_FVAR_LINEAR_ALL,
+}
+
+#[repr(u32)]
+#[derive(Copy, Clone, Debug)]
+pub enum CreasingMethod {
+    Uniform = crate::OpenSubdiv_v3_4_4_Sdc_Options_CreasingMethod_CREASE_UNIFORM,
+    Chaikin = crate::OpenSubdiv_v3_4_4_Sdc_Options_CreasingMethod_CREASE_CHAIKIN,
+}
+
+#[repr(u32)]
+#[derive(Copy, Clone, Debug)]
+pub enum TriangleSubdivision {
+    CatmullClark =
+        crate::OpenSubdiv_v3_4_4_Sdc_Options_TriangleSubdivision_TRI_SUB_CATMARK,
+    Smooth =
+        crate::OpenSubdiv_v3_4_4_Sdc_Options_TriangleSubdivision_TRI_SUB_SMOOTH,
+}
+
+pub type UniformRefinementOptions = crate::OpenSubdiv_v3_4_4_Far_TopologyRefiner_UniformOptions;
+pub type AsaptiveRefinementOptions = crate::OpenSubdiv_v3_4_4_Far_TopologyRefiner_AdaptiveOptions;
+pub type Options = crate::OpenSubdiv_v3_4_4_Far_TopologyRefinerFactory_Options;
+pub type TopologyRefiner = crate::OpenSubdiv_v3_4_4_Far_TopologyRefiner;
+pub type TopologyRefinerPtr = *mut TopologyRefiner;
 
 extern "C" {
     pub fn TopologyRefinerFactory_TopologyDescriptor_Create(

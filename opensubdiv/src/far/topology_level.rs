@@ -4,6 +4,8 @@ use std::convert::TryInto;
 
 use sys::vtr::types::{Index, LocalIndex};
 
+const INVALID_INDEX: u32 = u32::MAX; // aka: -1i32 aka
+
 /// An interface for accessing data in a specific level of a refined topology
 /// hierarchy.
 ///
@@ -30,23 +32,23 @@ pub struct TopologyLevel<'a> {
 /// made available.
 impl<'a> TopologyLevel<'a> {
     /// Return the number of vertices in this level.
-    pub fn num_vertices(&self) -> u32 {
+    pub fn len_vertices(&self) -> u32 {
         unsafe { sys::far::TopologyLevel_GetNumVertices(self.ptr) as _ }
     }
 
     /// Return the number of faces in this level.
-    pub fn num_faces(&self) -> u32 {
+    pub fn len_faces(&self) -> u32 {
         unsafe { sys::far::TopologyLevel_GetNumFaces(self.ptr) as _ }
     }
 
     /// Return the number of edges in this level.
-    pub fn num_edges(&self) -> u32 {
+    pub fn len_edges(&self) -> u32 {
         unsafe { sys::far::TopologyLevel_GetNumEdges(self.ptr) as _ }
     }
 
-    /// Returns the total number of face-vertices, i.e. the sum of all vertices
+    /// Returns the total number of face-vertices; i.e. the sum of all vertices
     /// for all faces.
-    pub fn num_face_vertices(&self) -> u32 {
+    pub fn len_face_vertices(&self) -> u32 {
         unsafe { sys::far::TopologyLevel_GetNumFaceVertices(self.ptr) as _ }
     }
 
@@ -54,7 +56,7 @@ impl<'a> TopologyLevel<'a> {
         FaceVerticesIterator {
             level: self,
             current: 0,
-            num: self.num_face_vertices() as _,
+            num: self.len_face_vertices() as _,
         }
     }
 }
@@ -80,10 +82,7 @@ impl<'a> TopologyLevel<'a> {
     pub fn face_vertices(&self, f: Index) -> Option<&[Index]> {
         unsafe {
             let arr = sys::far::TopologyLevel_GetFaceVertices(self.ptr, f);
-            if f < Index(0)
-                || arr.size() == 0
-                || arr.begin().is_null()
-                || f >= Index(self.num_faces() as _)
+            if 0 == arr.size() || arr.begin().is_null() || self.len_faces() <= f
             {
                 None
             } else {
@@ -195,7 +194,7 @@ impl<'a> TopologyLevel<'a> {
     #[inline]
     pub fn find_edge(&self, v0: Index, v1: Index) -> Option<Index> {
         let i = unsafe { sys::far::TopologyLevel_FindEdge(self.ptr, v0, v1) };
-        if i < Index(0) {
+        if INVALID_INDEX == i {
             None
         } else {
             Some(i)
@@ -218,7 +217,7 @@ impl<'a> Iterator for FaceVerticesIterator<'a> {
             None
         } else {
             self.current += 1;
-            self.level.face_vertices(Index(self.current - 1))
+            self.level.face_vertices(self.current - 1)
         }
     }
 }
@@ -284,14 +283,14 @@ impl<'a> TopologyLevel<'a> {
     /// Return the number of face-varying channels (should be same for all
     /// levels).
     #[inline]
-    pub fn num_fvar_channels(&self) -> u32 {
+    pub fn len_fvar_channels(&self) -> u32 {
         unsafe { sys::far::TopologyLevel_GetNumFVarChannels(self.ptr) as _ }
     }
 
     /// Return the total number of face-varying values in a particular channel.
     /// (the upper bound of a face-varying value index).
     #[inline]
-    pub fn num_fvar_values(&self, channel: u32) -> u32 {
+    pub fn len_fvar_values(&self, channel: u32) -> u32 {
         unsafe {
             sys::far::TopologyLevel_GetNumFVarValues(
                 self.ptr,
@@ -309,7 +308,7 @@ impl<'a> TopologyLevel<'a> {
                 f,
                 channel as _,
             );
-            if arr.size() <= 0 || arr.begin().is_null() {
+            if 0 == arr.size() || arr.begin().is_null() {
                 None
             } else {
                 Some(std::slice::from_raw_parts(
@@ -377,7 +376,7 @@ impl<'a> TopologyLevel<'a> {
     pub fn face_child_faces(&self, f: Index) -> Option<&[Index]> {
         unsafe {
             let arr = sys::far::TopologyLevel_GetFaceChildFaces(self.ptr, f);
-            if arr.size() <= 0 || arr.begin().is_null() {
+            if 0 == arr.size() || arr.begin().is_null() {
                 None
             } else {
                 Some(std::slice::from_raw_parts(
@@ -393,7 +392,7 @@ impl<'a> TopologyLevel<'a> {
     pub fn face_child_edges(&self, f: Index) -> Option<&[Index]> {
         unsafe {
             let arr = sys::far::TopologyLevel_GetFaceChildEdges(self.ptr, f);
-            if arr.size() <= 0 || arr.begin().is_null() {
+            if 0 == arr.size() || arr.begin().is_null() {
                 None
             } else {
                 Some(std::slice::from_raw_parts(
@@ -409,7 +408,7 @@ impl<'a> TopologyLevel<'a> {
     pub fn edge_child_edges(&self, e: Index) -> Option<&[Index]> {
         unsafe {
             let arr = sys::far::TopologyLevel_GetEdgeChildEdges(self.ptr, e);
-            if arr.size() <= 0 || arr.begin().is_null() {
+            if 0 == arr.size() || arr.begin().is_null() {
                 None
             } else {
                 Some(std::slice::from_raw_parts(

@@ -1,4 +1,4 @@
-use opensubdiv::{far, sdc};
+use opensubdiv::far;
 
 #[derive(Copy, Clone)]
 struct Vertex {
@@ -16,7 +16,7 @@ struct VertexSliceMut<'a> {
 }
 
 impl<'a> far::PrimvarBufferSrc for VertexSlice<'a> {
-    const NUM_ELEMENTS: i32 = 3;
+    const LEN_ELEMENTS: u32 = 3;
 
     fn as_f32(&self) -> &[f32] {
         unsafe {
@@ -29,7 +29,7 @@ impl<'a> far::PrimvarBufferSrc for VertexSlice<'a> {
 }
 
 impl<'a> far::PrimvarBufferDst for VertexSliceMut<'a> {
-    const NUM_ELEMENTS: i32 = 3;
+    const LEN_ELEMENTS: u32 = 3;
 
     fn as_f32_mut(&mut self) -> &mut [f32] {
         unsafe {
@@ -89,7 +89,7 @@ fn main() {
     // interpolate vertex primvar data
     let primvar_refiner = far::PrimvarRefiner::new(&refiner);
 
-    let mut refined_verts = Vec::with_capacity(max_level as usize);
+    let mut refined_verts = Vec::with_capacity(max_level as _);
 
     refined_verts.push(vbuffer);
     for level in 1..=max_level {
@@ -99,8 +99,8 @@ fn main() {
                 y: 0.0,
                 z: 0.0
             };
-            refiner.level(level).unwrap().num_vertices()
-                as usize
+            refiner.level(level).unwrap().len_vertices()
+                as _
         ];
 
         let src = unsafe {
@@ -136,7 +136,7 @@ fn main() {
         assert!(face_vert_indices.len() == 4);
         print!("f ");
         for fv in face_vert_indices {
-            print!("{} ", fv.0 + 1);
+            print!("{} ", fv + 1);
         }
         print!("\n");
     }

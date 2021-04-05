@@ -1,10 +1,5 @@
-#[repr(C)]
-#[derive(PartialEq, PartialOrd, Display, Copy, Clone)]
-pub struct Index(pub u32);
-
-#[repr(C)]
-#[derive(PartialEq, PartialOrd, Display, Copy, Clone)]
-pub struct LocalIndex(pub u16);
+pub type Index = u32;
+pub type LocalIndex = u16;
 
 pub const VALENCE_LIMIT: u32 = (1 << 16) - 1;
 

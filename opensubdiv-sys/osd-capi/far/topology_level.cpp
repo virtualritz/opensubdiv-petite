@@ -8,7 +8,7 @@ typedef OpenSubdiv::Vtr::ConstIndexArray ConstIndexArray;
 typedef OpenSubdiv::Vtr::ConstLocalIndexArray ConstLocalIndexArray;
 typedef OpenSubdiv::Vtr::Index Index;
 
-extern "C" {    
+extern "C" {
     /// \brief Return the number of vertices in this level
     int TopologyLevel_GetNumVertices(TopologyLevel* tl) {
         return tl->GetNumVertices();

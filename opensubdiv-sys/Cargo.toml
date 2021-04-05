@@ -15,6 +15,7 @@ ptex = []
 [dependencies]
 bitfield = "0.13.2"
 derive_more = "0.99.13"
+num_enum = "0.5.1"
 
 [build-dependencies]
 cmake = "0.1.45"

@@ -1,3 +1,5 @@
+#![allow(clippy::missing_safety_doc)]
+#![allow(clippy::too_many_arguments)]
 #![allow(non_upper_case_globals)]
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
@@ -5,15 +7,12 @@
 
 include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 
-#[macro_use]
-extern crate bitfield;
-
-#[macro_use]
-extern crate derive_more;
-
 #[link(name = "osl-capi", kind = "static")]
 pub mod far;
 pub use far::*;
+
+pub mod sdc;
+pub use sdc::*;
 
 pub mod osd;
 

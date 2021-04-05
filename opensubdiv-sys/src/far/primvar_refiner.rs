@@ -1,10 +1,3 @@
-use super::topology_refiner::TopologyRefinerPtr;
-
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct PrimvarRefiner_obj {
-    _unused: [u8; 0],
-}
 pub type PrimvarRefinerPtr = *mut crate::OpenSubdiv_v3_4_4_Far_PrimvarRefiner;
 
 extern "C" {

@@ -1,4 +1,3 @@
-use num_enum::TryFromPrimitive;
 use opensubdiv_sys as sys;
 use std::convert::TryInto;
 
@@ -7,110 +6,15 @@ pub use crate::sdc;
 use crate::Error;
 type Result<T, E = Error> = std::result::Result<T, E>;
 
-//pub use sys::topology_refiner::{UniformOptions, UniformOptionsBuilder};
+pub use sys::far::topology_refiner::{
+    BoundaryInterpolation, CreasingMethod, FaceVaryingLinearInterpolation,
+    Scheme, TriangleSubdivision,
+};
 
 use super::topology_level::TopologyLevel;
 
-/*
-pub fn uniform_options() -> UniformOptionsBuilder {
-    UniformOptionsBuilder::new()
-}*/
-
 #[derive(Copy, Clone, Debug)]
-pub struct UniformRefinementOptions(
-    sys::OpenSubdiv_v3_4_4_Far_TopologyRefiner_UniformOptions,
-);
-
-impl UniformRefinementOptions {
-    pub fn new(level: u32, order_vertices: bool, full_topology: bool) -> Self {
-        let mut options: sys::OpenSubdiv_v3_4_4_Far_TopologyRefiner_UniformOptions = unsafe{ std::mem::zeroed() };
-        options.set_refinementLevel(level.try_into().unwrap());
-        options.set_orderVerticesFromFacesFirst(order_vertices as _);
-        options.set_fullTopologyInLastLevel(full_topology as _);
-        Self(options)
-    }
-
-    pub fn refinement_level(&mut self, level: u32) -> &mut Self {
-        self.0.set_refinementLevel(level.try_into().unwrap());
-        self
-    }
-
-    pub fn order_vertices_from_faces_first(
-        &mut self,
-        order_vertices: bool,
-    ) -> &mut Self {
-        self.0.set_orderVerticesFromFacesFirst(order_vertices as _);
-        self
-    }
-
-    pub fn full_topology_in_last_level(
-        &mut self,
-        full_topology: bool,
-    ) -> &mut Self {
-        self.0.set_fullTopologyInLastLevel(full_topology as _);
-        self
-    }
-
-    pub fn finalize(self) -> Self {
-        self
-    }
-}
-
-impl Default for UniformRefinementOptions {
-    fn default() -> Self {
-        let mut options: sys::OpenSubdiv_v3_4_4_Far_TopologyRefiner_UniformOptions = unsafe{ std::mem::zeroed() };
-        options.set_refinementLevel(4);
-        options.set_orderVerticesFromFacesFirst(true as _);
-        options.set_fullTopologyInLastLevel(true as _);
-        Self(options)
-    }
-}
-
-#[repr(u32)]
-#[derive(TryFromPrimitive, Copy, Clone, Debug)]
-pub enum Scheme {
-    Bilinear = sys::OpenSubdiv_v3_4_4_Sdc_SchemeType_SCHEME_BILINEAR,
-    CatmullClark = sys::OpenSubdiv_v3_4_4_Sdc_SchemeType_SCHEME_CATMARK,
-    Loop = sys::OpenSubdiv_v3_4_4_Sdc_SchemeType_SCHEME_LOOP,
-}
-
-#[repr(u32)]
-#[derive(Copy, Clone, Debug)]
-pub enum BoundaryInterpolation {
-    None = sys::OpenSubdiv_v3_4_4_Sdc_Options_VtxBoundaryInterpolation_VTX_BOUNDARY_NONE,
-    EdgeOnly = sys::OpenSubdiv_v3_4_4_Sdc_Options_VtxBoundaryInterpolation_VTX_BOUNDARY_EDGE_ONLY,
-    EdgeAndCorner = sys::OpenSubdiv_v3_4_4_Sdc_Options_VtxBoundaryInterpolation_VTX_BOUNDARY_EDGE_AND_CORNER,
-}
-
-#[repr(u32)]
-#[derive(Copy, Clone, Debug)]
-pub enum FaceVaryingLinearInterpolation {
-    None = sys::OpenSubdiv_v3_4_4_Sdc_Options_FVarLinearInterpolation_FVAR_LINEAR_NONE,
-    CornersOnly = sys::OpenSubdiv_v3_4_4_Sdc_Options_FVarLinearInterpolation_FVAR_LINEAR_CORNERS_ONLY,
-    CornersPlusOne = sys::OpenSubdiv_v3_4_4_Sdc_Options_FVarLinearInterpolation_FVAR_LINEAR_CORNERS_PLUS1,
-    CornersPlusTwo = sys::OpenSubdiv_v3_4_4_Sdc_Options_FVarLinearInterpolation_FVAR_LINEAR_CORNERS_PLUS2,
-    Boundaries = sys::OpenSubdiv_v3_4_4_Sdc_Options_FVarLinearInterpolation_FVAR_LINEAR_BOUNDARIES,
-    All = sys::OpenSubdiv_v3_4_4_Sdc_Options_FVarLinearInterpolation_FVAR_LINEAR_ALL,
-}
-
-#[repr(u32)]
-#[derive(Copy, Clone, Debug)]
-pub enum CreasingMethod {
-    Uniform = sys::OpenSubdiv_v3_4_4_Sdc_Options_CreasingMethod_CREASE_UNIFORM,
-    Chaikin = sys::OpenSubdiv_v3_4_4_Sdc_Options_CreasingMethod_CREASE_CHAIKIN,
-}
-
-#[repr(u32)]
-#[derive(Copy, Clone, Debug)]
-pub enum TriangleSubdivision {
-    CatmullClark =
-        sys::OpenSubdiv_v3_4_4_Sdc_Options_TriangleSubdivision_TRI_SUB_CATMARK,
-    Smooth =
-        sys::OpenSubdiv_v3_4_4_Sdc_Options_TriangleSubdivision_TRI_SUB_SMOOTH,
-}
-
-#[derive(Copy, Clone, Debug)]
-pub struct Options(sys::OpenSubdiv_v3_4_4_Far_TopologyRefinerFactory_Options);
+pub struct Options(sys::far::topology_refiner::Options);
 
 impl Options {
     #[inline]
@@ -169,8 +73,74 @@ impl Options {
     }
 }
 
+/* FIXME
+impl Default for Options {
+    fn default() -> Self {
+        Self(
+            sys::far::topology_refiner::Options {
+                schemeType = Scheme::CatmullClark,
+                schemeOptions =
+            }
+        )
+    }
+}
+*/
+
+
+#[derive(Copy, Clone, Debug)]
+pub struct UniformRefinementOptions(
+    sys::far::topology_refiner::UniformRefinementOptions,
+);
+
+impl UniformRefinementOptions {
+    pub fn new(level: u32, order_vertices: bool, full_topology: bool) -> Self {
+        let mut options: sys::far::topology_refiner::UniformRefinementOptions =
+            unsafe { std::mem::zeroed() };
+        options.set_refinementLevel(level);
+        options.set_orderVerticesFromFacesFirst(order_vertices as _);
+        options.set_fullTopologyInLastLevel(full_topology as _);
+        Self(options)
+    }
+
+    pub fn refinement_level(&mut self, level: u32) -> &mut Self {
+        self.0.set_refinementLevel(level);
+        self
+    }
+
+    pub fn order_vertices_from_faces_first(
+        &mut self,
+        order_vertices: bool,
+    ) -> &mut Self {
+        self.0.set_orderVerticesFromFacesFirst(order_vertices as _);
+        self
+    }
+
+    pub fn full_topology_in_last_level(
+        &mut self,
+        full_topology: bool,
+    ) -> &mut Self {
+        self.0.set_fullTopologyInLastLevel(full_topology as _);
+        self
+    }
+
+    pub fn finalize(self) -> Self {
+        self
+    }
+}
+
+impl Default for UniformRefinementOptions {
+    fn default() -> Self {
+        let mut options: sys::far::topology_refiner::UniformRefinementOptions =
+            unsafe { std::mem::zeroed() };
+        options.set_refinementLevel(4);
+        options.set_orderVerticesFromFacesFirst(true as _);
+        options.set_fullTopologyInLastLevel(true as _);
+        Self(options)
+    }
+}
+
 pub struct TopologyRefiner(
-    pub(crate) *mut sys::OpenSubdiv_v3_4_4_Far_TopologyRefiner,
+    pub(crate) sys::topology_refiner::TopologyRefinerPtr,
 );
 
 impl TopologyRefiner {
@@ -196,9 +166,10 @@ impl TopologyRefiner {
     #[inline]
     pub fn options(&self) -> Options {
         unsafe {
-            let mut options: sys::OpenSubdiv_v3_4_4_Far_TopologyRefinerFactory_Options = std::mem::zeroed();
+            let mut options: sys::far::topology_refiner::Options =
+                std::mem::zeroed();
 
-            options.schemeType = (*self.0)._subdivType.try_into().unwrap();
+            options.schemeType = (*self.0)._subdivType;
             options.schemeOptions = (*self.0)._subdivOptions;
 
             Options(options)
@@ -213,7 +184,7 @@ impl TopologyRefiner {
 
     /// Returns the number of refinement levels.
     #[inline]
-    pub fn num_levels(&self) -> u32 {
+    pub fn len_levels(&self) -> u32 {
         unsafe { sys::far::TopologyRefiner_GetNumLevels(self.0) as _ }
     }
 
@@ -231,25 +202,25 @@ impl TopologyRefiner {
 
     /// Returns the total number of vertices in all levels.
     #[inline]
-    pub fn num_vertices_total(&self) -> u32 {
+    pub fn len_vertices_total(&self) -> u32 {
         unsafe { sys::far::TopologyRefiner_GetNumVerticesTotal(self.0) as _ }
     }
 
     /// Returns the total number of edges in all levels.
     #[inline]
-    pub fn num_edges_total(&self) -> u32 {
+    pub fn len_edges_total(&self) -> u32 {
         unsafe { sys::far::TopologyRefiner_GetNumEdgesTotal(self.0) as _ }
     }
 
     /// Returns the total number of faces in all levels.
     #[inline]
-    pub fn num_faces_total(&self) -> u32 {
+    pub fn len_faces_total(&self) -> u32 {
         unsafe { sys::far::TopologyRefiner_GetNumFacesTotal(self.0) as _ }
     }
 
     /// Returns the total number of face vertices in all levels.
     #[inline]
-    pub fn num_face_vertices_total(&self) -> u32 {
+    pub fn len_face_vertices_total(&self) -> u32 {
         unsafe {
             sys::far::TopologyRefiner_GetNumFaceVerticesTotal(self.0) as _
         }
@@ -261,7 +232,8 @@ impl TopologyRefiner {
         unsafe { (*self.0)._maxLevel() as _ }
     }
 
-    /// Returns a handle to access data specific to a particular level.
+    /// Returns a handle to access data specific to a particular refinement
+    /// level.
     #[inline]
     pub fn level(&self, level: u32) -> Option<TopologyLevel> {
         if level > self.max_level() {
@@ -284,12 +256,12 @@ impl TopologyRefiner {
         }
     }
 
-    /// Refine the topology uniformly
+    /// Refine the topology uniformly.
     ///
     /// This method applies uniform refinement to the level specified in the
-    /// given [`UniformOption`]s.
+    /// given [`UniformRefinementOptions`]s.
     ///
-    /// Note the impact of the [`UniformOption`] to generate full
+    /// Note the impact of the `UniformRefinementOptions` to generate full
     /// TopologyInLastLevel and be sure it is assigned to satisfy the needs
     /// of the resulting refinement.
     ///
@@ -302,6 +274,16 @@ impl TopologyRefiner {
     }
 
     /*
+    /// Refine the topology adaptively.
+    ///
+    /// This method applies uniform refinement to the level specified in the
+    /// given [`UniformOption`]s.
+    ///
+    /// Note the impact of the [`UniformOption`] to generate full
+    /// TopologyInLastLevel and be sure it is assigned to satisfy the needs
+    /// of the resulting refinement.
+    ///
+    /// * `options` - Options controlling uniform refinement.
     #[inline]
     pub fn refine_adaptive(&mut self, options: AdaptiveOptions) {
         unsafe {

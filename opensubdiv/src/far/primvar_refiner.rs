@@ -4,18 +4,16 @@ use std::convert::TryInto;
 use super::TopologyRefiner;
 
 pub trait PrimvarBufferSrc {
-    const NUM_ELEMENTS: i32;
+    const LEN_ELEMENTS: u32;
     fn as_f32(&self) -> &[f32];
 }
 
 pub trait PrimvarBufferDst {
-    const NUM_ELEMENTS: i32;
+    const LEN_ELEMENTS: u32;
     fn as_f32_mut(&mut self) -> &mut [f32];
 }
 
-pub struct PrimvarRefiner {
-    ptr: sys::far::PrimvarRefinerPtr,
-}
+pub struct PrimvarRefiner(sys::far::PrimvarRefinerPtr);
 
 impl PrimvarRefiner {
     pub fn new(tr: &TopologyRefiner) -> PrimvarRefiner {
@@ -24,12 +22,8 @@ impl PrimvarRefiner {
             if ptr.is_null() {
                 panic!("PrimvarRefiner_create() returned null");
             }
-            PrimvarRefiner { ptr }
+            PrimvarRefiner(ptr)
         }
-    }
-
-    pub fn destroy(&self) {
-        unsafe { sys::far::PrimvarRefiner_destroy(self.ptr) };
     }
 
     pub fn interpolate<B1: PrimvarBufferSrc, B2: PrimvarBufferDst>(
@@ -40,8 +34,8 @@ impl PrimvarRefiner {
     ) {
         unsafe {
             sys::far::PrimvarRefiner_Interpolate(
-                self.ptr,
-                B1::NUM_ELEMENTS,
+                self.0,
+                B1::LEN_ELEMENTS.try_into().unwrap(),
                 level.try_into().unwrap(),
                 src.as_f32().as_ptr(),
                 dst.as_f32_mut().as_mut_ptr(),
@@ -72,4 +66,10 @@ impl PrimvarRefiner {
         dst: *mut f32,
     );
     */
+}
+
+impl Drop for PrimvarRefiner {
+    fn drop(&mut self) {
+        unsafe { sys::far::PrimvarRefiner_destroy(self.0) };
+    }
 }

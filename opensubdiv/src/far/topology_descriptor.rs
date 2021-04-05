@@ -26,24 +26,24 @@ impl<'a> TopologyDescriptor<'a> {
     /// [`into_refiner()`](TopologyDescriptor::into_refiner()).
     ///
     /// ## Parameters
-    /// * `num_vertices` - The number of vertices in the mesh.
-    /// * `num_verts_per_face` - A slice containing the number of vertices for
+    /// * `len_vertices` - The number of vertices in the mesh.
+    /// * `len_verts_per_face` - A slice containing the number of vertices for
     ///   each face in the mesh. The length of this is the number of faces in
     ///   the mesh.
     /// * `vert_indices_per_face` - A flat list of the vertex indices for each
     ///   face in the mesh.
     #[inline]
     pub fn new(
-        num_vertices: u32,
-        num_verts_per_face: &'a [u32],
+        len_vertices: u32,
+        len_verts_per_face: &'a [u32],
         vert_indices_per_face: &'a [u32],
     ) -> TopologyDescriptor<'a> {
         let mut descriptor =
             unsafe { sys::OpenSubdiv_v3_4_4_Far_TopologyDescriptor::new() };
 
-        descriptor.numVertices = num_vertices.try_into().unwrap();
-        descriptor.numFaces = num_verts_per_face.len().try_into().unwrap();
-        descriptor.numVertsPerFace = num_verts_per_face.as_ptr() as _;
+        descriptor.numVertices = len_vertices.try_into().unwrap();
+        descriptor.numFaces = len_verts_per_face.len().try_into().unwrap();
+        descriptor.numVertsPerFace = len_verts_per_face.as_ptr() as _;
         descriptor.vertIndicesPerFace = vert_indices_per_face.as_ptr() as _;
 
         TopologyDescriptor {
