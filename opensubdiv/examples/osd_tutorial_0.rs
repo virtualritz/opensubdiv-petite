@@ -15,15 +15,15 @@ fn main() {
     ];
 
     // instantiate a TopologyRefiner from a descriptor
-    let mut refiner = far::TopologyDescriptor::new(
-        num_vertices,
-        &verts_per_face,
-        &vert_indices,
-    )
-    .into_refiner(
+    let mut refiner = far::TopologyRefiner::new(
+        far::TopologyDescriptor::new(
+            num_vertices,
+            &verts_per_face,
+            &vert_indices,
+        ),
         far::topology_refiner::Options::new()
-            .with_scheme(far::Scheme::CatmullClark)
-            .with_boundary_interpolation(far::BoundaryInterpolation::EdgeOnly)
+            .use_scheme(far::Scheme::CatmullClark)
+            .use_boundary_interpolation(far::BoundaryInterpolation::EdgeOnly)
             .finalize(),
     )
     .expect("Could not create TopologyRefiner");

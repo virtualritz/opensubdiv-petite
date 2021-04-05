@@ -59,17 +59,18 @@ fn main() {
     let crease_weights = [10., 10., 10., 10.];
 
     // populate a descriptor with our raw data
-    let mut refiner = far::TopologyDescriptor::new(
-        num_vertices as _,
-        &verts_per_face,
-        &vert_indices,
-    )
-    .creases(&creases, &crease_weights)
-    .into_refiner(
+    let mut refiner = far::TopologyRefiner::new(
+        far::TopologyDescriptor::new(
+            num_vertices as _,
+            &verts_per_face,
+            &vert_indices,
+        )
+        .creases(&creases, &crease_weights)
+        .clone(),
         far::topology_refiner::Options::new()
-            .with_scheme(far::Scheme::CatmullClark)
-            .with_boundary_interpolation(far::BoundaryInterpolation::EdgeOnly)
-            .finalize(),
+            .scheme(far::Scheme::CatmullClark)
+            .boundary_interpolation(far::BoundaryInterpolation::EdgeOnly)
+            .clone(),
     )
     .expect("Could not create TopologyRefiner");
 
@@ -77,7 +78,7 @@ fn main() {
     // uniformly refine up to 'max level' of 2
     refiner.refine_uniform(
         far::topology_refiner::UniformRefinementOptions::default()
-            .refinement_level(max_level)
+            .use_refinement_level(max_level)
             .finalize(),
     );
 

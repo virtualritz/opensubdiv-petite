@@ -29,9 +29,9 @@ pub fn eval_stencils(
     unsafe {
         if sys::osd::CudaEvaluator_EvalStencils(
             src_buffer.0,
-            src_desc,
+            src_desc.0,
             dst_buffer.0,
-            dst_desc,
+            dst_desc.0,
             stencil_table.ptr,
         ) {
             Ok(())

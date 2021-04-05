@@ -3,3 +3,4 @@ members = [
     'opensubdiv-sys',
     'opensubdiv'
 ]
+resolver = "2"

@@ -12,7 +12,7 @@ pub enum InterpolationMode {
 #[derive(Clone, Copy, Debug)]
 pub struct Options {
     interpolation_mode: u32,
-    generate_offsets:u32,
+    generate_offsets: u32,
     generate_control_vertices: u32,
     generate_intermediate_levels: u32,
     factorize_intermediate_levels: u32,
@@ -102,7 +102,10 @@ extern "C" {
     /// Returns the number of control vertices indexed in the table
     pub fn StencilTable_GetNumControlVertices(st: StencilTablePtr) -> u32;
     /// Returns a Stencil at index i in the table
-    pub fn StencilTable_GetStencil(st: StencilTablePtr, index: Index) -> Stencil;
+    pub fn StencilTable_GetStencil(
+        st: StencilTablePtr,
+        index: Index,
+    ) -> Stencil;
     /// Returns the number of control vertices of each stencil in the table
     pub fn StencilTable_GetSizes(st: StencilTablePtr) -> IntVectorRef;
     /// Returns the offset to a given stencil (factory may leave empty)

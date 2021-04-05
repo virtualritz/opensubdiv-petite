@@ -1,5 +1,5 @@
-use num_enum::TryFromPrimitive;
 use super::topology_level::TopologyLevelPtr;
+use num_enum::TryFromPrimitive;
 
 #[repr(u32)]
 #[derive(TryFromPrimitive, Copy, Clone, Debug)]
@@ -31,21 +31,24 @@ pub enum FaceVaryingLinearInterpolation {
 #[repr(u32)]
 #[derive(Copy, Clone, Debug)]
 pub enum CreasingMethod {
-    Uniform = crate::OpenSubdiv_v3_4_4_Sdc_Options_CreasingMethod_CREASE_UNIFORM,
-    Chaikin = crate::OpenSubdiv_v3_4_4_Sdc_Options_CreasingMethod_CREASE_CHAIKIN,
+    Uniform =
+        crate::OpenSubdiv_v3_4_4_Sdc_Options_CreasingMethod_CREASE_UNIFORM,
+    Chaikin =
+        crate::OpenSubdiv_v3_4_4_Sdc_Options_CreasingMethod_CREASE_CHAIKIN,
 }
 
 #[repr(u32)]
 #[derive(Copy, Clone, Debug)]
 pub enum TriangleSubdivision {
-    CatmullClark =
-        crate::OpenSubdiv_v3_4_4_Sdc_Options_TriangleSubdivision_TRI_SUB_CATMARK,
+    CatmullClark = crate::OpenSubdiv_v3_4_4_Sdc_Options_TriangleSubdivision_TRI_SUB_CATMARK,
     Smooth =
         crate::OpenSubdiv_v3_4_4_Sdc_Options_TriangleSubdivision_TRI_SUB_SMOOTH,
 }
 
-pub type UniformRefinementOptions = crate::OpenSubdiv_v3_4_4_Far_TopologyRefiner_UniformOptions;
-pub type AsaptiveRefinementOptions = crate::OpenSubdiv_v3_4_4_Far_TopologyRefiner_AdaptiveOptions;
+pub type UniformRefinementOptions =
+    crate::OpenSubdiv_v3_4_4_Far_TopologyRefiner_UniformOptions;
+pub type AdaptiveRefinementOptions =
+    crate::OpenSubdiv_v3_4_4_Far_TopologyRefiner_AdaptiveOptions;
 pub type Options = crate::OpenSubdiv_v3_4_4_Far_TopologyRefinerFactory_Options;
 pub type TopologyRefiner = crate::OpenSubdiv_v3_4_4_Far_TopologyRefiner;
 pub type TopologyRefinerPtr = *mut TopologyRefiner;

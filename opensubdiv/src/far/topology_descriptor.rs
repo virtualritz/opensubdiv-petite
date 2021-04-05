@@ -1,11 +1,5 @@
-use super::topology_refiner::TopologyRefiner;
 use opensubdiv_sys as sys;
 use std::{convert::TryInto, marker::PhantomData};
-
-use crate::Error;
-type Result<T, E = Error> = std::result::Result<T, E>;
-
-use crate::far::topology_refiner::Options;
 
 /// A container holding references to raw topology data.
 ///
@@ -93,12 +87,5 @@ impl<'a> TopologyDescriptor<'a> {
     pub fn left_handed(&mut self, left_handed: bool) -> &mut Self {
         self.descriptor.isLeftHanded = left_handed;
         self
-    }
-
-    /// Converts a `TopologyDescriptor` into a [`TopologyRefiner`].
-    ///
-    /// * `options` - Options controlling the creation of the `TopologyRefiner`.
-    pub fn into_refiner(self, options: Options) -> Result<TopologyRefiner> {
-        TopologyRefiner::new(self, options)
     }
 }

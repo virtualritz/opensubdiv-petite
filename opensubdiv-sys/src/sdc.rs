@@ -1,3 +1,7 @@
+
+pub type Options = crate::OpenSubdiv_v3_4_4_Sdc_Options;
+
+/*
 #[repr(u32)]
 #[derive(Copy, Clone, Debug)]
 pub enum CreaseRule {
@@ -7,3 +11,4 @@ pub enum CreaseRule {
     Create = crate::OpenSubdiv_v3_4_4_Sdc_Crease_Rule_RULE_CREASE,
     Corner = crate::OpenSubdiv_v3_4_4_Sdc_Crease_Rule_RULE_CORNER,
 }
+*/
