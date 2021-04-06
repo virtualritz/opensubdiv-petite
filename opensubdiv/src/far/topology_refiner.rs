@@ -127,10 +127,6 @@ impl TopologyRefiner {
     /// This method applies uniform refinement to the level specified in the
     /// given [`UniformRefinementOptions`]s.
     ///
-    /// Note the impact of the `UniformRefinementOptions` to generate full
-    /// TopologyInLastLevel and be sure it is assigned to satisfy the needs
-    /// of the resulting refinement.
-    ///
     /// * `options` - Options controlling uniform refinement.
     #[inline]
     pub fn refine_uniform(&mut self, options: UniformRefinementOptions) {
@@ -139,23 +135,27 @@ impl TopologyRefiner {
         }
     }
 
-    /*
     /// Refine the topology adaptively.
     ///
     /// This method applies uniform refinement to the level specified in the
-    /// given [`UniformOption`]s.
-    ///
-    /// Note the impact of the [`UniformOption`] to generate full
-    /// TopologyInLastLevel and be sure it is assigned to satisfy the needs
-    /// of the resulting refinement.
+    /// given [`AdaptiveRefinementOptions`]s.
     ///
     /// * `options` - Options controlling uniform refinement.
     #[inline]
-    pub fn refine_adaptive(&mut self, options: AdaptiveOptions) {
+    pub fn refine_adaptive(
+        &mut self,
+        options: AdaptiveRefinementOptions,
+        selected_faces: &[u32],
+    ) {
+        let tmp = sys::topology_refiner::ConstIndexArray {
+            _begin: selected_faces.as_ptr() as _,
+            _size: selected_faces.len().try_into().unwrap(),
+            _phantom_0: std::marker::PhantomData,
+        };
         unsafe {
-            (*self.0).RefineAdaptive(self.0, options);
+            (*self.0).RefineAdaptive(options.0, tmp);
         }
-    }*/
+    }
 
     #[inline]
     pub fn unrefine(&mut self) {
@@ -401,14 +401,14 @@ impl Default for AdaptiveRefinementOptions {
             unsafe { std::mem::zeroed() };
 
         options._bitfield_1 =
-        sys::far::topology_refiner::AdaptiveRefinementOptions::new_bitfield_1(
+            sys::far::topology_refiner::AdaptiveRefinementOptions::new_bitfield_1(
                 4,
-             15,
-             false as _,
-            false as _,
-             false as _,
-             false as _,
-        );
+                15,
+                false as _,
+                false as _,
+                false as _,
+                false as _,
+            );
 
         Self(options)
     }
