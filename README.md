@@ -1,4 +1,6 @@
 # opensubdiv
+![](osd-logo.png)
+
 A Rust wrapper for *Pixar*’s
 [*OpenSubdiv* library](http://graphics.pixar.com/opensubdiv/docs/intro.html).
 
@@ -8,13 +10,17 @@ The repositoy comes with minimal dependencies. I.e. *OpenSubdiv* and
 
 Either clone the repository with `--recursive` or, if you already cloned it and
 forgot, simply do a
+
 ```
 git submodule update --init
 ```
+
 to pull them in.
+
 ## Features
+
 There are several features to gate the resp.
-[buildflags](https://github.com/PixarAnimationStudios/OpenSubdiv#useful-cmake-options-and-environment-variable)
+[build flags](https://github.com/PixarAnimationStudios/OpenSubdiv#useful-cmake-options-and-environment-variables)
 when *OpenSubdiv* is built.
 
 Almost all of them are not yet implemented.
@@ -32,10 +38,12 @@ Almost all of them are not yet implemented.
      macOS.*
 - [ ] `opencl` – TBD
 - [ ] `ptex` – TBD
-### OpenMP Support on macOS
-The library will be built with [OpenMP](https://www.openmp.org/) support on
-*macOS* only if you have a
-non-*Apple* *Clang* installed.
+
+  ### OpenMP Support on macOS
+
+  The library will be built with [OpenMP](https://www.openmp.org/) support on
+  *macOS* only if you have a
+  non-*Apple* *Clang* installed.
 
 The `build.rs` looks in `/usr/local/opt/llvm/bin` for the `clang` and `clang++`
 executables. This is the default location [Homebrew](https://brew.sh/) installs
@@ -43,6 +51,7 @@ executables. This is the default location [Homebrew](https://brew.sh/) installs
 
 I.e. to build with *OpenMP* support on *macOS* make sure you install `LLVM` via
 *Homebrew* before building:
+
 ```
 brew install llvm
 ```
