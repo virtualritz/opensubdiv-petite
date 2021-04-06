@@ -19,4 +19,4 @@ num_enum = "0.5.1"
 
 [build-dependencies]
 cmake = "0.1.45"
-bindgen = "0.58.0"
+bindgen = "0.58.1"

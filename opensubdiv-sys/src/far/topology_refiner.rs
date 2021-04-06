@@ -50,6 +50,7 @@ pub type UniformRefinementOptions =
 pub type AdaptiveRefinementOptions =
     crate::OpenSubdiv_v3_4_4_Far_TopologyRefiner_AdaptiveOptions;
 pub type Options = crate::OpenSubdiv_v3_4_4_Far_TopologyRefinerFactory_Options;
+pub type ConstIndexArray = crate::OpenSubdiv_v3_4_4_Far_ConstIndexArray;
 pub type TopologyRefiner = crate::OpenSubdiv_v3_4_4_Far_TopologyRefiner;
 pub type TopologyRefinerPtr = *mut TopologyRefiner;
 
