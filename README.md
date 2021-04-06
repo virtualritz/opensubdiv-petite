@@ -38,11 +38,11 @@ Almost all of them are not yet implemented.
 - [ ] `opencl` – TBD
 - [ ] `ptex` – TBD
 
-  ### OpenMP Support on macOS
+### OpenMP Support on macOS
 
-  The library will be built with [OpenMP](https://www.openmp.org/) support on
-  *macOS* only if you have a
-  non-*Apple* *Clang* installed.
+The library will be built with [OpenMP](https://www.openmp.org/) support on
+*macOS* only if you have a
+non-*Apple* *Clang* installed.
 
 The `build.rs` looks in `/usr/local/opt/llvm/bin` for the `clang` and `clang++`
 executables. This is the default location [Homebrew](https://brew.sh/) installs
