@@ -1,5 +1,4 @@
-# opensubdiv
-![](osd-logo.png)
+# opensubdiv <img src="osd-logo.png" alt="OpenSubdiv Logo" width="15%" align="right" align="top">
 
 A Rust wrapper for *Pixar*’s
 [*OpenSubdiv* library](http://graphics.pixar.com/opensubdiv/docs/intro.html).
