@@ -1,10 +1,12 @@
 use opensubdiv::far;
 
 fn main() {
+    // Geomtry for a cube control polyhedron.
     let vertices = [
         -0.5, -0.5, 0.5, 0.5, -0.5, 0.5, -0.5, 0.5, 0.5, 0.5, 0.5, 0.5, -0.5,
         0.5, -0.5, 0.5, 0.5, -0.5, -0.5, -0.5, -0.5, 0.5, -0.5, -0.5,
     ];
+
     let num_vertices = vertices.len() / 3;
 
     let verts_per_face = [4, 4, 4, 4, 4, 4];
@@ -17,8 +19,9 @@ fn main() {
 
     let crease_weights = [10., 10., 10., 10.];
 
-    // populate a descriptor with our raw data
+    // Create a refiner from a descriptor.
     let mut refiner = far::TopologyRefiner::new(
+        // Populate the descriptor with our raw data.
         far::TopologyDescriptor::new(
             num_vertices as _,
             &verts_per_face,
@@ -26,24 +29,26 @@ fn main() {
         )
         .creases(&creases, &crease_weights)
         .clone(),
-        far::topology_refiner::Options::new()
+        far::topology_refiner::Options::default()
             .scheme(far::Scheme::CatmullClark)
             .boundary_interpolation(far::BoundaryInterpolation::EdgeOnly)
             .clone(),
     )
     .expect("Could not create TopologyRefiner");
 
+    // Uniformly refine up to 'max level' of 2.
     let max_level = 2;
-    // uniformly refine up to 'max level' of 2
+
     refiner.refine_uniform(
         far::topology_refiner::UniformRefinementOptions::default()
             .refinement_level(max_level)
             .clone(),
     );
 
-    // interpolate vertex primvar data
+    // Interpolate vertex primvar data.
     let primvar_refiner = far::PrimvarRefiner::new(&refiner);
 
+    // Create a vector holding all the subdivison levels.
     let mut refined_verts = Vec::with_capacity(max_level as _);
 
     refined_verts.push(vertices.to_vec());
@@ -53,29 +58,26 @@ fn main() {
             primvar_refiner
                 .interpolate(
                     level,
-                    3, // Each element is a 3-tuple
+                    3, // Each element is a 3-tuple.
                     refined_verts[(level - 1) as usize].as_slice(),
                 )
                 .unwrap(),
         );
     }
 
-    // output an OBJ of the highest level
+    // Output an OBJ of the highest level.
     let last_level = refiner.level(max_level).unwrap();
 
     println!("o subdivision_cube");
 
-    // print vertex positions
+    // Print vertex positions.
     for v in refined_verts.last().unwrap().chunks(3) {
         println!("v {} {} {}", v[0], v[1], v[2]);
     }
 
-    // for f in 0..nfaces {
-    //     let face_vert_indices =
-    // last_level.face_vertices(Index(f)).unwrap();
     for face_vert_indices in last_level.face_vertices_iter() {
-        // all refined cat-clark faces should be quads
-        assert!(face_vert_indices.len() == 4);
+        // All refined cat-clark faces should be quads.
+        assert!(4 == face_vert_indices.len());
         print!("f ");
         for fv in face_vert_indices {
             print!("{} ", fv + 1);
