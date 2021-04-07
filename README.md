@@ -16,6 +16,13 @@ git submodule update --init
 
 to pull them in.
 
+## Documentation
+
+It is suggested you only build (and look at) the documentation of the high level wrapper:
+```
+cargo doc -p opensubdiv --no-deps --open
+```
+
 ## Features
 
 There are several features to gate the resp.
