@@ -20,29 +20,30 @@ fn main() {
             &verts_per_face,
             &vert_indices,
         ),
-        far::topology_refiner::Options::new()
-            .scheme(far::Scheme::CatmullClark)
-            .boundary_interpolation(far::BoundaryInterpolation::EdgeOnly)
-            .clone(),
+        far::topology_refiner::Options {
+            scheme: far::Scheme::CatmullClark,
+            boundary_interpolation: far::BoundaryInterpolation::EdgeOnly,
+            ..Default::default()
+        },
     )
     .expect("Could not create TopologyRefiner");
 
-    refiner.refine_uniform(
-        far::topology_refiner::UniformRefinementOptions::default()
-            .refinement_level(2)
-            .clone(),
-    );
+    refiner.refine_uniform(far::topology_refiner::UniformRefinementOptions {
+        refinement_level: 2,
+        ..Default::default()
+    });
 
     let stencil_table = far::stencil_table::StencilTable::new(
         &refiner,
-        far::stencil_table::Options::default()
-            .generate_offsets(true)
-            .generate_intermediate_levels(false)
-            .clone(),
+        far::stencil_table::Options {
+            generate_offsets: true,
+            generate_intermediate_levels: false,
+            ..Default::default()
+        },
     );
 
     let n_coarse_verts = refiner.level(0).unwrap().vertices_len();
-    let n_refined_verts = stencil_table.stencils_len();
+    let n_refined_verts = stencil_table.len();
 
     // set up a buffer for primvar data
     let mut src_buffer = osd::CpuVertexBuffer::new(3, n_coarse_verts);

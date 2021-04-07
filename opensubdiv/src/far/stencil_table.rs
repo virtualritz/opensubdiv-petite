@@ -14,7 +14,6 @@ use opensubdiv_sys as sys;
 use crate::Index;
 
 use crate::far::TopologyRefiner;
-pub use sys::far::stencil_table::{InterpolationMode, Options};
 
 /// Gives read access to a single stencil in a [`StencilTable`].
 pub struct Stencil<'a> {
@@ -47,8 +46,25 @@ impl Drop for StencilTable {
 impl StencilTable {
     /// Create a new stencil table.
     pub fn new(refiner: &TopologyRefiner, options: Options) -> StencilTable {
-        let ptr =
-            unsafe { sys::far::StencilTableFactory_Create(refiner.0, options) };
+        let ptr = unsafe {
+            sys::far::StencilTableFactory_Create(
+                refiner.0,
+                sys::far::stencil_table::Options {
+                    interpolation_mode: options.interpolation_mode as _,
+                    generate_offsets: options.generate_offsets as _,
+                    generate_control_vertices: options.generate_control_vertices
+                        as _,
+                    generate_intermediate_levels: options
+                        .generate_intermediate_levels
+                        as _,
+                    factorize_intermediate_levels: options
+                        .factorize_intermediate_levels
+                        as _,
+                    max_level: options.max_level as _,
+                    face_varying_channel: options.face_varying_channel as _,
+                },
+            )
+        };
 
         if ptr.is_null() {
             panic!("StencilTableFactory_Create() returned null");
@@ -124,6 +140,41 @@ impl StencilTable {
         unsafe {
             let vr = sys::far::StencilTable_GetWeights(self.0);
             std::slice::from_raw_parts(vr.data(), vr.size())
+        }
+    }
+}
+
+//
+#[repr(u32)]
+#[derive(Clone, Copy, Debug)]
+pub enum InterpolationMode {
+    Vertex = 0,
+    Varying,
+    FaceVarying,
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Debug)]
+pub struct Options {
+    pub interpolation_mode: InterpolationMode,
+    pub generate_offsets: bool,
+    pub generate_control_vertices: bool,
+    pub generate_intermediate_levels: bool,
+    pub factorize_intermediate_levels: bool,
+    pub max_level: u32,
+    pub face_varying_channel: u32,
+}
+
+impl Default for Options {
+    fn default() -> Self {
+        Self {
+            interpolation_mode: InterpolationMode::Vertex as _,
+            generate_offsets: false as _,
+            generate_control_vertices: false as _,
+            generate_intermediate_levels: true as _,
+            factorize_intermediate_levels: true as _,
+            max_level: 10,
+            face_varying_channel: 0,
         }
     }
 }

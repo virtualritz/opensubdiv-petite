@@ -29,21 +29,25 @@ fn main() {
         )
         .creases(&creases, &crease_weights)
         .clone(),
-        far::topology_refiner::Options::default()
-            .scheme(far::Scheme::CatmullClark)
-            .boundary_interpolation(far::BoundaryInterpolation::EdgeOnly)
-            .clone(),
+        far::topology_refiner::Options {
+            scheme: far::Scheme::CatmullClark,
+            boundary_interpolation: far::BoundaryInterpolation::EdgeOnly,
+            ..Default::default()
+        },
     )
     .expect("Could not create TopologyRefiner");
+
+    println!("Boo!");
 
     // Uniformly refine up to 'max level' of 2.
     let max_level = 2;
 
-    refiner.refine_uniform(
-        far::topology_refiner::UniformRefinementOptions::default()
-            .refinement_level(max_level)
-            .clone(),
-    );
+    refiner.refine_uniform(far::topology_refiner::UniformRefinementOptions {
+        refinement_level: max_level,
+        ..Default::default()
+    });
+
+    println!("Boo1!");
 
     // Interpolate vertex primvar data.
     let primvar_refiner = far::PrimvarRefiner::new(&refiner);
@@ -54,6 +58,7 @@ fn main() {
     refined_verts.push(vertices.to_vec());
 
     for level in 1..=max_level {
+        println!("{}", level);
         refined_verts.push(
             primvar_refiner
                 .interpolate(

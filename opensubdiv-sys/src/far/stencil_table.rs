@@ -1,85 +1,16 @@
 use crate::vtr::types::*;
 
-#[repr(u32)]
-#[derive(Clone, Copy, Debug)]
-pub enum InterpolationMode {
-    Vertex = 0, // FIXME: bindgen curre
-    Varying,
-    FaceVarying,
-}
-
+// FIXME: figure out why bindgen doesn't generate this struct
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
 pub struct Options {
-    interpolation_mode: u32,
-    generate_offsets: u32,
-    generate_control_vertices: u32,
-    generate_intermediate_levels: u32,
-    factorize_intermediate_levels: u32,
-    max_level: u32,
-    face_varying_channel: u32,
-}
-
-impl Default for Options {
-    fn default() -> Self {
-        Self {
-            interpolation_mode: InterpolationMode::Vertex as _,
-            generate_offsets: false as _,
-            generate_control_vertices: false as _,
-            generate_intermediate_levels: true as _,
-            factorize_intermediate_levels: true as _,
-            max_level: 10,
-            face_varying_channel: 0,
-        }
-    }
-}
-
-impl Options {
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    pub fn interpolation_mode(
-        &mut self,
-        interpolation_mode: InterpolationMode,
-    ) -> &mut Self {
-        self.interpolation_mode = interpolation_mode as _;
-        self
-    }
-
-    pub fn generate_offsets(&mut self, generate_offsets: bool) -> &mut Self {
-        self.generate_offsets = generate_offsets as _;
-        self
-    }
-
-    pub fn generate_control_vertices(
-        &mut self,
-        generate_control_vertices: bool,
-    ) -> &mut Self {
-        self.generate_control_vertices = generate_control_vertices as _;
-        self
-    }
-
-    pub fn generate_intermediate_levels(
-        &mut self,
-        generate_intermediate_levels: bool,
-    ) -> &mut Self {
-        self.generate_intermediate_levels = generate_intermediate_levels as _;
-        self
-    }
-
-    pub fn factorize_intermediate_levels(
-        &mut self,
-        factorize_intermediate_levels: bool,
-    ) -> &mut Self {
-        self.factorize_intermediate_levels = factorize_intermediate_levels as _;
-        self
-    }
-
-    pub fn max_level(&mut self, max_level: u32) -> &mut Self {
-        self.max_level = max_level;
-        self
-    }
+    pub interpolation_mode: u32,
+    pub generate_offsets: u32,
+    pub generate_control_vertices: u32,
+    pub generate_intermediate_levels: u32,
+    pub factorize_intermediate_levels: u32,
+    pub max_level: u32,
+    pub face_varying_channel: u32,
 }
 
 pub type Stencil = crate::OpenSubdiv_v3_4_4_Far_StencilReal<f32>;

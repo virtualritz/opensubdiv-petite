@@ -13,7 +13,7 @@ pub enum Scheme {
 }
 
 #[repr(u32)]
-#[derive(Copy, Clone, Debug)]
+#[derive(TryFromPrimitive, Copy, Clone, Debug)]
 pub enum BoundaryInterpolation {
     /// No boundary edge interpolation is applied by default.  Boundary faces
     /// are tagged as holes so that the boundary vertices continue to support
@@ -33,7 +33,7 @@ pub enum BoundaryInterpolation {
 }
 
 #[repr(u32)]
-#[derive(Copy, Clone, Debug)]
+#[derive(TryFromPrimitive, Copy, Clone, Debug)]
 pub enum FaceVaryingLinearInterpolation {
     /// Smooth everywhere the mesh is smooth.
     None = crate::OpenSubdiv_v3_4_4_Sdc_Options_FVarLinearInterpolation_FVAR_LINEAR_NONE,
@@ -50,7 +50,7 @@ pub enum FaceVaryingLinearInterpolation {
 }
 
 #[repr(u32)]
-#[derive(Copy, Clone, Debug)]
+#[derive(TryFromPrimitive, Copy, Clone, Debug)]
 pub enum CreasingMethod {
     /// Apply regular, *Catmull-Clark* semi-sharp crease rules.
     ///
@@ -70,7 +70,7 @@ pub enum CreasingMethod {
 }
 
 #[repr(u32)]
-#[derive(Copy, Clone, Debug)]
+#[derive(TryFromPrimitive, Copy, Clone, Debug)]
 pub enum TriangleSubdivision {
     /// Default *Catmull-Clark* scheme weights at triangles.
     CatmullClark = crate::OpenSubdiv_v3_4_4_Sdc_Options_TriangleSubdivision_TRI_SUB_CATMARK,
