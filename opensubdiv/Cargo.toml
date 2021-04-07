@@ -3,6 +3,15 @@ name = "opensubdiv"
 version = "0.1.0"
 authors = ["Anders Langlands <anderslanglands@gmail.com>", "Moritz Moeller <virtualritz@protonmail.com>"]
 edition = "2018"
+keywords = ["graphics", "rendering", "3d", "subdivision-surface", "polygon-mesh"]
+categories = ["graphics", "rendering::graphics-api", "api-bindings"]
+license = "Apache-2.0"
+description = "Wrapper around Pixar’s OpenSubdiv"
+exclude = [".github/**/*", "crates/**/*"]
+readme = "README.md"
+homepage = "https://graphics.pixar.com/opensubdiv/"
+documentation = "https://docs.rs/opensubdiv/"
+repository = "https://github.com/virtualritz/opensubdiv/"
 
 [features]
 clew = ["opensubdiv-sys/clew"]

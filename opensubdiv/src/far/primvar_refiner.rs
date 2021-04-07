@@ -11,7 +11,7 @@
 //! * [`interpolate()`](PrimvarRefiner::interpolate()) – Interpolate using
 //!   vertex weights.
 //! * [`interpolate_varying()`](PrimvarRefiner::interpolate_varying()) –
-//!   Interpolate using linear weights
+//!   Interpolate using linear weights.
 //! * [`interpolate_face_varying()`](PrimvarRefiner::interpolate_face_varying())
 //!   – Interpolate using face-varying weights.
 //! * [`interpolate_face_uniform()`](PrimvarRefiner::interpolate_face_uniform())
@@ -20,9 +20,9 @@
 //! Additional methods allow primvar data to be interpolated to the final
 //! limit surface including the calculation of first derivative tangents.
 //!
-//! * `limit()` – Interpolate to the limit surface using vertex weights
+//! * `limit()` – Interpolate to the limit surface using vertex weights.
 //! * `limit_derive()` – Interpolate including first derivatives to the limit
-//!   surface using vertex weights
+//!   surface using vertex weights.
 //! * `limit_face_varying()` – Interpolate to the limit surface using
 //!   face-varying weights.
 //!

@@ -1,7 +1,7 @@
 //! Describes elements in interleaved data buffers.
 //!
 //! Example:
-//! ```
+//! ```text
 //!      n
 //! -----+----------------------------------------+-------------------------
 //!      |               vertex  0                |
@@ -68,13 +68,10 @@ impl BufferDescriptor {
 impl Default for BufferDescriptor {
     /// Create an empty buffer desciptior.
     fn default() -> Self {
-        Self(
-            sys::osd::BufferDescriptor {
-
+        Self(sys::osd::BufferDescriptor {
             offset: 0,
             length: 0,
             stride: 0,
-        }
-    )
+        })
     }
 }
