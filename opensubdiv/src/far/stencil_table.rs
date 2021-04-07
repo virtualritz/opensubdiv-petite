@@ -1,3 +1,14 @@
+//! Table of subdivision stencils.
+//!
+//! Stencils are the most direct method of evaluation of locations on the limit
+//! of a surface. Every point of a limit surface can be computed by linearly
+//! blending a collection of coarse control vertices.
+//!
+//! A stencil assigns a series of control vertex indices with a blending weight
+//1 that corresponds to a unique parametric location of the limit surface. When
+//! the control vertices move in space, the limit location can be very
+//! efficiently recomputed simply by applying the blending weights to the
+//! series of coarse control vertices.
 use opensubdiv_sys as sys;
 
 use crate::Index;
@@ -12,26 +23,18 @@ pub struct Stencil<'a> {
 }
 
 impl<'a> Stencil<'a> {
+    /// Returns the indices of the control vertices.
     pub fn indices(&self) -> &'a [Index] {
         self.indices
     }
 
+    /// Returns the stencil interpolation weights.
     pub fn weights(&self) -> &'a [f32] {
         self.weights
     }
 }
 
-/// Table of subdivision stencils.
-///
-/// Stencils are the most direct method of evaluation of locations on the limit
-/// of a surface. Every point of a limit surface can be computed by linearly
-/// blending a collection of coarse control vertices.
-///
-/// A stencil assigns a series of control vertex indices with a blending weight
-/// that corresponds to a unique parametric location of the limit surface. When
-/// the control vertices move in space, the limit location can be very
-/// efficiently recomputed simply by applying the blending weights to the
-/// series of coarse control vertices.
+/// Container for stencil data.
 pub struct StencilTable(pub(crate) sys::far::StencilTablePtr);
 
 impl Drop for StencilTable {
@@ -42,6 +45,7 @@ impl Drop for StencilTable {
 }
 
 impl StencilTable {
+    /// Create a new stencil table.
     pub fn new(refiner: &TopologyRefiner, options: Options) -> StencilTable {
         let ptr =
             unsafe { sys::far::StencilTableFactory_Create(refiner.0, options) };
@@ -55,7 +59,7 @@ impl StencilTable {
 
     /// Returns the number of stencils in the table.
     #[inline]
-    pub fn stencils_len(&self) -> u32 {
+    pub fn len(&self) -> u32 {
         unsafe { sys::far::StencilTable_GetNumStencils(self.0) as _ }
     }
 

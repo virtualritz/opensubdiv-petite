@@ -1,4 +1,7 @@
-#![doc(html_logo_url = "https://raw.githubusercontent.com/virtualritz/opensubdiv/master/osd-logo.png")]
+#![warn(missing_docs)]
+#![doc(
+    html_logo_url = "https://raw.githubusercontent.com/virtualritz/opensubdiv/master/osd-logo.png"
+)]
 //! This is a wrapper around parts of [*Pixar’s
 //! OpenSubdiv*](https://graphics.pixar.com/opensubdiv/).
 //!

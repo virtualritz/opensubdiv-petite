@@ -1,21 +1,20 @@
+//! An interface for accessing data in a specific level of a refined topology
+//! hierarchy.
 use super::topology_refiner::TopologyRefiner;
 use opensubdiv_sys as sys;
 use std::convert::TryInto;
 
 use sys::vtr::types::{Index, LocalIndex};
 
-const INVALID_INDEX: u32 = u32::MAX; // aka: -1i32 aka
+const INVALID_INDEX: u32 = u32::MAX; // aka: -1i32
 
-/// An interface for accessing data in a specific level of a refined topology
-/// hierarchy.
-///
-/// [TopologyLevel] provides an interface to data in a specific level of a
-/// topology hierarchy. Instances of TopologyLevel are created and owned by a
-/// TopologyRefiner, which will return const-references to them.  Such
-/// references are only valid during the lifetime of the TopologyRefiner that
-/// created and returned them, and only for a given refinement, i.e. if the
-/// TopologyRefiner is re-refined, any references to TopoologyLevels are
-/// invalidated.
+/// Provides an interface to data in a specific level of a
+/// topology hierarchy.  Instances of `TopologyLevel` are created and owned by a
+/// [`TopologyRefiner`](crate::far::TopologyRefiner), which will return
+/// const-references to them.  Such references are only valid during the
+/// lifetime of the `TopologyRefiner` that created and returned them, and only
+/// for a given refinement. I.e. if the `TopologyRefiner` is re-refined, any
+/// references to `TopoologyLevel`s are invalidated.
 // FIXME: We should really try and encode this in the type system - maybe
 // TopologyRefiner could create and store a dummy Refinment struct on the
 // TopologyRefiner, which this holds a reference to.
@@ -24,7 +23,7 @@ pub struct TopologyLevel<'a> {
     pub(crate) refiner: std::marker::PhantomData<&'a TopologyRefiner>,
 }
 
-/// ### Methods to inspect the overall inventory of components:
+/// ### Methods to Inspect the Overall Inventory of Components
 ///
 /// All three main component types are indexed locally within each level.  For
 /// some topological relationships – notably face-vertices, which is often
@@ -52,6 +51,7 @@ impl<'a> TopologyLevel<'a> {
         unsafe { sys::far::TopologyLevel_GetNumFaceVertices(self.ptr) as _ }
     }
 
+    /// Returns an iterator over the face vertices of this level.
     pub fn face_vertices_iter(&self) -> FaceVerticesIterator {
         FaceVerticesIterator {
             level: self,
@@ -61,7 +61,7 @@ impl<'a> TopologyLevel<'a> {
     }
 }
 
-/// ### Methods to inspect topological relationships for individual components:
+/// ### Methods to Inspect Topological Relationships for Individual Components
 ///
 /// With three main component types (vertices, faces and edges), for each of the
 /// three components the TopologyLevel stores the incident/adjacent components
@@ -202,6 +202,7 @@ impl<'a> TopologyLevel<'a> {
     }
 }
 
+/// An iterator over the face vertices of this [`TopologyLevel`].
 pub struct FaceVerticesIterator<'a> {
     level: &'a TopologyLevel<'a>,
     num: u32,

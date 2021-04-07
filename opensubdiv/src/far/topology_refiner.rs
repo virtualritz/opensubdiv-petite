@@ -1,3 +1,24 @@
+//! Topology refinement.
+//!
+//! [`TopologyRefiner`] is the building block for many other useful structs in
+//! `far`. It performs refinement of an arbitrary mesh and provides access to
+//! the refined mesh topology.
+//!
+//! It can be used for primvar refinement directly
+//! through a [`PrimvarRefiner`](super::primvar_refiner::PrimvarRefiner).  Or
+//! indirectly by being used to create a
+//! [`StencilTable`](super::stencil_table::StencilTable), or a `PatchTable`,
+//! etc.
+//!
+//! `TopologyRefiner` provides these refinement methods:
+//! * [`refine_uniform()`](TopologyRefiner::refine_uniform()) – Does uniform
+//!   refinenment as specified in the [`UniformRefinementOptions`].
+//! * [`refine_adaptive()`](TopologyRefiner::refine_adaptive()) – Does adaptive
+//!   refinement as specified in the [`AdaptiveRefinementOptions`].
+//!
+//! The result can be accessed via:
+//! * [`level()`](TopologyRefiner::level()) – Gives access to the refined
+//!   topology at through a [`TopologyLevel`] instance.
 use opensubdiv_sys as sys;
 use std::convert::TryInto;
 
@@ -5,11 +26,13 @@ use crate::far::TopologyDescriptor;
 use crate::Error;
 type Result<T, E = Error> = std::result::Result<T, E>;
 
+/// Stores topology data for a specified set of refinement options.
 pub struct TopologyRefiner(
     pub(crate) sys::topology_refiner::TopologyRefinerPtr,
 );
 
 impl TopologyRefiner {
+    /// Create a new topology refiner.
     pub fn new(
         descriptor: TopologyDescriptor,
         options: Options,
@@ -50,7 +73,7 @@ impl TopologyRefiner {
 
     /// Returns the number of refinement levels.
     #[inline]
-    pub fn levels_len(&self) -> u32 {
+    pub fn refinement_levels(&self) -> u32 {
         unsafe { sys::far::TopologyRefiner_GetNumLevels(self.0) as _ }
     }
 
@@ -60,7 +83,7 @@ impl TopologyRefiner {
         unsafe { (*self.0)._maxValence as _ }
     }
 
-    /// Returns true if faces have been tagged as holes.
+    /// Returns `true` if faces have been tagged as holes.
     #[inline]
     pub fn has_holes(&self) -> bool {
         unsafe { (*self.0)._hasHoles() != 0 }
@@ -157,6 +180,7 @@ impl TopologyRefiner {
         }
     }
 
+    /// Unrefine the topology, keeping only the base level.
     #[inline]
     pub fn unrefine(&mut self) {
         unsafe {
@@ -181,30 +205,57 @@ pub use sys::far::topology_refiner::{
 
 use super::topology_level::TopologyLevel;
 
+/// All supported options applying to a subdivision scheme.
+///
+/// This  contains all supported options that can be applied to a subdivision
+/// [`Scheme`] to affect the shape of the limit surface. These differ
+/// from approximations that may be applied at a higher level.  I.e. options to
+/// limit the level of feature adaptive subdivision, options to ignore
+/// fractional creasing, or creasing entirely, etc.  These options define the
+/// shape of a particular limit surface, including the ‘shape of primitive
+/// variable data associated with it.
+///
+/// The intent is that these sets of options be defined at a high level and
+/// propagated into the lowest-level computation in support of each subdivision
+/// scheme.  Ideally it remains a set of bit-fields (essentially an int) and so
+/// remains light weight and easily passed around by value.
 #[derive(Copy, Clone, Debug)]
 pub struct Options(sys::far::topology_refiner::Options);
 
 impl Options {
+    /// Creates new options.
     #[inline]
-    pub fn new() -> Self {
-        Self::default()
+    pub fn new(
+        scheme: Scheme,
+        boundary_interpolation: BoundaryInterpolation,
+        face_varying_linear_interpolation: FaceVaryingLinearInterpolation,
+        creasing_method: CreasingMethod,
+        triangle_subdivision: TriangleSubdivision,
+    ) -> Self {
+        let mut sdc_options: sys::sdc::Options = unsafe { std::mem::zeroed() };
+        sdc_options._bitfield_1 = sys::sdc::Options::new_bitfield_1(
+            boundary_interpolation as _,
+            face_varying_linear_interpolation as _,
+            creasing_method as _,
+            triangle_subdivision as _,
+        );
+
+        let mut options: sys::far::topology_refiner::Options =
+            unsafe { std::mem::zeroed() };
+        options.schemeType = scheme as _;
+        options.schemeOptions = sdc_options;
+
+        Self(options)
     }
 
-    #[inline]
-    pub fn validate_full_topology(
-        &mut self,
-        validate_full_topology: bool,
-    ) -> &mut Self {
-        self.0.set_validateFullTopology(validate_full_topology as _);
-        self
-    }
-
+    /// Sets the subdivision [`Scheme`] to use.
     #[inline]
     pub fn scheme(&mut self, scheme: Scheme) -> &mut Self {
         self.0.schemeType = scheme as _;
         self
     }
 
+    /// Sets the vertex boundary interpolation rule.
     #[inline]
     pub fn boundary_interpolation(
         &mut self,
@@ -216,6 +267,19 @@ impl Options {
         self
     }
 
+    /// Sets the vertex boundary interpolation rule.
+    #[inline]
+    pub fn face_varying_linear_interpolation(
+        &mut self,
+        face_varying_linear_interpolation: FaceVaryingLinearInterpolation,
+    ) -> &mut Self {
+        self.0
+            .schemeOptions
+            .set__fvarLinInterp(boundary_interpolation as _);
+        self
+    }
+
+    /// Set the edge crease rule.
     #[inline]
     pub fn creasing_method(
         &mut self,
@@ -227,6 +291,10 @@ impl Options {
         self
     }
 
+    /// Set the triangle subdivision weights rule.
+    ///
+    /// Only applies to the [`Catmull-Clark`](Scheme::CatmullClark) scheme –
+    /// ignored otherwise.
     #[inline]
     pub fn triangle_subdivision(
         &mut self,
@@ -237,9 +305,34 @@ impl Options {
             .set__triangleSub(triangle_subdivision as _);
         self
     }
+
+    /// Apply more extensive validation of the constructed topology – intended
+    /// for *debugging*.
+    #[inline]
+    pub fn validate_full_topology(
+        &mut self,
+        validate_full_topology: bool,
+    ) -> &mut Self {
+        self.0.set_validateFullTopology(validate_full_topology as _);
+        self
+    }
 }
 
 impl Default for Options {
+    /// Create options with the following defaults:
+    ///
+    /// | Property                            | Value
+    /// | |----------------
+    /// --|-----------------------------------------------------| | `scheme`
+    /// | [`CatmullClark`](Scheme::CatmullClark)              |
+    /// | `boundary_interpolation`            |
+    /// [`None`](BoundaryInterpolation::None)               |
+    /// | `face_varying_linear_interpolation` |
+    /// [`All`](FaceVaryingLinearInterpolation::All)        |
+    /// | `creasing_method`                   |
+    /// [`Uniform`](CreasingMethod::Uniform)                |
+    /// | `triangle_subdivision`              |
+    /// [`CatmullClark`](TriangleSubdivision::CatmullClark) |
     fn default() -> Self {
         let mut sdc_options: sys::sdc::Options = unsafe { std::mem::zeroed() };
         sdc_options._bitfield_1 = sys::sdc::Options::new_bitfield_1(
@@ -258,16 +351,21 @@ impl Default for Options {
     }
 }
 
+/// Uniform topology refinement options.
 #[derive(Copy, Clone, Debug)]
 pub struct UniformRefinementOptions(
     sys::far::topology_refiner::UniformRefinementOptions,
 );
 
 impl UniformRefinementOptions {
+    /// Create new uniform refinement options.
+    ///
+    /// Use [`default()`](UniformRefinementOptions::default()) to create options
+    /// with default values.
     pub fn new(
         refinement_level: u32,
-        order_vertices: bool,
-        full_topology: bool,
+        order_vertices_from_faces_first: bool,
+        full_topology_in_last_level: bool,
     ) -> Self {
         let mut options: sys::far::topology_refiner::UniformRefinementOptions =
             unsafe { std::mem::zeroed() };
@@ -282,29 +380,44 @@ impl UniformRefinementOptions {
         Self(options)
     }
 
+    /// Number of refinement iterations.
     pub fn refinement_level(&mut self, refinement_level: u32) -> &mut Self {
         self.0.set_refinementLevel(refinement_level);
         self
     }
 
+    /// Order child vertices from faces first instead of child vertices of
+    /// vertices.
     pub fn order_vertices_from_faces_first(
         &mut self,
-        order_vertices: bool,
+        order_vertices_from_faces_first: bool,
     ) -> &mut Self {
-        self.0.set_orderVerticesFromFacesFirst(order_vertices as _);
+        self.0.set_orderVerticesFromFacesFirst(
+            order_vertices_from_faces_first as _,
+        );
         self
     }
 
+    /// Skip topological relationships in the last level of refinement that are
+    /// not needed for interpolation (keep false if using limit).
     pub fn full_topology_in_last_level(
         &mut self,
-        full_topology: bool,
+        full_topology_in_last_level: bool,
     ) -> &mut Self {
-        self.0.set_fullTopologyInLastLevel(full_topology as _);
+        self.0
+            .set_fullTopologyInLastLevel(full_topology_in_last_level as _);
         self
     }
 }
 
 impl Default for UniformRefinementOptions {
+    /// Create uniform refinement options with the following defaults:
+    ///
+    /// | Property                          | Value   |
+    /// |----------------                 --|---------|
+    /// | `refinement_level`                | `4`     |
+    /// | `order_vertices_from_faces_first` | `true`  |
+    /// | `full_topology_in_last_level`     | `true`  |
     fn default() -> Self {
         let mut options: sys::far::topology_refiner::UniformRefinementOptions =
             unsafe { std::mem::zeroed() };
@@ -320,12 +433,17 @@ impl Default for UniformRefinementOptions {
     }
 }
 
+/// Adaptive topology refinement options.
 #[derive(Copy, Clone, Debug)]
 pub struct AdaptiveRefinementOptions(
     sys::far::topology_refiner::AdaptiveRefinementOptions,
 );
 
 impl AdaptiveRefinementOptions {
+    /// Create new adaptive refinement options.
+    ///
+    /// Use [`default()`](AdaptiveRefinementOptions::default()) to create
+    /// options with default values.
     pub fn new(
         isolation_level: u32,
         secondary_level: u32,
@@ -349,16 +467,20 @@ impl AdaptiveRefinementOptions {
         Self(options)
     }
 
+    /// Number of iterations applied to isolate extraordinary vertices and
+    /// creases.
     pub fn isolation_level(&mut self, isolation_level: u32) -> &mut Self {
         self.0.set_isolationLevel(isolation_level);
         self
     }
 
+    /// Shallower level to stop isolation of smooth irregular features.
     pub fn secondary_level(&mut self, secondary_level: u32) -> &mut Self {
         self.0.set_secondaryLevel(secondary_level);
         self
     }
 
+    /// Use 'single-crease' patch and stop isolation where applicable.
     pub fn use_single_crease_patch(
         &mut self,
         single_crease_patch: bool,
@@ -367,6 +489,7 @@ impl AdaptiveRefinementOptions {
         self
     }
 
+    /// Use infinitely sharp patches and stop isolation where applicable.
     pub fn use_infintely_sharp_patch(
         &mut self,
         infintely_sharp_patch: bool,
@@ -375,6 +498,8 @@ impl AdaptiveRefinementOptions {
         self
     }
 
+    /// Inspect face-varying channels and isolate when irregular features
+    /// present.
     pub fn consider_face_varying_channels(
         &mut self,
         consider_face_varying_channels: bool,
@@ -384,6 +509,8 @@ impl AdaptiveRefinementOptions {
         self
     }
 
+    /// Order child vertices from faces first instead of child vertices of
+    /// vertices.
     pub fn order_vertices_from_faces_first(
         &mut self,
         order_vertices_from_faces_first: bool,
@@ -396,6 +523,16 @@ impl AdaptiveRefinementOptions {
 }
 
 impl Default for AdaptiveRefinementOptions {
+    /// Create adaptive refinement options with the following defaults:
+    ///
+    /// | Property                          | Value   |
+    /// |-----------------------------------|---------|
+    /// | `isolation_level`                 | `4`     |
+    /// | `secondary_level`                 | `15`    |
+    /// | `single_crease_patch`             | `false` |
+    /// | `infintely_sharp_patch`           | `false` |
+    /// | `consider_face_varying_channels`  | `false` |
+    /// | `order_vertices_from_faces_first` | `false` |
     fn default() -> Self {
         let mut options: sys::far::topology_refiner::AdaptiveRefinementOptions =
             unsafe { std::mem::zeroed() };
