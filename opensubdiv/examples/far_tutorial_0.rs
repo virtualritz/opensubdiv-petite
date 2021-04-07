@@ -1,46 +1,5 @@
 use opensubdiv::far;
 
-#[derive(Copy, Clone)]
-struct Vertex {
-    x: f32,
-    y: f32,
-    z: f32,
-}
-
-struct VertexSlice<'a> {
-    slice: &'a [Vertex],
-}
-
-struct VertexSliceMut<'a> {
-    slice: &'a mut [Vertex],
-}
-
-impl<'a> far::PrimvarBufferSrc for VertexSlice<'a> {
-    const LEN_ELEMENTS: u32 = 3;
-
-    fn as_f32(&self) -> &[f32] {
-        unsafe {
-            std::slice::from_raw_parts(
-                self.slice.as_ptr() as *const f32,
-                self.slice.len() * 3,
-            )
-        }
-    }
-}
-
-impl<'a> far::PrimvarBufferDst for VertexSliceMut<'a> {
-    const LEN_ELEMENTS: u32 = 3;
-
-    fn as_f32_mut(&mut self) -> &mut [f32] {
-        unsafe {
-            std::slice::from_raw_parts_mut(
-                self.slice.as_mut_ptr() as *mut f32,
-                self.slice.len() * 3,
-            )
-        }
-    }
-}
-
 fn main() {
     let vertices = [
         -0.5, -0.5, 0.5, 0.5, -0.5, 0.5, -0.5, 0.5, 0.5, 0.5, 0.5, 0.5, -0.5,
@@ -82,47 +41,23 @@ fn main() {
             .clone(),
     );
 
-    // initialize coarse mesh positions
-    let vbuffer = vertices
-        .chunks(3)
-        .map(|v| Vertex {
-            x: v[0],
-            y: v[1],
-            z: v[2],
-        })
-        .collect::<Vec<_>>();
-
     // interpolate vertex primvar data
     let primvar_refiner = far::PrimvarRefiner::new(&refiner);
 
     let mut refined_verts = Vec::with_capacity(max_level as _);
 
-    refined_verts.push(vbuffer);
+    refined_verts.push(vertices.to_vec());
+
     for level in 1..=max_level {
-        let mut dst_vec = vec![
-            Vertex {
-                x: 0.0,
-                y: 0.0,
-                z: 0.0
-            };
-            refiner.level(level).unwrap().vertices_len() as _
-        ];
-
-        let src = unsafe {
-            VertexSlice {
-                slice: refined_verts
-                    .get_unchecked(level as usize - 1)
-                    .as_slice(),
-            }
-        };
-
-        let mut dst = VertexSliceMut {
-            slice: dst_vec.as_mut_slice(),
-        };
-
-        primvar_refiner.interpolate(level, &src, &mut dst);
-
-        refined_verts.push(dst_vec);
+        refined_verts.push(
+            primvar_refiner
+                .interpolate(
+                    level,
+                    3, // Each element is a 3-tuple
+                    refined_verts[(level - 1) as usize].as_slice(),
+                )
+                .unwrap(),
+        );
     }
 
     // output an OBJ of the highest level
@@ -131,8 +66,8 @@ fn main() {
     println!("o subdivision_cube");
 
     // print vertex positions
-    for v in refined_verts.last().unwrap().iter() {
-        println!("v {} {} {}", v.x, v.y, v.z);
+    for v in refined_verts.last().unwrap().chunks(3) {
+        println!("v {} {} {}", v[0], v[1], v[2]);
     }
 
     // for f in 0..nfaces {

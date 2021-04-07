@@ -1,10 +1,39 @@
+//! A container holding references to raw topology data.
+//!
+//! ## Semi-Sharp Creases
+//! Just as some types of parametric surfaces support additional shaping
+//! controls to affect creasing along the boundaries between surface elements,
+//! *OpenSubdiv* provides additional sharpness values associated with
+//! edges and vertices to achieve similar results over arbitrary topology.
+//!
+//! Setting sharpness values to a maximum value (10 in this case – a number
+//! chosen for historical reasons) effectively modifies the subdivision rules so
+//! that the boundaries between the piecewise smooth surfaces are infinitely
+//! sharp or discontinuous.
+//!
+//! But since real world surfaces never really have infinitely sharp edges,
+//! especially when viewed sufficiently close, it is often preferable to set the
+//! sharpness lower than this value, making the crease "semi-sharp".  A constant
+//! weight value assigned to a sequence of edges connected edges therefore
+//! enables the creation of features akin to fillets and blends without adding
+//! extra rows of vertices (though that technique still has its merits):
+//!
+//! Sharpness values range from 0–10, with a value of 0 (or less) having no
+//! effect on the surface and a value of 10 (or more) making the feature
+//! completely sharp.
+//!
+//! It should be noted that infinitely sharp creases are really tangent
+//! discontinuities in the surface, implying that the geometric normals are also
+//! discontinuous there.  Therefore, displacing along the normal will likely
+//! tear apart the surface along the crease.  If you really want to displace a
+//! surface at a crease, it may be better to make the crease semi-sharp.
 use opensubdiv_sys as sys;
 use std::{convert::TryInto, marker::PhantomData};
 
-/// A container holding references to raw topology data.
+/// A `TopologyDescriptor` holds references to raw topology data as flat index
+/// buffers.
 ///
-/// `TopologyDescriptor` contains references to raw topology data as flat index
-/// buffers.  This is used to construct a
+/// This is used to construct a
 /// [`TopologyRefiner`](crate::far::TopologyRefiner).
 #[derive(Clone, Copy, Debug)]
 pub struct TopologyDescriptor<'a> {
@@ -47,35 +76,38 @@ impl<'a> TopologyDescriptor<'a> {
         }
     }
 
+    /// Add creases as vertex index pairs with corresponding sharpness.
     #[inline]
     pub fn creases(
         &mut self,
         creases: &'a [u32],
-        weights: &'a [f32],
+        sharpness: &'a [f32],
     ) -> &mut Self {
         debug_assert!(0 == creases.len() % 2);
-        debug_assert!(weights.len() == creases.len() / 2);
+        debug_assert!(sharpness.len() == creases.len() / 2);
 
-        self.descriptor.numCreases = weights.len().try_into().unwrap();
+        self.descriptor.numCreases = sharpness.len().try_into().unwrap();
         self.descriptor.creaseVertexIndexPairs = creases.as_ptr() as _;
-        self.descriptor.creaseWeights = weights.as_ptr();
+        self.descriptor.creaseWeights = sharpness.as_ptr();
         self
     }
 
+    /// Add corners as vertex indices with corresponding sharpness.
     #[inline]
     pub fn corners(
         &mut self,
         corners: &'a [u32],
-        weights: &'a [f32],
+        sharpness: &'a [f32],
     ) -> &mut Self {
-        debug_assert!(weights.len() == corners.len());
+        debug_assert!(sharpness.len() == corners.len());
 
-        self.descriptor.numCorners = weights.len().try_into().unwrap();
+        self.descriptor.numCorners = sharpness.len().try_into().unwrap();
         self.descriptor.cornerVertexIndices = corners.as_ptr() as _;
-        self.descriptor.cornerWeights = weights.as_ptr();
+        self.descriptor.cornerWeights = sharpness.as_ptr();
         self
     }
 
+    /// Add holes as face indices.
     #[inline]
     pub fn holes(&mut self, holes: &'a [u32]) -> &mut Self {
         self.descriptor.numHoles = holes.len().try_into().unwrap();
@@ -83,6 +115,8 @@ impl<'a> TopologyDescriptor<'a> {
         self
     }
 
+    /// Set if the topology describes faces with left handed (counter-clockwise)
+    /// winding.
     #[inline]
     pub fn left_handed(&mut self, left_handed: bool) -> &mut Self {
         self.descriptor.isLeftHanded = left_handed;

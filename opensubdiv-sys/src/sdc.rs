@@ -1,4 +1,3 @@
-
 pub type Options = crate::OpenSubdiv_v3_4_4_Sdc_Options;
 
 /*

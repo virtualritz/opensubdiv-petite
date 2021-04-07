@@ -31,7 +31,7 @@ Almost all of them are not yet implemented.
     It just require some more work in `build.rs`.
     Ideally, if the `cuda` feature flag is present, `build.rs` would detect a
     *CUDA* installation on *Linux*/*Windows* and configure the *OpenSubdiv*
-    build resp. panic if no instalation can be found.
+    build resp. panic if no installation can be found.
 - [ ] `metal` – Adds support for the *Apple*
      [*Metal*](https://developer.apple.com/metal/) backend. *Only valid on
      macOS.*
