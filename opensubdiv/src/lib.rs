@@ -29,7 +29,7 @@
 //! Renaming was done considering these constraints:
 //! * Be verbose consistently (the original API is quite verbose but does make
 //!   use of abbreviations in some suprising places).
-//! * Use canonical Rust naming (`num_vertices()` becomes `vertices_len()`)
+//! * Use canonical Rust naming (`num_vertices()` becomes `vertices_len()`).
 //! * Use canonical Rust constructs (e.g. the builder pattern – or anti-pattern,
 //!   depending whom you ask). I will probably switch this to an [init struct
 //!   pattern](https://xaeroxe.github.io/init-struct-pattern/) soon.  Even

@@ -18,8 +18,10 @@ to pull them in.
 
 ## Documentation
 
-It is suggested you only build (and look at) the documentation of the high level wrapper:
-```
+It is suggested you only build (and look at) the documentation of the high level
+wrapper:
+
+```shell
 cargo doc -p opensubdiv --no-deps --open
 ```
 
@@ -76,11 +78,11 @@ Many methods have slightly different names on the Rust side.
 
 Renaming was done considering these constraints:
 
-- Be verbose consistently (the original API is quite verbose but does make
-  use of abbreviations in some suprising places).
-- Use canonical Rust naming (`num_vertices()` becomes `vertices_len()`)
+- Be verbose consistently (the original API is quite verbose but does make use
+  of abbreviations in some suprising places).
+- Use canonical Rust naming (`num_vertices()` becomes `vertices_len()`).
 - Use canonical Rust constructs (e.g. the builder pattern – or anti-pattern,
-  depending whom you ask). I will probably switch this to an [init struct
+  depending whom you ask). I will probably switch this to an [init **struct**
   pattern](https://xaeroxe.github.io/init-struct-pattern/) soon.  Even though
   this means a minimal overhead for some structs which are better left for
   `bindgen` to define and then require copying.
