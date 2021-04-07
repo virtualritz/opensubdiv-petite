@@ -275,7 +275,7 @@ impl Options {
     ) -> &mut Self {
         self.0
             .schemeOptions
-            .set__fvarLinInterp(boundary_interpolation as _);
+            .set__fvarLinInterp(face_varying_linear_interpolation as _);
         self
     }
 
@@ -373,8 +373,8 @@ impl UniformRefinementOptions {
         options._bitfield_1 =
             sys::far::topology_refiner::UniformRefinementOptions::new_bitfield_1(
                 refinement_level,
-                order_vertices as _,
-                full_topology as _,
+                order_vertices_from_faces_first as _,
+                full_topology_in_last_level as _,
             );
 
         Self(options)

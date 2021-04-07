@@ -72,7 +72,7 @@ impl StencilTable {
     /// Returns a Stencil at index i in the table.
     #[inline]
     pub fn stencil(&self, i: Index) -> Option<Stencil> {
-        if self.stencils_len() <= i {
+        if self.len() <= i {
             None
         } else {
             unsafe {

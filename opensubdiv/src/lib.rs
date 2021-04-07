@@ -31,10 +31,9 @@
 //!   use of abbreviations in some suprising places).
 //! * Use canonical Rust naming (`num_vertices()` becomes `vertices_len()`).
 //! * Use canonical Rust constructs (e.g. the builder pattern – or anti-pattern,
-//!   depending whom you ask). I will probably switch this to an [init struct
-//!   pattern](https://xaeroxe.github.io/init-struct-pattern/) soon.  Even
-//!   though this means a minimal overhead for some structs which are better
-//!   left for `bindgen` to define and then require copying.
+//!   depending whom you ask). I will probably switch this to an [init struct pattern](https://xaeroxe.github.io/init-struct-pattern/)
+//!   soon.  Even though this means a minimal overhead for some structs which
+//!   are better left for `bindgen` to define and then require copying.
 //! * Be brief when possible. Example: `StencilTable::numStencils()` in C++
 //!   becomes `StencilTable::len()` in Rust.
 //! * Use usnigned integer types, specifically `u32`, instead of signed ones
