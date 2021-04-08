@@ -1,5 +1,22 @@
 //! A container holding references to raw topology data.
 //!
+//! ## Example
+//! ```
+//! # use opensubdiv::far::TopologyDescriptor;
+//! // The positions. This is commonly used later, with a PrimvarRefiner.
+//! let vertices = [1, 1, 1, 1, -1, -1, -1, 1, -1, -1 - 1, 1];
+//!
+//! // Describe the basic topology of our tetrahedron.
+//! let mut tetrahedron = TopologyDescriptor::new(
+//!     (vertices.len() / 3) as _,
+//!     &[3; 4],
+//!     &[2, 1, 0, 3, 2, 0, 1, 3, 0, 2, 3, 1],
+//! );
+//!
+//! // Make all edges creased with sharpness 8.0.
+//! tetrahedron.creases(&[0, 2, 0, 3, 1, 3, 0, 1, 2, 3, 1, 2], &[8.0; 6]);
+//! ```
+//!
 //! ## Semi-Sharp Creases
 //! Just as some types of parametric surfaces support additional shaping
 //! controls to affect creasing along the boundaries between surface elements,
@@ -58,7 +75,7 @@ impl<'a> TopologyDescriptor<'a> {
     ///   face in the mesh.
     #[inline]
     pub fn new(
-        vertices_len: u32,
+        vertices_len: usize,
         vertices_per_face: &'a [u32],
         vertex_indices_per_face: &'a [u32],
     ) -> TopologyDescriptor<'a> {
@@ -84,7 +101,7 @@ impl<'a> TopologyDescriptor<'a> {
         sharpness: &'a [f32],
     ) -> &mut Self {
         debug_assert!(0 == creases.len() % 2);
-        debug_assert!(sharpness.len() == creases.len() / 2);
+        debug_assert!(creases.len() / 2 <= sharpness.len());
 
         self.descriptor.numCreases = sharpness.len().try_into().unwrap();
         self.descriptor.creaseVertexIndexPairs = creases.as_ptr() as _;
@@ -99,7 +116,7 @@ impl<'a> TopologyDescriptor<'a> {
         corners: &'a [u32],
         sharpness: &'a [f32],
     ) -> &mut Self {
-        debug_assert!(sharpness.len() == corners.len());
+        debug_assert!(corners.len() <= sharpness.len());
 
         self.descriptor.numCorners = sharpness.len().try_into().unwrap();
         self.descriptor.cornerVertexIndices = corners.as_ptr() as _;

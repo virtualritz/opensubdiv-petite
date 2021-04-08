@@ -10,6 +10,7 @@
 //! efficiently recomputed simply by applying the blending weights to the
 //! series of coarse control vertices.
 use opensubdiv_sys as sys;
+use std::convert::TryInto;
 
 use crate::Index;
 
@@ -45,7 +46,10 @@ impl Drop for StencilTable {
 
 impl StencilTable {
     /// Create a new stencil table.
-    pub fn new(refiner: &TopologyRefiner, options: Options) -> StencilTable {
+    pub fn new(
+        refiner: &TopologyRefiner,
+        options: StencilTableOptions,
+    ) -> StencilTable {
         let ptr = unsafe {
             sys::far::StencilTableFactory_Create(
                 refiner.0,
@@ -60,8 +64,11 @@ impl StencilTable {
                     factorize_intermediate_levels: options
                         .factorize_intermediate_levels
                         as _,
-                    max_level: options.max_level as _,
-                    face_varying_channel: options.face_varying_channel as _,
+                    max_level: options.max_level.try_into().unwrap(),
+                    face_varying_channel: options
+                        .face_varying_channel
+                        .try_into()
+                        .unwrap(),
                 },
             )
         };
@@ -75,20 +82,20 @@ impl StencilTable {
 
     /// Returns the number of stencils in the table.
     #[inline]
-    pub fn len(&self) -> u32 {
+    pub fn len(&self) -> usize {
         unsafe { sys::far::StencilTable_GetNumStencils(self.0) as _ }
     }
 
     /// Returns the number of control vertices indexed in the table.
     #[inline]
-    pub fn control_vertices_len(&self) -> u32 {
+    pub fn control_vertices_len(&self) -> usize {
         unsafe { sys::far::StencilTable_GetNumControlVertices(self.0) as _ }
     }
 
     /// Returns a Stencil at index i in the table.
     #[inline]
     pub fn stencil(&self, i: Index) -> Option<Stencil> {
-        if self.len() <= i {
+        if self.len() <= i as _ {
             None
         } else {
             unsafe {
@@ -155,24 +162,24 @@ pub enum InterpolationMode {
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
-pub struct Options {
+pub struct StencilTableOptions {
     pub interpolation_mode: InterpolationMode,
     pub generate_offsets: bool,
     pub generate_control_vertices: bool,
     pub generate_intermediate_levels: bool,
     pub factorize_intermediate_levels: bool,
-    pub max_level: u32,
-    pub face_varying_channel: u32,
+    pub max_level: usize,
+    pub face_varying_channel: usize,
 }
 
-impl Default for Options {
+impl Default for StencilTableOptions {
     fn default() -> Self {
         Self {
-            interpolation_mode: InterpolationMode::Vertex as _,
-            generate_offsets: false as _,
-            generate_control_vertices: false as _,
-            generate_intermediate_levels: true as _,
-            factorize_intermediate_levels: true as _,
+            interpolation_mode: InterpolationMode::Vertex,
+            generate_offsets: false,
+            generate_control_vertices: false,
+            generate_intermediate_levels: true,
+            factorize_intermediate_levels: true,
             max_level: 10,
             face_varying_channel: 0,
         }

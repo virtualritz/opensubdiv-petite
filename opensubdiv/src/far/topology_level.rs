@@ -31,23 +31,23 @@ pub struct TopologyLevel<'a> {
 /// made available.
 impl<'a> TopologyLevel<'a> {
     /// Return the number of vertices in this level.
-    pub fn vertices_len(&self) -> u32 {
+    pub fn vertices_len(&self) -> usize {
         unsafe { sys::far::TopologyLevel_GetNumVertices(self.ptr) as _ }
     }
 
     /// Return the number of faces in this level.
-    pub fn faces_len(&self) -> u32 {
+    pub fn faces_len(&self) -> usize {
         unsafe { sys::far::TopologyLevel_GetNumFaces(self.ptr) as _ }
     }
 
     /// Return the number of edges in this level.
-    pub fn edges_len(&self) -> u32 {
+    pub fn edges_len(&self) -> usize {
         unsafe { sys::far::TopologyLevel_GetNumEdges(self.ptr) as _ }
     }
 
     /// Returns the total number of face-vertices; i.e. the sum of all vertices
     /// for all faces.
-    pub fn face_vertices_len(&self) -> u32 {
+    pub fn face_vertices_len(&self) -> usize {
         unsafe { sys::far::TopologyLevel_GetNumFaceVertices(self.ptr) as _ }
     }
 
@@ -82,7 +82,9 @@ impl<'a> TopologyLevel<'a> {
     pub fn face_vertices(&self, f: Index) -> Option<&[Index]> {
         unsafe {
             let arr = sys::far::TopologyLevel_GetFaceVertices(self.ptr, f);
-            if 0 == arr.size() || arr.begin().is_null() || self.faces_len() <= f
+            if 0 == arr.size()
+                || arr.begin().is_null()
+                || self.faces_len() <= f as _
             {
                 None
             } else {
@@ -284,14 +286,14 @@ impl<'a> TopologyLevel<'a> {
     /// Return the number of face-varying channels (should be same for all
     /// levels).
     #[inline]
-    pub fn face_varying_channels_len(&self) -> u32 {
+    pub fn face_varying_channels_len(&self) -> usize {
         unsafe { sys::far::TopologyLevel_GetNumFVarChannels(self.ptr) as _ }
     }
 
     /// Return the total number of face-varying values in a particular channel.
     /// (the upper bound of a face-varying value index).
     #[inline]
-    pub fn face_varying_values_len(&self, channel: u32) -> u32 {
+    pub fn face_varying_values_len(&self, channel: usize) -> usize {
         unsafe {
             sys::far::TopologyLevel_GetNumFVarValues(
                 self.ptr,
@@ -305,7 +307,7 @@ impl<'a> TopologyLevel<'a> {
     pub fn face_varying_values_on_face(
         &self,
         f: Index,
-        channel: u32,
+        channel: usize,
     ) -> Option<&[Index]> {
         unsafe {
             let arr = sys::far::TopologyLevel_GetFaceFVarValues(
@@ -329,7 +331,7 @@ impl<'a> TopologyLevel<'a> {
     pub fn vertex_face_varying_topology_matches(
         &self,
         v: Index,
-        channel: u32,
+        channel: usize,
     ) -> bool {
         unsafe {
             sys::far::TopologyLevel_DoesVertexFVarTopologyMatch(
