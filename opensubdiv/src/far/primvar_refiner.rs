@@ -66,8 +66,8 @@ impl<'a> PrimvarRefiner<'a> {
     /// of the [`TopologyRefiner`] fed to [`PrimvarRefiner::new()`].
     pub fn interpolate(
         &self,
-        refinement_level: u32,
-        tuple_len: u32,
+        refinement_level: usize,
+        tuple_len: usize,
         source: &[f32],
     ) -> Option<Vec<f32>> {
         match self.topology_refiner.level(refinement_level) {
@@ -105,8 +105,8 @@ impl<'a> PrimvarRefiner<'a> {
     /// of the [`TopologyRefiner`] fed to [`PrimvarRefiner::new()`].
     pub fn interpolate_face_varying(
         &self,
-        refinement_level: u32,
-        tuple_len: u32,
+        refinement_level: usize,
+        tuple_len: usize,
         source: &[f32],
     ) -> Option<Vec<f32>> {
         match self.topology_refiner.level(refinement_level) {
@@ -143,8 +143,8 @@ impl<'a> PrimvarRefiner<'a> {
     /// of the [`TopologyRefiner`] fed to [`PrimvarRefiner::new()`].
     pub fn interpolate_face_uniform(
         &self,
-        refinement_level: u32,
-        tuple_len: u32,
+        refinement_level: usize,
+        tuple_len: usize,
         source: &[f32],
     ) -> Option<Vec<f32>> {
         match self.topology_refiner.level(refinement_level) {
@@ -180,8 +180,8 @@ impl<'a> PrimvarRefiner<'a> {
     /// of the [`TopologyRefiner`] fed to [`PrimvarRefiner::new()`].
     pub fn interpolate_varying(
         &self,
-        refinement_level: u32,
-        tuple_len: u32,
+        refinement_level: usize,
+        tuple_len: usize,
         source: &[f32],
     ) -> Option<Vec<f32>> {
         match self.topology_refiner.level(refinement_level) {

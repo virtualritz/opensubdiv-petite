@@ -17,7 +17,7 @@ impl Drop for CpuVertexBuffer {
 
 impl CpuVertexBuffer {
     #[inline]
-    pub fn new(elements_len: u32, vertices_len: u32) -> CpuVertexBuffer {
+    pub fn new(elements_len: usize, vertices_len: usize) -> CpuVertexBuffer {
         let ptr = unsafe {
             sys::osd::CpuVertexBuffer_Create(
                 elements_len.try_into().unwrap(),
@@ -33,13 +33,13 @@ impl CpuVertexBuffer {
     }
 
     /// Returns how many elements defined in this vertex buffer.
-    pub fn elements_len(&self) -> u32 {
+    pub fn elements_len(&self) -> usize {
         unsafe { sys::osd::CpuVertexBuffer_GetNumElements(self.0) as _ }
     }
 
     /// Returns how many vertices allocated in this vertex buffer.
     #[inline]
-    pub fn vertices_len(&self) -> u32 {
+    pub fn vertices_len(&self) -> usize {
         unsafe { sys::osd::CpuVertexBuffer_GetNumVertices(self.0) as _ }
     }
 
@@ -65,13 +65,13 @@ impl CpuVertexBuffer {
     pub fn update_data(
         &mut self,
         src: &[f32],
-        start_vertex: u32,
-        vertices_len: u32,
+        start_vertex: usize,
+        vertices_len: usize,
     ) {
         // do some basic error checking
         let elements_len = self.elements_len();
 
-        if (start_vertex * elements_len) as usize > src.len() {
+        if start_vertex * elements_len > src.len() {
             panic!(
                 "Start vertex is out of range of the src slice: {} ({})",
                 start_vertex,
@@ -79,7 +79,7 @@ impl CpuVertexBuffer {
             );
         }
 
-        if (vertices_len * elements_len) as usize > src.len() {
+        if vertices_len * elements_len > src.len() {
             panic!(
                 "vertices_len is out of range of the src slice: {} ({})",
                 vertices_len,

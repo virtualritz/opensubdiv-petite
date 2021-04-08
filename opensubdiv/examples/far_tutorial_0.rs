@@ -9,7 +9,7 @@ fn main() {
 
     let num_vertices = vertices.len() / 3;
 
-    let verts_per_face = [4, 4, 4, 4, 4, 4];
+    let verts_per_face = [4; 6];
 
     let vert_indices = [
         0, 1, 3, 2, 2, 3, 5, 4, 4, 5, 7, 6, 6, 7, 1, 0, 1, 7, 5, 3, 6, 0, 2, 4,
@@ -29,15 +29,13 @@ fn main() {
         )
         .creases(&creases, &crease_weights)
         .clone(),
-        far::topology_refiner::Options {
+        far::TopologyRefinerOptions {
             scheme: far::Scheme::CatmullClark,
             boundary_interpolation: far::BoundaryInterpolation::EdgeOnly,
             ..Default::default()
         },
     )
     .expect("Could not create TopologyRefiner");
-
-    println!("Boo!");
 
     // Uniformly refine up to 'max level' of 2.
     let max_level = 2;
@@ -46,8 +44,6 @@ fn main() {
         refinement_level: max_level,
         ..Default::default()
     });
-
-    println!("Boo1!");
 
     // Interpolate vertex primvar data.
     let primvar_refiner = far::PrimvarRefiner::new(&refiner);
@@ -83,7 +79,6 @@ fn main() {
     for face_vert_indices in last_level.face_vertices_iter() {
         // All refined cat-clark faces should be quads.
         assert!(4 == face_vert_indices.len());
-        print!("f ");
         for fv in face_vert_indices {
             print!("{} ", fv + 1);
         }

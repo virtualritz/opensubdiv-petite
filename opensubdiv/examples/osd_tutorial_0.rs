@@ -20,7 +20,7 @@ fn main() {
             &verts_per_face,
             &vert_indices,
         ),
-        far::topology_refiner::Options {
+        far::TopologyRefinerOptions {
             scheme: far::Scheme::CatmullClark,
             boundary_interpolation: far::BoundaryInterpolation::EdgeOnly,
             ..Default::default()
@@ -33,9 +33,9 @@ fn main() {
         ..Default::default()
     });
 
-    let stencil_table = far::stencil_table::StencilTable::new(
+    let stencil_table = far::StencilTable::new(
         &refiner,
-        far::stencil_table::Options {
+        far::StencilTableOptions {
             generate_offsets: true,
             generate_intermediate_levels: false,
             ..Default::default()

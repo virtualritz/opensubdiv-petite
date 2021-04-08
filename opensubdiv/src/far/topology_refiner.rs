@@ -35,7 +35,7 @@ impl TopologyRefiner {
     /// Create a new topology refiner.
     pub fn new(
         descriptor: TopologyDescriptor,
-        options: Options,
+        options: TopologyRefinerOptions,
     ) -> Result<Self> {
         let mut sdc_options: sys::sdc::Options = unsafe { std::mem::zeroed() };
         sdc_options._bitfield_1 = sys::sdc::Options::new_bitfield_1(
@@ -66,9 +66,9 @@ impl TopologyRefiner {
 
     /// Returns the subdivision options.
     #[inline]
-    pub fn options(&self) -> Options {
+    pub fn options(&self) -> TopologyRefinerOptions {
         let options = unsafe { &(*self.0)._subdivOptions };
-        Options {
+        TopologyRefinerOptions {
             scheme: unsafe { (*self.0)._subdivType }.try_into().unwrap(),
             boundary_interpolation: options
                 ._vtxBoundInterp()
@@ -91,13 +91,13 @@ impl TopologyRefiner {
 
     /// Returns the number of refinement levels.
     #[inline]
-    pub fn refinement_levels(&self) -> u32 {
+    pub fn refinement_levels(&self) -> usize {
         unsafe { sys::far::TopologyRefiner_GetNumLevels(self.0) as _ }
     }
 
     /// Returns the maximum vertex valence in all levels
     #[inline]
-    pub fn max_valence(&self) -> u32 {
+    pub fn max_valence(&self) -> usize {
         unsafe { (*self.0)._maxValence as _ }
     }
 
@@ -109,25 +109,25 @@ impl TopologyRefiner {
 
     /// Returns the total number of vertices in all levels.
     #[inline]
-    pub fn vertices_total_len(&self) -> u32 {
+    pub fn vertices_total_len(&self) -> usize {
         unsafe { sys::far::TopologyRefiner_GetNumVerticesTotal(self.0) as _ }
     }
 
     /// Returns the total number of edges in all levels.
     #[inline]
-    pub fn edges_total_len(&self) -> u32 {
+    pub fn edges_total_len(&self) -> usize {
         unsafe { sys::far::TopologyRefiner_GetNumEdgesTotal(self.0) as _ }
     }
 
     /// Returns the total number of faces in all levels.
     #[inline]
-    pub fn faces_total_len(&self) -> u32 {
+    pub fn faces_total_len(&self) -> usize {
         unsafe { sys::far::TopologyRefiner_GetNumFacesTotal(self.0) as _ }
     }
 
     /// Returns the total number of face vertices in all levels.
     #[inline]
-    pub fn face_vertices_total_len(&self) -> u32 {
+    pub fn face_vertices_total_len(&self) -> usize {
         unsafe {
             sys::far::TopologyRefiner_GetNumFaceVerticesTotal(self.0) as _
         }
@@ -135,14 +135,14 @@ impl TopologyRefiner {
 
     /// Returns the highest level of refinement.
     #[inline]
-    pub fn max_level(&self) -> u32 {
+    pub fn max_level(&self) -> usize {
         unsafe { (*self.0)._maxLevel() as _ }
     }
 
     /// Returns a handle to access data specific to a particular refinement
     /// level.
     #[inline]
-    pub fn level(&self, level: u32) -> Option<TopologyLevel> {
+    pub fn level(&self, level: usize) -> Option<TopologyLevel> {
         if level > self.max_level() {
             None
         } else {
@@ -176,7 +176,7 @@ impl TopologyRefiner {
 
         sys_options._bitfield_1 =
             sys::far::topology_refiner::UniformRefinementOptions::new_bitfield_1(
-                options.refinement_level,
+                options.refinement_level.try_into().unwrap(),
                 options.order_vertices_from_faces_first as _,
                 options.full_topology_in_last_level as _,
             );
@@ -203,8 +203,8 @@ impl TopologyRefiner {
 
         sys_options._bitfield_1 =
         sys::far::topology_refiner::AdaptiveRefinementOptions::new_bitfield_1(
-            options.isolation_level as _,
-            options.secondary_level as _,
+            options.isolation_level.try_into().unwrap(),
+            options.secondary_level.try_into().unwrap(),
             options.single_crease_patch as _,
             options.infintely_sharp_patch as _,
             options.consider_face_varying_channels as _,
@@ -262,7 +262,7 @@ use super::topology_level::TopologyLevel;
 /// scheme.  Ideally it remains a set of bit-fields (essentially an int) and so
 /// remains light weight and easily passed around by value.
 #[derive(Copy, Clone, Debug)]
-pub struct Options {
+pub struct TopologyRefinerOptions {
     pub scheme: Scheme,
     pub boundary_interpolation: BoundaryInterpolation,
     pub face_varying_linear_interpolation: FaceVaryingLinearInterpolation,
@@ -270,7 +270,7 @@ pub struct Options {
     pub triangle_subdivision: TriangleSubdivision,
 }
 
-impl Default for Options {
+impl Default for TopologyRefinerOptions {
     /// Create options with the following defaults:
     ///
     /// | Property                            | Value
@@ -301,7 +301,7 @@ impl Default for Options {
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
 pub struct UniformRefinementOptions {
-    pub refinement_level: u32,
+    pub refinement_level: usize,
     pub order_vertices_from_faces_first: bool,
     pub full_topology_in_last_level: bool,
 }
@@ -326,8 +326,8 @@ impl Default for UniformRefinementOptions {
 /// Adaptive topology refinement options.
 #[derive(Copy, Clone, Debug)]
 pub struct AdaptiveRefinementOptions {
-    pub isolation_level: u32,
-    pub secondary_level: u32,
+    pub isolation_level: usize,
+    pub secondary_level: usize,
     pub single_crease_patch: bool,
     pub infintely_sharp_patch: bool,
     pub consider_face_varying_channels: bool,

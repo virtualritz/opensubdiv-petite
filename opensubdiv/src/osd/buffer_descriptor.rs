@@ -36,7 +36,7 @@ impl BufferDescriptor {
     ///
     /// Use [`default()`](BufferDescriptor::default()) to create an empty buffer
     /// descriptor.
-    pub fn new(offset: u32, length: u32, stride: u32) -> Self {
+    pub fn new(offset: usize, length: usize, stride: usize) -> Self {
         Self(sys::osd::BufferDescriptor {
             offset: offset.try_into().unwrap(),
             length: length.try_into().unwrap(),
@@ -45,7 +45,7 @@ impl BufferDescriptor {
     }
 
     /// Returns the relative offset within a stride.
-    pub fn local_offset(&self) -> u32 {
+    pub fn local_offset(&self) -> usize {
         if self.0.stride != 0 {
             (self.0.offset % self.0.stride) as _
         } else {
