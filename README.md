@@ -1,4 +1,4 @@
-# opensubdiv <img src="osd-logo.png" alt="OpenSubdiv Logo" width="15%" align="right" align="top">
+# opensubdiv <img src="osd-logo.png" alt="OpenSubdiv Logo" width="15%" padding-bottom="5%" align="right" align="top">
 
 A Rust wrapper for *Pixar*’s
 [*OpenSubdiv* library](http://graphics.pixar.com/opensubdiv/docs/intro.html).
