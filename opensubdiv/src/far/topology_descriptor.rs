@@ -2,14 +2,16 @@
 //!
 //! ## Example
 //! ```
-//! # use opensubdiv::far::TopologyDescriptor;
-//! // The positions. This is commonly used later, with a PrimvarRefiner.
+//! # use crate::far::TopologyDescriptor;
+//! // The positions as a flat buffer. This is commonly used later, with a PrimvarRefiner.
 //! let vertices = [1, 1, 1, 1, -1, -1, -1, 1, -1, -1 - 1, 1];
 //!
 //! // Describe the basic topology of our tetrahedron.
 //! let mut tetrahedron = TopologyDescriptor::new(
 //!     (vertices.len() / 3) as _,
+//!     // Four triangles.
 //!     &[3; 4],
+//!     // Vertex indices for each triangle.
 //!     &[2, 1, 0, 3, 2, 0, 1, 3, 0, 2, 3, 1],
 //! );
 //!
@@ -52,6 +54,9 @@ use std::{convert::TryInto, marker::PhantomData};
 ///
 /// This is used to construct a
 /// [`TopologyRefiner`](crate::far::TopologyRefiner).
+///
+/// See the [module level documentation](crate::far::topology_descriptor) for
+/// an example.
 #[derive(Clone, Copy, Debug)]
 pub struct TopologyDescriptor<'a> {
     pub(crate) descriptor: sys::OpenSubdiv_v3_4_4_Far_TopologyDescriptor,
@@ -81,6 +86,17 @@ impl<'a> TopologyDescriptor<'a> {
     ) -> TopologyDescriptor<'a> {
         let mut descriptor =
             unsafe { sys::OpenSubdiv_v3_4_4_Far_TopologyDescriptor::new() };
+
+        #[cfg(feature = "validate_topology")]
+        {
+            debug_assert!(
+                vertex_indices_per_face.len()
+                    == vertices_per_face.iter().sum::<u32>() as _
+            );
+            for index in vertex_indices_per_face {
+                debug_assert!((*index as usize) < vertices_len);
+            }
+        }
 
         descriptor.numVertices = vertices_len.try_into().unwrap();
         descriptor.numFaces = vertices_per_face.len().try_into().unwrap();

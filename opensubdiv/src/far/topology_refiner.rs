@@ -50,6 +50,9 @@ impl TopologyRefiner {
         sys_options.schemeType = options.scheme as _;
         sys_options.schemeOptions = sdc_options;
 
+        #[cfg(feature = "validate_topology")]
+        sys_options._set_validateFullTopology(true as _);
+
         let ptr = unsafe {
             sys::TopologyRefinerFactory_TopologyDescriptor_Create(
                 &descriptor.descriptor as _,

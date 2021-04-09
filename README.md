@@ -33,19 +33,24 @@ when *OpenSubdiv* is built.
 
 Almost all of them are not yet implemented.
 
-- [ ] `clew` – TBD
+- [ ] `clew` – TBD. Adds support for
+      [`CLEW`](https://github.com/martijnberger/clew).
 - [ ] `cuda` – Adds support for the [*Nvidia CUDA*](https://developer.nvidia.com/cuda-toolkit)
-    backend. *Only valid on Linux/Windows.*
-    *CUDA* support is almost done (Rust API wrappers are there).
-    It just require some more work in `build.rs`.
-    Ideally, if the `cuda` feature flag is present, `build.rs` would detect a
-    *CUDA* installation on *Linux*/*Windows* and configure the *OpenSubdiv*
-    build resp. panic if no installation can be found.
-- [ ] `metal` – Adds support for the *Apple*
-     [*Metal*](https://developer.apple.com/metal/) backend. *Only valid on
-     macOS.*
-- [ ] `opencl` – TBD
-- [ ] `ptex` – TBD
+      backend. *Only valid on Linux/Windows.*
+      *CUDA* support is almost done (Rust API wrappers are there).
+      It just require some more work in `build.rs`.
+      Ideally, if the `cuda` feature flag is present, `build.rs` would detect a
+      *CUDA* installation on *Linux*/*Windows* and configure the *OpenSubdiv*
+      build resp. panic if no installation can be found.
+- [ ] TBD. `metal` – Adds support for the *Apple*
+      [*Metal*](https://developer.apple.com/metal/) backend. *Only valid on
+      macOS.*
+- [ ] `opencl` – TBD. Adds support for the
+      [`OpenCL`](https://www.khronos.org/opencl/) backend.
+- [ ] `ptex` – TBD. Adds support for [`PTex`](http://ptex.us/).
+- [x] `topology_validation` – Do (expensive) validation of topology. This
+      checks index bounds on the Rust side and activates a bunch of topology
+      checks on the FFI side. This is on by default.
 
 ### OpenMP Support on macOS
 

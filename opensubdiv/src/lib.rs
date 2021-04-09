@@ -14,6 +14,30 @@
 //! The code is optimized for drawing deforming surfaces with static topology at
 //! interactive framerates.
 //!
+//! ## Features
+//!
+//! There are several features to gate the resp. [build
+//! flags](https://github.com/PixarAnimationStudios/OpenSubdiv#useful-cmake-options-and-environment-variables)
+//! when *OpenSubdiv* is built.
+//!
+//! Almost all of them are not yet implemented.
+//!
+//! - [ ] `clew` – TBD. Adds support for [`CLEW`](https://github.com/martijnberger/clew).
+//! - [ ] `cuda` – Adds support for the [*Nvidia CUDA*](https://developer.nvidia.com/cuda-toolkit)
+//!   backend. *Only valid on Linux/Windows.* *CUDA* support is almost done
+//!   (Rust API wrappers are there). It just require some more work in
+//!   `build.rs`. Ideally, if the `cuda` feature flag is present, `build.rs`
+//!   would detect a *CUDA* installation on *Linux*/*Windows* and configure the
+//!   *OpenSubdiv* build resp. panic if no installation can be found.
+//! - [ ] TBD. `metal` – Adds support for the *Apple* [*Metal*](https://developer.apple.com/metal/)
+//!   backend. *Only valid on macOS.*
+//! - [ ] `opencl` – TBD. Adds support for the [`OpenCL`](https://www.khronos.org/opencl/)
+//!   backend.
+//! - [ ] `ptex` – TBD. Adds support for [`PTex`](http://ptex.us/).
+//! - [x] `topology_validation` – Do (expensive) validation of topology. This
+//!   checks index bounds on the Rust side and activates a bunch of topology
+//!   checks on the FFI side. This is on by default.
+//!
 //! ## Limitations
 //!
 //! The original library does make use of templates in quite a few places.
@@ -30,16 +54,16 @@
 //! * Be verbose consistently (the original API is quite verbose but does make
 //!   use of abbreviations in some suprising places).
 //! * Use canonical Rust naming (`num_vertices()` becomes `vertices_len()`).
-//! * Use canonical Rust constructs (e.g. the builder pattern – or anti-pattern,
-//!   depending whom you ask). I will probably switch this to an [init struct pattern](https://xaeroxe.github.io/init-struct-pattern/)
-//!   soon.  Even though this means a minimal overhead for some structs which
-//!   are better left for `bindgen` to define and then require copying.
+//! * Use canonical Rust constructs.  Most option/configuraion structs use the
+//!   [init struct pattern](https://xaeroxe.github.io/init-struct-pattern/).
+//!   In places where the no simple type case is possible, the builder pattern
+//!   (or anti-pattern, depending whom you ask) is used.
 //! * Be brief when possible. Example: `StencilTable::numStencils()` in C++
 //!   becomes `StencilTable::len()` in Rust.
-//! * Use usnigned integer types, specifically `u32`, instead of signed ones
-//!   (`i32`) for anything that can only contain positive values (indices,
-//!   sizes/lengths/counts, valences, arities, etc.). Types should express
-//!   intent.  See also
+//! * Use unsigned integer types, specifically `usize` and `u32`, instead of
+//!   signed ones (`i32`) for anything that can only contain positive values
+//!   (indices, sizes/lengths/counts, valences, arities, etc.). Types should
+//!   express intent.  See also
 //!   [here](https://github.com/PixarAnimationStudios/OpenSubdiv/issues/1222).
 pub mod far;
 pub mod osd;

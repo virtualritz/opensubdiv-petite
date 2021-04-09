@@ -14,12 +14,14 @@ documentation = "https://docs.rs/opensubdiv/"
 repository = "https://github.com/virtualritz/opensubdiv/"
 
 [features]
+default = ["topology_validation"]
 clew = ["opensubdiv-sys/clew"]
 cuda = ["opensubdiv-sys/cuda"]
 metal = ["opensubdiv-sys/metal"]
 omp = ["opensubdiv-sys/omp"]
 opencl = ["opensubdiv-sys/opencl"]
 ptex = ["opensubdiv-sys/ptex"]
+topology_validation = []
 
 [dependencies]
 derive_more = "0.99.13"
