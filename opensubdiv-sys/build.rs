@@ -1,6 +1,7 @@
 #![allow(unreachable_code)]
 use std::{env, path::PathBuf};
 
+#[cfg(all(target_os = "macos", feature = "openmp"))]
 static MAC_OS_BREW_CLANG_PATH: &str = "/usr/local/opt/llvm/bin";
 
 pub fn main() {
@@ -22,6 +23,9 @@ pub fn main() {
     open_subdiv
         .always_configure(true)
         .define("GLFW_LOCATION", glfw)
+        .define("NO_EXAMPLES", "1")
+        .define("NO_TUTORIALS", "1")
+        .define("NO_REGRESSION", "1")
         .define("NO_PTEX", "1")
         .define("NO_DOC", "1")
         .define("NO_OPENCL", "1")
@@ -34,7 +38,7 @@ pub fn main() {
     #[cfg(any(not(target_os = "macos"), not(feature = "metal")))]
     open_subdiv.define("NO_METAL", "1");
 
-    #[cfg(target_os = "macos")]
+    #[cfg(all(target_os = "macos", feature = "openmp"))]
     {
         // We try to use Homebrew's Clang for building; not Apple Clang.
         // This allows us to build with OpenMP support.
@@ -48,7 +52,7 @@ pub fn main() {
         } else {
             // No clang installed via Homebrew – we can't build with OpenMP
             // support on macOS as Apple's Clang has no support for it.
-            open_subdiv.define("NO_OMP", "1");
+            panic!("Feature `openmp` enabled but no OpenMP capable compiler found.")
         }
     }
 
@@ -61,22 +65,41 @@ pub fn main() {
     let osd_inlude_path = open_subdiv.join("include");
     let osd_lib_path = open_subdiv.join("lib");
 
-    let mut dst_capi = cmake::Config::new("osd-capi");
+    let mut osd_capi = cc::Build::new();
 
-    dst_capi
-        .always_configure(true)
-        .define("OSD_INCLUDE_PATH", &osd_inlude_path);
+    osd_capi
+        .include(&osd_inlude_path)
+        .cpp(true)
+        .static_flag(true)
+        .flag("-std=c++14")
+        .flag("-Wno-return-type-c-linkage")
+        .file("c-api/far/primvar_refiner.cpp")
+        .file("c-api/far/stencil_table.cpp")
+        .file("c-api/far/stencil_table_factory.cpp")
+        .file("c-api/far/topology_refiner.cpp")
+        .file("c-api/far/topology_level.cpp")
+        .file("c-api/osd/cpu_vertex_buffer.cpp");
 
-    #[cfg(any(target_os = "macos", not(feature = "cuda")))]
-    dst_capi.define("NO_CUDA", "1");
+    #[cfg(feature = "openmp")]
+    osd_capi
+        .file("osd/omp_evaluator.cpp")
+        .file("osd/omp_vertex_buffer.cpp");
 
-    let dst_capi = dst_capi.build();
+    #[cfg(all(feature = "cuda", not(target_os = "macos")))]
+    osd_capi
+        .file("osd/cuda_evaluator.cpp")
+        .file("osd/cuda_vertex_buffer.cpp");
 
-    println!("cargo:rustc-link-search=native={}", dst_capi.display());
+    osd_capi.compile("osd-capi");
+
+    //println!("cargo:rustc-link-search=native={}", dst_capi.display());
     println!("cargo:rustc-link-lib=static=osd-capi");
 
     println!("cargo:rustc-link-search=native={}", osd_lib_path.display());
     println!("cargo:rustc-link-lib=static=osdCPU");
+
+    #[cfg(feature = "openmp")]
+    println!("cargo:rustc-link-lib=static=osdOMP");
 
     #[cfg(feature = "cuda")]
     println!("cargo:rustc-link-lib=static=osdGPU");

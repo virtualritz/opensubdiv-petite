@@ -156,7 +156,7 @@ extern "C" {
         }
     }
 
-    void PrimvarRefiner_Interpolate(
+    void PrimvarRefiner_InterpolateFaceVarying(
         PrimvarRefiner* pr,
         int num_elements,
         int level,
