@@ -36,27 +36,37 @@ extern "C" {
         return &pr->GetTopologyRefiner();
     }
 
-    void PrimvarRefiner_Interpolate(PrimvarRefiner* pr, int num_elements, int level,
-                                    float* src, float* dst) {
+    void PrimvarRefiner_Interpolate(
+        PrimvarRefiner* pr,
+        int num_elements,
+        int level,
+        float* src,
+        float* dst
+    ) {
+        Primvar<1>* dst1;
+        Primvar<2>* dst2;
+        Primvar<3>* dst3;
+        Primvar<4>* dst4;
+
         switch (num_elements) {
             case 1: {
-                Primvar<1>* dst = (Primvar<1>*)dst;
-                pr->Interpolate(level, (Primvar<1>*)src, dst);
+                dst1 = (Primvar<1>*)dst;
+                pr->Interpolate(level, (Primvar<1>*)src, dst1);
                 break;
             }
             case 2: {
-                Primvar<2>* dst = (Primvar<2>*)dst;
-                pr->Interpolate(level, (Primvar<2>*)src, dst);
+                dst2 = (Primvar<2>*)dst;
+                pr->Interpolate(level, (Primvar<2>*)src, dst2);
                 break;
             }
             case 3: {
-                Primvar<3>* dst = (Primvar<3>*)dst;
-                pr->Interpolate(level, (Primvar<3>*)src, dst);
+                dst3 = (Primvar<3>*)dst;
+                pr->Interpolate(level, (Primvar<3>*)src, dst3);
                 break;
             }
             case 4: {
-                Primvar<4>* dst = (Primvar<4>*)dst;
-                pr->Interpolate(level, (Primvar<4>*)src, dst);
+                dst4 = (Primvar<4>*)dst;
+                pr->Interpolate(level, (Primvar<4>*)src, dst4);
                 break;
             }
             default: {
@@ -66,91 +76,121 @@ extern "C" {
         }
     }
 
-    void PrimvarRefiner_InterpolateVarying(PrimvarRefiner* pr, int num_elements,
-                                        int level, float* src, float* dst) {
+    void PrimvarRefiner_InterpolateVarying(
+        PrimvarRefiner* pr,
+        int num_elements,
+        int level,
+        float* src,
+        float* dst
+    ) {
+        Primvar<1>* dst1;
+        Primvar<2>* dst2;
+        Primvar<3>* dst3;
+        Primvar<4>* dst4;
+
         switch (num_elements) {
             case 1: {
-                Primvar<1>* dst = (Primvar<1>*)dst;
-                pr->InterpolateVarying(level, (Primvar<1>*)src, dst);
+                dst1 = (Primvar<1>*)dst;
+                pr->InterpolateVarying(level, (Primvar<1>*)src, dst1);
                 break;
             }
             case 2: {
-                Primvar<2>* dst = (Primvar<2>*)dst;
-                pr->InterpolateVarying(level, (Primvar<2>*)src, dst);
+                dst2 = (Primvar<2>*)dst;
+                pr->InterpolateVarying(level, (Primvar<2>*)src, dst2);
                 break;
             }
             case 3: {
-                Primvar<3>* dst = (Primvar<3>*)dst;
-                pr->InterpolateVarying(level, (Primvar<3>*)src, dst);
+                dst3 = (Primvar<3>*)dst;
+                pr->InterpolateVarying(level, (Primvar<3>*)src, dst3);
                 break;
             }
             case 4: {
-                Primvar<4>* dst = (Primvar<4>*)dst;
-                pr->InterpolateVarying(level, (Primvar<4>*)src, dst);
+                dst4 = (Primvar<4>*)dst;
+                pr->InterpolateVarying(level, (Primvar<4>*)src, dst4);
                 break;
             }
             default: {
-                printf("Invalid num elements for Interpolate: { %d\n", num_elements);
+                printf("Invalid num elements for InterpolateVarying: { %d\n", num_elements);
                 std::terminate();
             }
         }
     }
 
-    void PrimvarRefiner_InterpolateFaceUniform(PrimvarRefiner* pr, int num_elements,
-                                            int level, float* src, float* dst) {
+    void PrimvarRefiner_InterpolateFaceUniform(
+        PrimvarRefiner* pr,
+        int num_elements,
+        int level,
+        float* src,
+        float* dst
+    ) {
+        Primvar<1>* dst1;
+        Primvar<2>* dst2;
+        Primvar<3>* dst3;
+        Primvar<4>* dst4;
+
         switch (num_elements) {
             case 1: {
-                Primvar<1>* dst = (Primvar<1>*)dst;
-                pr->InterpolateFaceUniform(level, (Primvar<1>*)src, dst);
+                dst1 = (Primvar<1>*)dst;
+                pr->InterpolateFaceUniform(level, (Primvar<1>*)src, dst1);
                 break;
             }
             case 2: {
-                Primvar<2>* dst = (Primvar<2>*)dst;
-                pr->InterpolateFaceUniform(level, (Primvar<2>*)src, dst);
+                dst2 = (Primvar<2>*)dst;
+                pr->InterpolateFaceUniform(level, (Primvar<2>*)src, dst2);
                 break;
             }
             case 3: {
-                Primvar<3>* dst = (Primvar<3>*)dst;
-                pr->InterpolateFaceUniform(level, (Primvar<3>*)src, dst);
+                dst3 = (Primvar<3>*)dst;
+                pr->InterpolateFaceUniform(level, (Primvar<3>*)src, dst3);
                 break;
             }
             case 4: {
-                Primvar<4>* dst = (Primvar<4>*)dst;
-                pr->InterpolateFaceUniform(level, (Primvar<4>*)src, dst);
+                dst4 = (Primvar<4>*)dst;
+                pr->InterpolateFaceUniform(level, (Primvar<4>*)src, dst4);
                 break;
             }
             default: {
-                printf("Invalid num elements for Interpolate: { %d\n", num_elements);
+                printf("Invalid num elements for InterpolateFaceUniform: { %d\n", num_elements);
                 std::terminate();
             }
         }
     }
 
-    void PrimvarRefiner_InterpolateFaceVarying(PrimvarRefiner* pr, int num_elements,
-                                            int level, float* src, float* dst) {
+    void PrimvarRefiner_Interpolate(
+        PrimvarRefiner* pr,
+        int num_elements,
+        int level,
+        float* src,
+        float* dst
+    ) {
+        Primvar<1>* dst1;
+        Primvar<2>* dst2;
+        Primvar<3>* dst3;
+        Primvar<4>* dst4;
+
         switch (num_elements) {
             case 1: {
-                Primvar<1>* dst = (Primvar<1>*)dst;
-                pr->InterpolateFaceVarying(level, (Primvar<1>*)src, dst);
+                dst1 = (Primvar<1>*)dst;
+                pr->InterpolateFaceVarying(level, (Primvar<1>*)src, dst1);
                 break;
             }
             case 2: {
-                Primvar<2>* dst = (Primvar<2>*)dst;
-                pr->InterpolateFaceVarying(level, (Primvar<2>*)src, dst);
+                dst2 = (Primvar<2>*)dst;
+                pr->InterpolateFaceVarying(level, (Primvar<2>*)src, dst2);
                 break;
             }
             case 3: {
-                Primvar<3>* dst = (Primvar<3>*)dst;
-                pr->InterpolateFaceVarying(level, (Primvar<3>*)src, dst);
+                dst3 = (Primvar<3>*)dst;
+                pr->InterpolateFaceVarying(level, (Primvar<3>*)src, dst3);
                 break;
             }
             case 4: {
-                Primvar<4>* dst = (Primvar<4>*)dst;
-                pr->InterpolateFaceVarying(level, (Primvar<4>*)src, dst);
+                dst4 = (Primvar<4>*)dst;
+                pr->InterpolateFaceVarying(level, (Primvar<4>*)src, dst4);
                 break;
             }
             default: {
-                printf("Invalid num elements for Interpolate: { %d\n", num_elements);
+                printf("Invalid num elements for InterpolateFaceVarying: { %d\n", num_elements);
                 std::terminate();
             }
         }
