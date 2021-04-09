@@ -93,7 +93,8 @@ Renaming was done considering these constraints:
   `bindgen` to define and then require copying.
 - Be brief when possible. Example: `StencilTable::numStencils()` in C++
   becomes `StencilTable::len()` in Rust.
-- Use unsigned integer types, specifically `u32`, instead of signed ones
-  (`i32`) for anything that can only contain positive values (indices,
-  sizes/lengths/counts, valences, arities, etc.).  Types should express intent.
-  See also [here](https://github.com/PixarAnimationStudios/OpenSubdiv/issues/1222).
+- Use unsigned integer types, specifically `usize` and `u32`, instead of signed
+  ones (`i32`) for anything that can only contain positive values (indices,
+  sizes/lengths/counts, valences, arities, etc.). Types should express intent.
+  See also
+  [here](https://github.com/PixarAnimationStudios/OpenSubdiv/issues/1222).
