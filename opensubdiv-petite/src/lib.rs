@@ -1,4 +1,4 @@
-#![warn(missing_docs)]
+//#![warn(missing_docs)]
 #![doc(
     html_logo_url = "https://raw.githubusercontent.com/virtualritz/opensubdiv/master/osd-logo.png"
 )]
@@ -36,7 +36,9 @@
 //! - [ ] `ptex` – TBD. Adds support for [`PTex`](http://ptex.us/).
 //! - [x] `topology_validation` – Do (expensive) validation of topology. This
 //!   checks index bounds on the Rust side and activates a bunch of topology
-//!   checks on the FFI side. This is on by default.
+//!   checks on the FFI side.  *This is on by default!* Set `default-features =
+//!   false` in `Cargo.toml` to switch this *off* – suggested for `release`
+//!   builds.
 //!
 //! ## Limitations
 //!
@@ -68,7 +70,10 @@
 pub mod far;
 pub mod osd;
 
-pub use opensubdiv_sys::vtr::Index;
+#[cfg(feature = "tri_mesh_buffers")]
+pub mod tri_mesh_buffers;
+
+pub use opensubdiv_petite_sys::vtr::Index;
 
 #[macro_use]
 extern crate derive_more;

@@ -15,7 +15,7 @@
 //!    - uTangent (offset = n+7,  length = 3, stride = 13)
 //!    - vTangent (offset = n+10, length = 3, stride = 13)
 //! ```
-use opensubdiv_sys as sys;
+use opensubdiv_petite_sys as sys;
 use std::convert::TryInto;
 
 /// A struct which describes buffer elements in interleaved data buffers.

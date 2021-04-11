@@ -1,11 +1,10 @@
-# opensubdiv <img src="osd-logo.png" alt="OpenSubdiv Logo" width="15%" padding-bottom="5%" align="right" align="top">
+# opensubdiv-petite <img src="osd-logo.png" alt="OpenSubdiv Logo" width="15%" padding-bottom="5%" align="right" align="top">
 
-A Rust wrapper for *Pixar*’s
+A Rust selective wrapper for *Pixar*’s
 [*OpenSubdiv* library](http://graphics.pixar.com/opensubdiv/docs/intro.html).
 
-The repositoy comes with minimal dependencies. I.e. *OpenSubdiv* and
-[GLFW](https://www.glfw.org/) are tracked as *Git* submodules under
-`opensubdiv/dependencies`.
+The repositoy comes with minimal dependencies. *OpenSubdiv* is tracked as a
+*Git* submodule under `opensubdiv-petite-sys/OpenSubdiv`.
 
 Either clone the repository with `--recursive` or, if you already cloned it and
 forgot, simply do a
@@ -48,26 +47,19 @@ Almost all of them are not yet implemented.
 - [ ] `opencl` – TBD. Adds support for the
       [`OpenCL`](https://www.khronos.org/opencl/) backend.
 - [ ] `ptex` – TBD. Adds support for [`PTex`](http://ptex.us/).
-- [x] `topology_validation` – Do (expensive) validation of topology. This
+- [x] `topology_validation` – Do (expensive) validation of topology.  This
       checks index bounds on the Rust side and activates a bunch of topology
-      checks on the FFI side. This is on by default.
+      checks on the FFI side.  *This is on by default!*
+      Set `default-features = false` in `Cargo.toml` to switch this *off* –
+      suggested for `release` builds.
 
 ### OpenMP Support on macOS
 
-The library will be built with [OpenMP](https://www.openmp.org/) support on
-*macOS* only if you have a
-non-*Apple* *Clang* installed.
+*OpenMP* detection is broken on the *CMake* side on *macOS*.  There are [a
+bunch of issues](https://gitlab.kitware.com/cmake/cmake/-/issues?scope=all&state=opened&search=OpenMP) open in the CMake tracker. I added some comments [here](https://gitlab.kitware.com/cmake/cmake/-/issues/18470).
 
-The `build.rs` looks in `/usr/local/opt/llvm/bin` for the `clang` and `clang++`
-executables. This is the default location [Homebrew](https://brew.sh/) installs
-`llvm` in.
-
-I.e. to build with *OpenMP* support on *macOS* make sure you install `LLVM` via
-*Homebrew* before building:
-
-```shell
-brew install llvm
-```
+A workaround is likely possible. PRs welcome. If you need to make a fix on the
+[*OpenSubdiv*](https://github.com/PixarAnimationStudios/OpenSubdiv) side, Pixar will probably also welcome a PR.
 
 ## Limitations
 

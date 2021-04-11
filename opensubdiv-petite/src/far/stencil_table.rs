@@ -9,7 +9,7 @@
 //! the control vertices move in space, the limit location can be very
 //! efficiently recomputed simply by applying the blending weights to the
 //! series of coarse control vertices.
-use opensubdiv_sys as sys;
+use opensubdiv_petite_sys as sys;
 use std::convert::TryInto;
 
 use crate::Index;

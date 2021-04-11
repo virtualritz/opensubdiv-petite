@@ -1,7 +1,7 @@
 //! An interface for accessing data in a specific level of a refined topology
 //! hierarchy.
 use super::topology_refiner::TopologyRefiner;
-use opensubdiv_sys as sys;
+use opensubdiv_petite_sys as sys;
 use std::convert::TryInto;
 
 use sys::vtr::types::{Index, LocalIndex};
@@ -63,20 +63,21 @@ impl<'a> TopologyLevel<'a> {
 
 /// ### Methods to Inspect Topological Relationships for Individual Components
 ///
-/// With three main component types (vertices, faces and edges), for each of the
-/// three components the TopologyLevel stores the incident/adjacent components
-/// of the other two types.  So there are six relationships available for
-/// immediate inspection.  All are accessed by methods that return an array of
-/// fixed size containing the indices of the incident components.
+/// With three main component types (*vertices*, *faces* and *edges*), for each
+/// of the three components the `TopologyLevel` stores the incident/adjacent
+/// components of the other two types.  So there are six relationships available
+/// for immediate inspection.  All are accessed by methods that return an array
+/// of fixed size containing the indices of the incident components.
 ///
 /// For some of the relations, i.e. those for which the incident components are
 /// of higher order or 'contain' the component itself (e.g. a vertex has
 /// incident faces that contain it), an additional 'local index' is available
-/// that identifies the component within each of its neighbors.  For example, if
-/// vertex V is the k'th vertex in some face F, then when F occurs in the set of
-/// incident vertices of V, the local index corresponding to F will be k.  The
-/// ordering of local indices matches the ordering of the incident component to
-/// which it corresponds.
+/// that identifies the component within each of its neighbors.
+///
+/// For example, if vertex `V` is the `k`th vertex in some face `F`, then when
+/// `F` occurs in the set of incident vertices of `V`, the local index
+/// corresponding to `F` will be `k`.  The ordering of local indices matches
+/// the ordering of the incident component to which it corresponds.
 impl<'a> TopologyLevel<'a> {
     /// Access the vertices incident a given face
     pub fn face_vertices(&self, f: Index) -> Option<&[Index]> {
@@ -205,6 +206,7 @@ impl<'a> TopologyLevel<'a> {
 }
 
 /// An iterator over the face vertices of this [`TopologyLevel`].
+#[derive(Copy, Clone)]
 pub struct FaceVerticesIterator<'a> {
     level: &'a TopologyLevel<'a>,
     num: u32,
@@ -225,7 +227,7 @@ impl<'a> Iterator for FaceVerticesIterator<'a> {
     }
 }
 
-/// Methods to inspect other topological properties of individual components
+/// ### Methods to Inspect Other Topological Properties of Individual Components
 impl<'a> TopologyLevel<'a> {
     /// Return if the edge is non-manifold.
     #[inline]
@@ -252,7 +254,7 @@ impl<'a> TopologyLevel<'a> {
     }
 }
 
-/// Methods to inspect face-varying data.
+/// ### Methods to Inspect Face-Varying Data.
 ///
 /// Face-varying data is organized into topologically independent channels,
 /// each with an integer identifier.  Access to face-varying data generally
@@ -347,7 +349,7 @@ impl<'a> TopologyLevel<'a> {
     pub fn edge_face_varying_topology_matches(
         &self,
         e: Index,
-        channel: u32,
+        channel: usize,
     ) -> bool {
         unsafe {
             sys::far::TopologyLevel_DoesEdgeFVarTopologyMatch(
@@ -363,7 +365,7 @@ impl<'a> TopologyLevel<'a> {
     pub fn face_varying_topology_on_face_matches(
         &self,
         f: Index,
-        channel: u32,
+        channel: usize,
     ) -> bool {
         unsafe {
             sys::far::TopologyLevel_DoesFaceFVarTopologyMatch(
@@ -375,8 +377,8 @@ impl<'a> TopologyLevel<'a> {
     }
 }
 
-/// Methods to identify parent or child components in adjoining levels of
-/// refinement.
+/// ### Methods to Identify Parent or Child Components in Adjoining Levels of
+/// Refinement.
 impl<'a> TopologyLevel<'a> {
     /// Access the child faces (in the next level) of a given face.
     #[inline]
