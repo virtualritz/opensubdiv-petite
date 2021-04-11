@@ -1,6 +1,6 @@
-# opensubdiv-petite <img src="osd-logo.png" alt="OpenSubdiv Logo" width="15%" padding-bottom="5%" align="right" align="top">
+# `opensubdiv-petite` <img src="osd-logo.png" alt="OpenSubdiv Logo" width="15%" padding-bottom="5%" align="right" align="top">
 
-A Rust selective wrapper for *Pixar*’s
+A selective Rust wrapper for *Pixar*’s
 [*OpenSubdiv* library](http://graphics.pixar.com/opensubdiv/docs/intro.html).
 
 The repositoy comes with minimal dependencies. *OpenSubdiv* is tracked as a
@@ -79,7 +79,7 @@ Renaming was done considering these constraints:
   of abbreviations in some suprising places).
 - Use canonical Rust naming (`num_vertices()` becomes `vertices_len()`).
 - Use canonical Rust constructs (e.g. the builder pattern – or anti-pattern,
-  depending whom you ask). I will probably switch this to an [init **struct**
+  depending whom you ask). I will probably switch this to an [init struct
   pattern](https://xaeroxe.github.io/init-struct-pattern/) soon.  Even though
   this means a minimal overhead for some structs which are better left for
   `bindgen` to define and then require copying.
