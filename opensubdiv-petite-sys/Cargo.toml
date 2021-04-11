@@ -9,8 +9,8 @@ license = "Apache-2.0"
 description = "Low-level wrapper around parts of Pixar’s OpenSubdiv"
 readme = "README.md"
 homepage = "https://graphics.pixar.com/opensubdiv/"
-documentation = "https://docs.rs/opensubdiv/"
-repository = "https://github.com/virtualritz/opensubdiv/"
+documentation = "https://docs.rs/opensubdiv-petite-sys/"
+repository = "https://github.com/virtualritz/opensubdiv-petite/"
 
 [features]
 clew = []
