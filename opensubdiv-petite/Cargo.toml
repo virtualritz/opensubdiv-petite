@@ -14,7 +14,7 @@ documentation = "https://docs.rs/opensubdiv/"
 repository = "https://github.com/virtualritz/opensubdiv/"
 
 [features]
-default = ["topology_validation", "openmp"]
+default = ["topology_validation"]
 clew = ["opensubdiv-petite-sys/clew"]
 cuda = ["opensubdiv-petite-sys/cuda"]
 metal = ["opensubdiv-petite-sys/metal"]
@@ -41,3 +41,8 @@ bevy = "0.5.0"
 path = "examples/osd_tutorial_0_cuda.rs"
 name = "osd_tutorial_0_cuda"
 required-features = [ "cuda" ]
+
+[[example]]
+path = "examples/bevy.rs"
+name = "bevy"
+required-features = [ "tri_mesh_buffers" ]

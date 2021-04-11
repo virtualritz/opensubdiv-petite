@@ -1,6 +1,6 @@
 #![cfg(not(target_os = "macos"))]
 
-use opensubdiv::{far, osd};
+use opensubdiv_petite::{far, osd};
 
 fn main() {
     let vertices = [
