@@ -10,8 +10,8 @@ description = "Wrapper around parts of Pixar’s OpenSubdiv"
 exclude = [".github/**/*", "crates/**/*"]
 readme = "../README.md"
 homepage = "https://graphics.pixar.com/opensubdiv/"
-documentation = "https://docs.rs/opensubdiv/"
-repository = "https://github.com/virtualritz/opensubdiv/"
+documentation = "https://docs.rs/opensubdiv-petite/"
+repository = "https://github.com/virtualritz/opensubdiv-petite/"
 
 [features]
 default = ["topology_validation"]
