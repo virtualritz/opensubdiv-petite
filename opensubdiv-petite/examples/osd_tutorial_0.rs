@@ -1,4 +1,4 @@
-use opensubdiv::{far, osd};
+use opensubdiv_petite::{far, osd};
 
 fn main() {
     let vertices = [

@@ -2,13 +2,13 @@
 //!
 //! ## Example
 //! ```
-//! # use crate::far::TopologyDescriptor;
+//! # use opensubdiv_petite::far::TopologyDescriptor;
 //! // The positions as a flat buffer. This is commonly used later, with a PrimvarRefiner.
-//! let vertices = [1, 1, 1, 1, -1, -1, -1, 1, -1, -1 - 1, 1];
+//! let vertices = [1, 1, 1,  1, -1, -1, -1, 1, -1, -1, - 1, 1];
 //!
 //! // Describe the basic topology of our tetrahedron.
 //! let mut tetrahedron = TopologyDescriptor::new(
-//!     (vertices.len() / 3) as _,
+//!     vertices.len() / 3,
 //!     // Four triangles.
 //!     &[3; 4],
 //!     // Vertex indices for each triangle.

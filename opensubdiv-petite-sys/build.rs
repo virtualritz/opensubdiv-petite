@@ -85,6 +85,7 @@ pub fn main() {
         .file("c-api/far/stencil_table_factory.cpp")
         .file("c-api/far/topology_refiner.cpp")
         .file("c-api/far/topology_level.cpp")
+        .file("c-api/osd/cpu_evaluator.cpp")
         .file("c-api/osd/cpu_vertex_buffer.cpp");
 
     #[cfg(all(feature = "openmp", not(target_os = "macos")))]
@@ -131,7 +132,8 @@ pub fn main() {
         .derive_partialeq(true)
         .derive_eq(true)
         .derive_hash(true)
-        .derive_debug(true);
+        .derive_debug(true)
+        .layout_tests(false);
 
     let out_path = PathBuf::from(env::var_os("OUT_DIR").unwrap());
     let bindings = bindings
