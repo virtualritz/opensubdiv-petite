@@ -2,7 +2,7 @@ use super::buffer_descriptor::BufferDescriptor;
 use super::cpu_vertex_buffer::CpuVertexBuffer;
 use crate::far::StencilTable;
 
-use opensubdiv_sys as sys;
+use opensubdiv_petite_sys as sys;
 
 use crate::Error;
 type Result<T, E = Error> = std::result::Result<T, E>;

@@ -46,7 +46,7 @@
 //! discontinuous there.  Therefore, displacing along the normal will likely
 //! tear apart the surface along the crease.  If you really want to displace a
 //! surface at a crease, it may be better to make the crease semi-sharp.
-use opensubdiv_sys as sys;
+use opensubdiv_petite_sys as sys;
 use std::{convert::TryInto, marker::PhantomData};
 
 /// A `TopologyDescriptor` holds references to raw topology data as flat index
@@ -87,14 +87,20 @@ impl<'a> TopologyDescriptor<'a> {
         let mut descriptor =
             unsafe { sys::OpenSubdiv_v3_4_4_Far_TopologyDescriptor::new() };
 
-        #[cfg(feature = "validate_topology")]
+        #[cfg(feature = "topology_validation")]
         {
-            debug_assert!(
-                vertex_indices_per_face.len()
-                    == vertices_per_face.iter().sum::<u32>() as _
-            );
-            for index in vertex_indices_per_face {
-                debug_assert!((*index as usize) < vertices_len);
+            if vertex_indices_per_face.len()
+                != vertices_per_face.iter().sum::<u32>() as _
+            {
+                panic!("The number of vertex indices is not equal to the sum of face arties.")
+            }
+            for index in vertex_indices_per_face.iter().enumerate() {
+                if vertices_len <= (*index.1 as usize) {
+                    panic!(
+                        "Vertex index[{}] = {} is out of range (should be < {}).",
+                        index.0, *index.1, vertices_len
+                    );
+                }
             }
         }
 
@@ -116,8 +122,20 @@ impl<'a> TopologyDescriptor<'a> {
         creases: &'a [u32],
         sharpness: &'a [f32],
     ) -> &mut Self {
-        debug_assert!(0 == creases.len() % 2);
-        debug_assert!(creases.len() / 2 <= sharpness.len());
+        assert!(0 == creases.len() % 2);
+        assert!(creases.len() / 2 <= sharpness.len());
+
+        #[cfg(feature = "topology_validation")]
+        {
+            for crease in creases.iter().enumerate() {
+                if self.descriptor.numVertices as u32 <= *crease.1 {
+                    panic!(
+                        "Crease index[{}] = {} is out of range (should be < {}).",
+                        crease.0, *crease.1, self.descriptor.numVertices
+                    );
+                }
+            }
+        }
 
         self.descriptor.numCreases = sharpness.len().try_into().unwrap();
         self.descriptor.creaseVertexIndexPairs = creases.as_ptr() as _;
@@ -132,7 +150,19 @@ impl<'a> TopologyDescriptor<'a> {
         corners: &'a [u32],
         sharpness: &'a [f32],
     ) -> &mut Self {
-        debug_assert!(corners.len() <= sharpness.len());
+        assert!(corners.len() <= sharpness.len());
+
+        #[cfg(feature = "topology_validation")]
+        {
+            for corner in corners.iter().enumerate() {
+                if self.descriptor.numVertices as u32 <= *corner.1 {
+                    panic!(
+                        "Corner index[{}] = {} is out of range (should be < {}).",
+                        corner.0, *corner.1, self.descriptor.numVertices
+                    );
+                }
+            }
+        }
 
         self.descriptor.numCorners = sharpness.len().try_into().unwrap();
         self.descriptor.cornerVertexIndices = corners.as_ptr() as _;
@@ -143,6 +173,18 @@ impl<'a> TopologyDescriptor<'a> {
     /// Add holes as face indices.
     #[inline]
     pub fn holes(&mut self, holes: &'a [u32]) -> &mut Self {
+        #[cfg(feature = "topology_validation")]
+        {
+            for hole in holes.iter().enumerate() {
+                if self.descriptor.numVertices as u32 <= *hole.1 {
+                    panic!(
+                        "Hole index[{}] = {} is out of range (should be < {}).",
+                        hole.0, *hole.1, self.descriptor.numVertices
+                    );
+                }
+            }
+        }
+
         self.descriptor.numHoles = holes.len().try_into().unwrap();
         self.descriptor.holeIndices = holes.as_ptr() as _;
         self

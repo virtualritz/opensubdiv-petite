@@ -1,54 +1,55 @@
-use opensubdiv_sys as sys;
+use opensubdiv_petite_sys as sys;
 use std::convert::TryInto;
 
-/// Concrete vertex buffer class for CPU subdivision.
+/// Concrete vertex buffer class for CUDA subdivision.
 ///
-/// [`CpuVertexBuffer`] implements the VertexBufferInterface. An instance
-/// of this buffer class can be passed to
-/// [`evaluate_stencils()`](crate::osd::cpu_evaluator::evaluate_stencils()).
-pub struct CpuVertexBuffer(pub(crate) sys::osd::CpuVertexBufferPtr);
+/// [`CudaVertexBuffer`] implements the VertexBufferInterface. An instance
+/// of this buffer class can be passed to ///
+/// [`evaluate_stencils()`](crate::osd::cuda_evaluator::evaluate_stencils()).
+pub struct CudaVertexBuffer(pub(crate) sys::osd::CudaVertexBufferPtr);
 
-impl Drop for CpuVertexBuffer {
+impl Drop for CudaVertexBuffer {
     #[inline]
     fn drop(&mut self) {
-        unsafe { sys::osd::CpuVertexBuffer_destroy(self.0) }
+        unsafe { sys::osd::CudaVertexBuffer_destroy(self.0) }
     }
 }
 
-impl CpuVertexBuffer {
+impl CudaVertexBuffer {
     #[inline]
-    pub fn new(elements_len: usize, vertices_len: usize) -> CpuVertexBuffer {
+    pub fn new(elements_len: usize, vertices_len: usize) -> CudaVertexBuffer {
         let ptr = unsafe {
-            sys::osd::CpuVertexBuffer_Create(
+            sys::osd::CudaVertexBuffer_Create(
                 elements_len.try_into().unwrap(),
                 vertices_len.try_into().unwrap(),
                 std::ptr::null(),
             )
         };
         if ptr.is_null() {
-            panic!("CpuVertexBuffer_Create returned null");
+            panic!("CudaVertexBuffer_Create returned null");
         }
 
-        CpuVertexBuffer(ptr)
+        CudaVertexBuffer(ptr)
     }
 
     /// Returns how many elements defined in this vertex buffer.
+    #[inline]
     pub fn elements_len(&self) -> usize {
-        unsafe { sys::osd::CpuVertexBuffer_GetNumElements(self.0) as _ }
+        unsafe { sys::osd::CudaVertexBuffer_GetNumElements(self.0) as _ }
     }
 
     /// Returns how many vertices allocated in this vertex buffer.
     #[inline]
     pub fn vertices_len(&self) -> usize {
-        unsafe { sys::osd::CpuVertexBuffer_GetNumVertices(self.0) as _ }
+        unsafe { sys::osd::CudaVertexBuffer_GetNumVertices(self.0) as _ }
     }
 
-    /// Get the contents of this vertex buffer as a slice of [`f32`].
+    /// Get the contents of this vertex buffer as a slice of [`f32`]s.
     #[inline]
-    pub fn bind_cpu_buffer(&self) -> &[f32] {
-        let ptr = unsafe { sys::osd::CpuVertexBuffer_BindCpuBuffer(self.0) };
+    pub fn bind_cuda_buffer(&self) -> &[f32] {
+        let ptr = unsafe { sys::osd::CudaVertexBuffer_BindCudaBuffer(self.0) };
         if ptr.is_null() {
-            panic!("CpuVertexBuffer_BindCpuBuffer() returned null");
+            panic!("CudaVertexBuffer_BindCudaBuffer() returned null");
         }
 
         unsafe {
@@ -60,7 +61,7 @@ impl CpuVertexBuffer {
     }
 
     /// This method is meant to be used in client code in order to provide
-    /// coarse vertices data to Osd.
+    /// coarse vertices data to *OpenSubdiv*..
     #[inline]
     pub fn update_data(
         &mut self,
@@ -88,7 +89,7 @@ impl CpuVertexBuffer {
         }
 
         unsafe {
-            sys::osd::CpuVertexBuffer_UpdateData(
+            sys::osd::CudaVertexBuffer_UpdateData(
                 self.0,
                 src.as_ptr(),
                 start_vertex.try_into().unwrap(),

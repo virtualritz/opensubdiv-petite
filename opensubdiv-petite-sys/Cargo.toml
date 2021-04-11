@@ -1,34 +1,32 @@
 [package]
-name = "opensubdiv"
+name = "opensubdiv-petite-sys"
 version = "0.1.0"
 authors = ["Anders Langlands <anderslanglands@gmail.com>", "Moritz Moeller <virtualritz@protonmail.com>"]
 edition = "2018"
 keywords = ["graphics", "rendering", "3d", "subdivision-surface", "polygon-mesh"]
 categories = ["graphics", "rendering::graphics-api", "api-bindings"]
 license = "Apache-2.0"
-description = "Wrapper around Pixar’s OpenSubdiv"
-exclude = [".github/**/*", "crates/**/*"]
+description = "Low-level wrapper around parts of Pixar’s OpenSubdiv"
 readme = "README.md"
 homepage = "https://graphics.pixar.com/opensubdiv/"
 documentation = "https://docs.rs/opensubdiv/"
 repository = "https://github.com/virtualritz/opensubdiv/"
 
 [features]
-default = ["topology_validation"]
-clew = ["opensubdiv-sys/clew"]
-cuda = ["opensubdiv-sys/cuda"]
-metal = ["opensubdiv-sys/metal"]
-omp = ["opensubdiv-sys/omp"]
-opencl = ["opensubdiv-sys/opencl"]
-ptex = ["opensubdiv-sys/ptex"]
-topology_validation = []
+clew = []
+cuda = []
+metal = []
+omp = []
+opencl = []
+openmp = []
+ptex = []
 
 [dependencies]
+bitfield = "0.13.2"
 derive_more = "0.99.13"
-opensubdiv-sys = { path="../opensubdiv-sys" }
 num_enum = "0.5.1"
 
-[[example]]
-path = "examples/osd_tutorial_0_cuda.rs"
-name = "osd_tutorial_0_cuda"
-required-features = [ "cuda" ]
+[build-dependencies]
+cc = { version = "1.0.67", features = ["parallel"] }
+cmake = "0.1.45"
+bindgen = "0.58.1"

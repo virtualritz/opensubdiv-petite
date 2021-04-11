@@ -19,11 +19,11 @@
 //! The result can be accessed via:
 //! * [`level()`](TopologyRefiner::level()) – Gives access to the refined
 //!   topology at through a [`TopologyLevel`] instance.
-use opensubdiv_sys as sys;
+use opensubdiv_petite_sys as sys;
 use std::convert::TryInto;
 
 use crate::far::TopologyDescriptor;
-use crate::Error;
+use crate::{Error, Index};
 type Result<T, E = Error> = std::result::Result<T, E>;
 
 /// Stores topology data for a specified set of refinement options.
@@ -50,8 +50,8 @@ impl TopologyRefiner {
         sys_options.schemeType = options.scheme as _;
         sys_options.schemeOptions = sdc_options;
 
-        #[cfg(feature = "validate_topology")]
-        sys_options._set_validateFullTopology(true as _);
+        #[cfg(feature = "topology_validation")]
+        sys_options.set_validateFullTopology(true as _);
 
         let ptr = unsafe {
             sys::TopologyRefinerFactory_TopologyDescriptor_Create(
@@ -199,7 +199,7 @@ impl TopologyRefiner {
     pub fn refine_adaptive(
         &mut self,
         options: AdaptiveRefinementOptions,
-        selected_faces: &[u32],
+        selected_faces: &[Index],
     ) {
         let mut sys_options: sys::far::topology_refiner::AdaptiveRefinementOptions =
             unsafe { std::mem::zeroed() };

@@ -31,7 +31,7 @@
 //! efficient to create and use a
 //! [`StencilTable`](crate::far::stencil_table::StencilTable), or `PatchTable`,
 //! to refine primvar data.
-use opensubdiv_sys as sys;
+use opensubdiv_petite_sys as sys;
 use std::convert::TryInto;
 
 use super::TopologyRefiner;

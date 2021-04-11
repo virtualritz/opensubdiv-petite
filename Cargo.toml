@@ -1,6 +1,6 @@
 [workspace]
 members = [
-    'opensubdiv-sys',
-    'opensubdiv'
+    'opensubdiv-petite-sys',
+    'opensubdiv-petite'
 ]
 resolver = "2"

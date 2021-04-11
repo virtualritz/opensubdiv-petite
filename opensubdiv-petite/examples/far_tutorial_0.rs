@@ -1,4 +1,4 @@
-use opensubdiv::far;
+use opensubdiv_petite::far;
 
 fn main() {
     // Geomtry for a cube control polyhedron.
