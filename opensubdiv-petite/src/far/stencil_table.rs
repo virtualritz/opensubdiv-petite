@@ -86,6 +86,11 @@ impl StencilTable {
         unsafe { sys::far::StencilTable_GetNumStencils(self.0) as _ }
     }
 
+    #[inline]
+    pub fn is_empty(&self) -> bool {
+        0 == self.len()
+    }
+
     /// Returns the number of control vertices indexed in the table.
     #[inline]
     pub fn control_vertices_len(&self) -> usize {
