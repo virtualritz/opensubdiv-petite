@@ -3,6 +3,8 @@
 A selective Rust wrapper for *Pixar*’s
 [*OpenSubdiv* library](http://graphics.pixar.com/opensubdiv/docs/intro.html).
 
+The current version this wraps is **OpenSubdiv v3.4.4**.
+
 The repositoy comes with minimal dependencies. *OpenSubdiv* is tracked as a
 *Git* submodule under `opensubdiv-petite-sys/OpenSubdiv`.
 
