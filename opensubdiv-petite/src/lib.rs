@@ -55,7 +55,7 @@
 //! Renaming was done considering these constraints:
 //! * Be verbose consistently (the original API is quite verbose but does make
 //!   use of abbreviations in some suprising places).
-//! * Use canonical Rust naming (`num_vertices()` becomes `vertices_len()`).
+//! * Use canonical Rust naming  – (`num_vertices()` becomes `vertices_len()`).
 //! * Use canonical Rust constructs.  Most option/configuraion structs use the
 //!   [init struct pattern](https://xaeroxe.github.io/init-struct-pattern/).
 //!   In places where the no simple type case is possible, the builder pattern
@@ -64,7 +64,7 @@
 //!   becomes `StencilTable::len()` in Rust.
 //! * Use unsigned integer types, specifically `usize` and `u32`, instead of
 //!   signed ones (`i32`) for anything that can only contain positive values
-//!   (indices, sizes/lengths/counts, valences, arities, etc.). Types should
+//!   (indices, sizes/lengths/counts, valences, arities, etc.).  Types should
 //!   express intent.  See also
 //!   [here](https://github.com/PixarAnimationStudios/OpenSubdiv/issues/1222).
 pub mod far;
