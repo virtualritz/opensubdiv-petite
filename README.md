@@ -1,4 +1,4 @@
-# `opensubdiv-petite` <img src="osd-logo.png" alt="OpenSubdiv Logo" width="15%" padding-bottom="5%" align="right" align="top">
+# Open**Subdiv** *Petite* <img src="osd-logo.png" alt="OpenSubdiv Logo" width="15%" padding-bottom="5%" align="right" align="top">
 
 A selective Rust wrapper for *Pixar*’s
 [*OpenSubdiv* library](http://graphics.pixar.com/opensubdiv/docs/intro.html).
@@ -28,4 +28,7 @@ cargo doc -p opensubdiv --no-deps --open
 ```
 ## Versions
 
-- `v0.1.x` – **OpenSubdiv `v3.4.4`**
+For now crate versions reflect code maturity on the Rust side. They are not in
+any way related to the *OpenSubdiv* version that is wrapped.
+
+- `opensubdiv-petite[-sys] v0.1.x` – *OpenSubdiv* `v3.4.4`

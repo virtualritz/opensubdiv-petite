@@ -11,6 +11,18 @@ readme = "README.md"
 homepage = "https://graphics.pixar.com/opensubdiv/"
 documentation = "https://docs.rs/opensubdiv-petite-sys/"
 repository = "https://github.com/virtualritz/opensubdiv-petite/"
+exclude = [
+    "OpenSubdiv/*.pdf",
+    "OpenSubdiv/*.yml",
+    "OpenSubdiv/documentation/**/*",
+    "OpenSubdiv/examples/**/*",
+    "OpenSubdiv/regression/far_perf/**/*",
+    "OpenSubdiv/regression/far_regression/**/*",
+    "OpenSubdiv/regression/hbr_regression/**/*",
+    "OpenSubdiv/regression/osd_regression/**/*",
+    "OpenSubdiv/regression/shapes/**/*",
+    "OpenSubdiv/tutorials/**/*",
+]
 
 [features]
 clew = []
