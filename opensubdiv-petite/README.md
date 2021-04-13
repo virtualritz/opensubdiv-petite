@@ -1,11 +1,11 @@
-# `opensubdiv-petite` <img src="../osd-logo.png" alt="OpenSubdiv Logo" width="15%" padding-bottom="5%" align="right" align="top">
+# Open**Subdiv** *Petite* <img src="../osd-logo.png" alt="OpenSubdiv Logo" width="15%" padding-bottom="5%" align="right" align="top">
 
 A selective Rust wrapper for *Pixar*’s
 [*OpenSubdiv* library](http://graphics.pixar.com/opensubdiv/docs/intro.html).
 
 ## Versions
 
-- `v0.1.x` – **OpenSubdiv `v3.4.4`**
+- `v0.1.x` – *OpenSubdiv* `v3.4.4`
 
 ## Features
 
@@ -16,7 +16,7 @@ when *OpenSubdiv* is built.
 Almost all of them are not yet implemented.
 
 - [ ] `clew` – TBD. Adds support for
-      [`CLEW`](https://github.com/martijnberger/clew).
+      [*CLEW*](https://github.com/martijnberger/clew).
 - [ ] `cuda` – Adds support for the [*Nvidia CUDA*](https://developer.nvidia.com/cuda-toolkit)
       backend. *Only valid on Linux/Windows.*
       *CUDA* support is almost done (Rust API wrappers are there).
@@ -28,8 +28,8 @@ Almost all of them are not yet implemented.
       [*Metal*](https://developer.apple.com/metal/) backend. *Only valid on
       macOS.*
 - [ ] `opencl` – TBD. Adds support for the
-      [`OpenCL`](https://www.khronos.org/opencl/) backend.
-- [ ] `ptex` – TBD. Adds support for [`PTex`](http://ptex.us/).
+      [*OpenCL*](https://www.khronos.org/opencl/) backend.
+- [ ] `ptex` – TBD. Adds support for [*PTex*](http://ptex.us/).
 - [x] `topology_validation` – Do (expensive) validation of topology.  This
       checks index bounds on the Rust side and activates a bunch of topology
       checks on the FFI side.  *This is on by default!*
