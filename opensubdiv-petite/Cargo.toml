@@ -29,13 +29,13 @@ topology_validation = []
 derive_more = "0.99.13"
 opensubdiv-petite-sys = { path="../opensubdiv-petite-sys" }
 num_enum = "0.5.1"
-
 itertools = { version = "0.10.0", optional = true }
 ultraviolet = { version = "0.8.0", optional = true }
 slice-of-array = { version = "0.3.0", optional = true }
 
 [dev-dependencies]
-bevy = "0.5.0"
+bevy = { version = "0.5.0", default-features = false, features = ["render", "bevy_wgpu", "bevy_winit"] }
+bevy-orbit-controls = "2.0.0"
 
 [[example]]
 path = "examples/osd_tutorial_0_cuda.rs"

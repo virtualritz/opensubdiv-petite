@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use bevy::render::mesh::Indices;
 use bevy::render::pipeline::PrimitiveTopology;
+use bevy_orbit_controls::*;
 use opensubdiv_petite::{far, tri_mesh_buffers};
 
 // Uniformly refine up to 'max level' of 3.
@@ -10,6 +11,7 @@ fn main() {
     App::build()
         .insert_resource(Msaa { samples: 4 })
         .add_plugins(DefaultPlugins)
+        .add_plugin(OrbitCameraPlugin)
         .add_startup_system(setup.system())
         .add_system(rotator_system.system())
         .run();
@@ -54,7 +56,8 @@ fn setup(
         transform: Transform::from_xyz(-2.0, 2.5, 5.0)
             .looking_at(Vec3::ZERO, Vec3::Y),
         ..Default::default()
-    });
+    })
+    .insert(OrbitCamera::default());
 }
 
 fn subdivided_chamfered_tetrahedron() -> Mesh {
