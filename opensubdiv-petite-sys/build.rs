@@ -11,10 +11,6 @@ pub fn main() {
     #[cfg(all(not(target_os = "macos"), feature = "metal"))]
     panic!("The feature `metal` is only available on macOS.");
 
-    //let glfw = cmake::Config::new("dependencies/glfw")
-    //  .always_configure(false)
-    //.build();
-
     // FIXME: check if Homebrew Clang is installed in
     // /usr/local/Cellar/llvm/11.1.0/bin
 
@@ -22,7 +18,6 @@ pub fn main() {
 
     open_subdiv
         .always_configure(true)
-        //.define("GLFW_LOCATION", glfw)
         .define("NO_EXAMPLES", "1")
         .define("NO_TUTORIALS", "1")
         .define("NO_REGRESSION", "1")
@@ -41,7 +36,7 @@ pub fn main() {
     #[cfg(any(not(target_os = "macos"), not(feature = "metal")))]
     open_subdiv.define("NO_METAL", "1");
 
-    /*
+    /* FIXME: OMP support on macOS
     #[cfg(all(target_os = "macos", feature = "openmp"))]
     {
         // We try to use Homebrew's Clang for building; not Apple Clang.
@@ -101,7 +96,6 @@ pub fn main() {
 
     osd_capi.compile("osd-capi");
 
-    //println!("cargo:rustc-link-search=native={}", dst_capi.display());
     println!("cargo:rustc-link-lib=static=osd-capi");
 
     println!("cargo:rustc-link-search=native={}", osd_lib_path.display());
@@ -124,11 +118,6 @@ pub fn main() {
         .header("wrapper.hpp")
         .parse_callbacks(Box::new(bindgen::CargoCallbacks))
         .allowlist_type("OpenSubdiv.*")
-        //.disable_name_namespacing()
-        //.whitelist_type("Osd.*")
-        //.whitelist_function("ai.*")
-        //.whitelist_var("ai.*")
-        //.whitelist_var("AI_.*")
         .derive_partialeq(true)
         .derive_eq(true)
         .derive_hash(true)
