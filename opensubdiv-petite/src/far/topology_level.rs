@@ -80,12 +80,12 @@ impl<'a> TopologyLevel<'a> {
 /// the ordering of the incident component to which it corresponds.
 impl<'a> TopologyLevel<'a> {
     /// Access the vertices incident a given face
-    pub fn face_vertices(&self, f: Index) -> Option<&[Index]> {
+    pub fn face_vertices(&self, face: Index) -> Option<&[Index]> {
         unsafe {
-            let arr = sys::far::TopologyLevel_GetFaceVertices(self.ptr, f);
+            let arr = sys::far::TopologyLevel_GetFaceVertices(self.ptr, face);
             if 0 == arr.size()
                 || arr.begin().is_null()
-                || self.faces_len() <= f as _
+                || self.faces_len() <= face as _
             {
                 None
             } else {
@@ -95,9 +95,9 @@ impl<'a> TopologyLevel<'a> {
     }
 
     /// Access the edges incident a given face
-    pub fn face_edges(&self, f: Index) -> Option<&[Index]> {
+    pub fn face_edges(&self, face: Index) -> Option<&[Index]> {
         unsafe {
-            let arr = sys::far::TopologyLevel_GetFaceEdges(self.ptr, f);
+            let arr = sys::far::TopologyLevel_GetFaceEdges(self.ptr, face);
             if arr.size() == 0 || arr.begin().is_null() {
                 None
             } else {
@@ -107,9 +107,9 @@ impl<'a> TopologyLevel<'a> {
     }
 
     /// Access the vertices incident a given edge
-    pub fn edge_vertices(&self, f: Index) -> Option<&[Index]> {
+    pub fn edge_vertices(&self, edge: Index) -> Option<&[Index]> {
         unsafe {
-            let arr = sys::far::TopologyLevel_GetEdgeVertices(self.ptr, f);
+            let arr = sys::far::TopologyLevel_GetEdgeVertices(self.ptr, edge);
             if arr.size() == 0 || arr.begin().is_null() {
                 None
             } else {
@@ -131,9 +131,9 @@ impl<'a> TopologyLevel<'a> {
     }
 
     /// Access the faces incident a given vertex
-    pub fn vertex_faces(&self, f: Index) -> Option<&[Index]> {
+    pub fn vertex_faces(&self, vertex: Index) -> Option<&[Index]> {
         unsafe {
-            let arr = sys::far::TopologyLevel_GetVertexFaces(self.ptr, f);
+            let arr = sys::far::TopologyLevel_GetVertexFaces(self.ptr, vertex);
             if arr.size() == 0 || arr.begin().is_null() {
                 None
             } else {
@@ -143,9 +143,9 @@ impl<'a> TopologyLevel<'a> {
     }
 
     /// Access the edges incident a given vertex
-    pub fn vertex_edges(&self, f: Index) -> Option<&[Index]> {
+    pub fn vertex_edges(&self, vertex: Index) -> Option<&[Index]> {
         unsafe {
-            let arr = sys::far::TopologyLevel_GetVertexEdges(self.ptr, f);
+            let arr = sys::far::TopologyLevel_GetVertexEdges(self.ptr, vertex);
             if arr.size() == 0 || arr.begin().is_null() {
                 None
             } else {
@@ -155,10 +155,14 @@ impl<'a> TopologyLevel<'a> {
     }
 
     /// Access the local indices of a vertex with respect to its incident faces
-    pub fn vertex_face_local_indices(&self, f: Index) -> Option<&[LocalIndex]> {
+    pub fn vertex_face_local_indices(
+        &self,
+        vertex: Index,
+    ) -> Option<&[LocalIndex]> {
         unsafe {
-            let arr =
-                sys::far::TopologyLevel_GetVertexFaceLocalIndices(self.ptr, f);
+            let arr = sys::far::TopologyLevel_GetVertexFaceLocalIndices(
+                self.ptr, vertex,
+            );
             if arr.size() == 0 || arr.begin().is_null() {
                 None
             } else {
@@ -168,10 +172,14 @@ impl<'a> TopologyLevel<'a> {
     }
 
     /// Access the local indices of a vertex with respect to its incident edges
-    pub fn vertex_edge_local_indices(&self, f: Index) -> Option<&[LocalIndex]> {
+    pub fn vertex_edge_local_indices(
+        &self,
+        vertex: Index,
+    ) -> Option<&[LocalIndex]> {
         unsafe {
-            let arr =
-                sys::far::TopologyLevel_GetVertexEdgeLocalIndices(self.ptr, f);
+            let arr = sys::far::TopologyLevel_GetVertexEdgeLocalIndices(
+                self.ptr, vertex,
+            );
             if arr.size() == 0 || arr.begin().is_null() {
                 None
             } else {
@@ -181,10 +189,13 @@ impl<'a> TopologyLevel<'a> {
     }
 
     /// Access the local indices of an edge with respect to its incident faces
-    pub fn edge_face_local_indices(&self, f: Index) -> Option<&[LocalIndex]> {
+    pub fn edge_face_local_indices(
+        &self,
+        face: Index,
+    ) -> Option<&[LocalIndex]> {
         unsafe {
             let arr =
-                sys::far::TopologyLevel_GetEdgeFaceLocalIndices(self.ptr, f);
+                sys::far::TopologyLevel_GetEdgeFaceLocalIndices(self.ptr, face);
             if arr.size() == 0 || arr.begin().is_null() {
                 None
             } else {
@@ -195,8 +206,10 @@ impl<'a> TopologyLevel<'a> {
 
     /// Identify the edge matching the given vertex pair.
     #[inline]
-    pub fn find_edge(&self, v0: Index, v1: Index) -> Option<Index> {
-        let i = unsafe { sys::far::TopologyLevel_FindEdge(self.ptr, v0, v1) };
+    pub fn find_edge(&self, vertex0: Index, vertex1: Index) -> Option<Index> {
+        let i = unsafe {
+            sys::far::TopologyLevel_FindEdge(self.ptr, vertex0, vertex1)
+        };
         if INVALID_INDEX == i {
             None
         } else {
@@ -229,28 +242,28 @@ impl<'a> Iterator for FaceVerticesIterator<'a> {
 
 /// ### Methods to Inspect Other Topological Properties of Individual Components
 impl<'a> TopologyLevel<'a> {
-    /// Return if the edge is non-manifold.
+    /// Returns `true` if the edge is non-manifold.
     #[inline]
-    pub fn is_edge_non_manifold(&self, e: Index) -> bool {
-        unsafe { sys::far::TopologyLevel_IsEdgeNonManifold(self.ptr, e) }
+    pub fn is_edge_non_manifold(&self, edge: Index) -> bool {
+        unsafe { sys::far::TopologyLevel_IsEdgeNonManifold(self.ptr, edge) }
     }
 
     /// Returns `true` if the vertex is non-manifold.
     #[inline]
-    pub fn is_vertex_non_manifold(&self, v: Index) -> bool {
-        unsafe { sys::far::TopologyLevel_IsVertexNonManifold(self.ptr, v) }
+    pub fn is_vertex_non_manifold(&self, vertex: Index) -> bool {
+        unsafe { sys::far::TopologyLevel_IsVertexNonManifold(self.ptr, vertex) }
     }
 
     /// Returns`true` if the edge is a boundary.
     #[inline]
-    pub fn is_edge_boundary(&self, e: Index) -> bool {
-        unsafe { sys::far::TopologyLevel_IsEdgeBoundary(self.ptr, e) }
+    pub fn is_edge_boundary(&self, edge: Index) -> bool {
+        unsafe { sys::far::TopologyLevel_IsEdgeBoundary(self.ptr, edge) }
     }
 
     /// Return`true` if the vertex is a boundary.
     #[inline]
-    pub fn is_vertex_boundary(&self, v: Index) -> bool {
-        unsafe { sys::far::TopologyLevel_IsVertexBoundary(self.ptr, v) }
+    pub fn is_vertex_boundary(&self, vertex: Index) -> bool {
+        unsafe { sys::far::TopologyLevel_IsVertexBoundary(self.ptr, vertex) }
     }
 }
 
@@ -308,13 +321,13 @@ impl<'a> TopologyLevel<'a> {
     #[inline]
     pub fn face_varying_values_on_face(
         &self,
-        f: Index,
+        face: Index,
         channel: usize,
     ) -> Option<&[Index]> {
         unsafe {
             let arr = sys::far::TopologyLevel_GetFaceFVarValues(
                 self.ptr,
-                f,
+                face,
                 channel as _,
             );
             if 0 == arr.size() || arr.begin().is_null() {
@@ -332,13 +345,13 @@ impl<'a> TopologyLevel<'a> {
     #[inline]
     pub fn vertex_face_varying_topology_matches(
         &self,
-        v: Index,
+        vertex: Index,
         channel: usize,
     ) -> bool {
         unsafe {
             sys::far::TopologyLevel_DoesVertexFVarTopologyMatch(
                 self.ptr,
-                v,
+                vertex,
                 channel.try_into().unwrap(),
             )
         }
@@ -348,13 +361,13 @@ impl<'a> TopologyLevel<'a> {
     #[inline]
     pub fn edge_face_varying_topology_matches(
         &self,
-        e: Index,
+        edge: Index,
         channel: usize,
     ) -> bool {
         unsafe {
             sys::far::TopologyLevel_DoesEdgeFVarTopologyMatch(
                 self.ptr,
-                e,
+                edge,
                 channel.try_into().unwrap(),
             )
         }
@@ -364,13 +377,13 @@ impl<'a> TopologyLevel<'a> {
     #[inline]
     pub fn face_varying_topology_on_face_matches(
         &self,
-        f: Index,
+        face: Index,
         channel: usize,
     ) -> bool {
         unsafe {
             sys::far::TopologyLevel_DoesFaceFVarTopologyMatch(
                 self.ptr,
-                f,
+                face,
                 channel.try_into().unwrap(),
             )
         }
@@ -382,9 +395,9 @@ impl<'a> TopologyLevel<'a> {
 impl<'a> TopologyLevel<'a> {
     /// Access the child faces (in the next level) of a given face.
     #[inline]
-    pub fn face_child_faces(&self, f: Index) -> Option<&[Index]> {
+    pub fn face_child_faces(&self, face: Index) -> Option<&[Index]> {
         unsafe {
-            let arr = sys::far::TopologyLevel_GetFaceChildFaces(self.ptr, f);
+            let arr = sys::far::TopologyLevel_GetFaceChildFaces(self.ptr, face);
             if 0 == arr.size() || arr.begin().is_null() {
                 None
             } else {
@@ -398,9 +411,9 @@ impl<'a> TopologyLevel<'a> {
 
     /// Access the child edges (in the next level) of a given face.
     #[inline]
-    pub fn face_child_edges(&self, f: Index) -> Option<&[Index]> {
+    pub fn face_child_edges(&self, face: Index) -> Option<&[Index]> {
         unsafe {
-            let arr = sys::far::TopologyLevel_GetFaceChildEdges(self.ptr, f);
+            let arr = sys::far::TopologyLevel_GetFaceChildEdges(self.ptr, face);
             if 0 == arr.size() || arr.begin().is_null() {
                 None
             } else {
@@ -414,9 +427,9 @@ impl<'a> TopologyLevel<'a> {
 
     /// Access the child edges (in the next level) of a given edge.
     #[inline]
-    pub fn edge_child_edges(&self, e: Index) -> Option<&[Index]> {
+    pub fn edge_child_edges(&self, edge: Index) -> Option<&[Index]> {
         unsafe {
-            let arr = sys::far::TopologyLevel_GetEdgeChildEdges(self.ptr, e);
+            let arr = sys::far::TopologyLevel_GetEdgeChildEdges(self.ptr, edge);
             if 0 == arr.size() || arr.begin().is_null() {
                 None
             } else {
@@ -430,25 +443,27 @@ impl<'a> TopologyLevel<'a> {
 
     /// Return the child vertex (in the next level) of a given face.
     #[inline]
-    pub fn face_child_vertex(&self, f: Index) -> Index {
-        unsafe { sys::far::TopologyLevel_GetFaceChildVertex(self.ptr, f) }
+    pub fn face_child_vertex(&self, face: Index) -> Index {
+        unsafe { sys::far::TopologyLevel_GetFaceChildVertex(self.ptr, face) }
     }
 
     /// Return the child vertex (in the next level) of a given edge.
     #[inline]
-    pub fn edge_child_vertex(&self, e: Index) -> Index {
-        unsafe { sys::far::TopologyLevel_GetEdgeChildVertex(self.ptr, e) }
+    pub fn edge_child_vertex(&self, edge: Index) -> Index {
+        unsafe { sys::far::TopologyLevel_GetEdgeChildVertex(self.ptr, edge) }
     }
 
     /// Return the child vertex (in the next level) of a given vertex.
     #[inline]
-    pub fn vertex_child_vertex(&self, v: Index) -> Index {
-        unsafe { sys::far::TopologyLevel_GetVertexChildVertex(self.ptr, v) }
+    pub fn vertex_child_vertex(&self, vertex: Index) -> Index {
+        unsafe {
+            sys::far::TopologyLevel_GetVertexChildVertex(self.ptr, vertex)
+        }
     }
 
     /// Return the parent face (in the previous level) of a given face.
     #[inline]
-    pub fn face_parent_face(&self, f: Index) -> Index {
-        unsafe { sys::far::TopologyLevel_GetFaceParentFace(self.ptr, f) }
+    pub fn face_parent_face(&self, face: Index) -> Index {
+        unsafe { sys::far::TopologyLevel_GetFaceParentFace(self.ptr, face) }
     }
 }

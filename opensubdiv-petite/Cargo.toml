@@ -46,3 +46,6 @@ required-features = [ "cuda" ]
 path = "examples/bevy.rs"
 name = "bevy"
 required-features = [ "tri_mesh_buffers" ]
+
+[package.metadata.docs.rs]
+features = ["tri_mesh_buffers", "topology_validation"]

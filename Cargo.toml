@@ -4,3 +4,6 @@ members = [
     'opensubdiv-petite'
 ]
 resolver = "2"
+
+[profile.dev]
+split-debuginfo = "unpacked"

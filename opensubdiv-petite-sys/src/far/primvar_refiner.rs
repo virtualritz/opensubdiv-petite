@@ -2,7 +2,7 @@ pub type PrimvarRefinerPtr = *mut crate::OpenSubdiv_v3_4_4_Far_PrimvarRefiner;
 
 extern "C" {
     pub fn PrimvarRefiner_create(
-        tr: *mut crate::OpenSubdiv_v3_4_4_Far_TopologyRefiner,
+        tr: crate::TopologyRefinerPtr,
     ) -> PrimvarRefinerPtr;
     pub fn PrimvarRefiner_destroy(pr: PrimvarRefinerPtr);
     pub fn PrimvarRefiner_GetTopologyRefiner(pr: PrimvarRefinerPtr);
