@@ -20,7 +20,7 @@
 //! The main data structures in `far` related to topology refinement are:
 //!
 //! * [`TopologyDescriptor`] – Describes a mesh.
-//! * [`TopologyRefiner`](crate::far::topology_refiner::TopologyRefiner) -
+//! * [`TopologyRefiner`](crate::far::topology_refiner::TopologyRefiner) –
 //!   Encapsulates mesh refinement.
 //! * [`TopologyLevel`](crate::far::topology_level::TopologyLevel) – Representis
 //!   one level of refinement within a `TopologyRefiner`.

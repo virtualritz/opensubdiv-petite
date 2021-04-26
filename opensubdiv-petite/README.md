@@ -5,6 +5,9 @@ A selective Rust wrapper for *Pixar*’s
 
 ## Versions
 
+For now crate versions reflect code maturity on the Rust side. They are not in
+any way related to the *OpenSubdiv* version that is wrapped.
+
 - `v0.1.x` – *OpenSubdiv* `v3.4.4`
 
 ## Features
@@ -63,8 +66,8 @@ Renaming was done considering these constraints:
 - Use canonical Rust naming – (`num_vertices()` becomes `vertices_len()`).
 - Use canonical Rust constructs.  Most option/configuraion structs use the
   [init struct pattern](https://xaeroxe.github.io/init-struct-pattern/).
-  In places where the no simple type case is possible, the builder pattern
-  (or anti-pattern, depending whom you ask) is used.
+  In places where it’s not possible to easily map to a Rust struct, the builder
+  pattern (or anti-pattern, depending whom you ask) is used.
 - Be brief when possible. Example: `StencilTable::numStencils()` in C++
   becomes `StencilTable::len()` in Rust.
 - Use unsigned integer types, specifically `usize` and `u32`, instead of

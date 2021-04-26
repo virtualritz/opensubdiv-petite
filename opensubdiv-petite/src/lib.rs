@@ -56,10 +56,10 @@
 //! * Be verbose consistently (the original API is quite verbose but does make
 //!   use of abbreviations in some suprising places).
 //! * Use canonical Rust naming  – (`num_vertices()` becomes `vertices_len()`).
-//! * Use canonical Rust constructs.  Most option/configuraion structs use the
-//!   [init struct pattern](https://xaeroxe.github.io/init-struct-pattern/).
-//!   In places where the no simple type case is possible, the builder pattern
-//!   (or anti-pattern, depending whom you ask) is used.
+//! * Use canonically Rust constructs.  Most option/configuraion structs use the
+//!   [init struct pattern](https://xaeroxe.github.io/init-struct-pattern/). In
+//!   places where it’s not possible to easily map to a Rust struct, the builder
+//!   pattern (or anti-pattern, depending whom you ask) is used.
 //! * Be brief when possible. Example: `StencilTable::numStencils()` in C++
 //!   becomes `StencilTable::len()` in Rust.
 //! * Use unsigned integer types, specifically `usize` and `u32`, instead of
@@ -86,7 +86,7 @@ pub use opensubdiv_petite_sys::vtr::Index;
 #[macro_use]
 extern crate derive_more;
 
-#[derive(Display, Debug)]
+#[derive(Display, Debug, Error)]
 pub enum Error {
     #[display(fmt = "Failed to create TopologyRefiner")]
     CreateTopologyRefinerFailed,
