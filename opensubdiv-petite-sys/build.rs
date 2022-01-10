@@ -27,6 +27,12 @@ pub fn main() {
         .define("NO_CLEW", "1")
         .define("NO_TBB", "1");
 
+    #[cfg(target_os = "windows")]
+    {
+        open_subdiv.cxxflag("/DWIN32 /D_WINDOWS /W3 /GR /EHsc");
+        open_subdiv.cflag("/DWIN32 /D_WINDOWS /W3");
+    }
+
     #[cfg(any(target_os = "macos", not(feature = "cuda")))]
     open_subdiv.define("NO_CUDA", "1");
 
@@ -74,7 +80,6 @@ pub fn main() {
         .cpp(true)
         .static_flag(true)
         .flag("-std=c++14")
-        .flag("-Wno-return-type-c-linkage")
         .file("c-api/far/primvar_refiner.cpp")
         .file("c-api/far/stencil_table.cpp")
         .file("c-api/far/stencil_table_factory.cpp")
@@ -82,6 +87,13 @@ pub fn main() {
         .file("c-api/far/topology_level.cpp")
         .file("c-api/osd/cpu_evaluator.cpp")
         .file("c-api/osd/cpu_vertex_buffer.cpp");
+
+    // To use M_PI
+    #[cfg(target_os = "windows")]
+    osd_capi.flag("-D_USE_MATH_DEFINES");
+
+    #[cfg(not(target_os = "windows"))]
+    osd_capi.flag("-Wno-return-type-c-linkage");
 
     #[cfg(all(feature = "openmp", not(target_os = "macos")))]
     osd_capi
@@ -131,6 +143,26 @@ pub fn main() {
         .expect("Unable to generate bindings");
 
     let bindings_path = out_path.join("bindings.rs");
+
+    #[cfg(target_os = "windows")]
+    {
+        // Workaround for Destructor mangling.
+        // See https://github.com/rust-lang/rust-bindgen/issues/1725
+
+        use std::io::Write;
+
+        let bindings_string = bindings.to_string();
+        let re = regex::Regex::new(r#"\?\?_D(.*?)XXZ"#)
+            .expect("Couldn't create regex");
+        let binding_string_fixed =
+            re.replace_all(&bindings_string, "??1${1}@XZ");
+        let mut file = std::fs::File::create(bindings_path)
+            .expect("Couldn't create bindings");
+        file.write_all(binding_string_fixed.as_bytes())
+            .expect("Couldn't write bindings");
+    }
+
+    #[cfg(not(target_os = "windows"))]
     bindings
         .write_to_file(&bindings_path)
         .expect("Couldn't write bindings");
