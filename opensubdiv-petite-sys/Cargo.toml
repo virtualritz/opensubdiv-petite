@@ -42,3 +42,6 @@ num_enum = "0.5.1"
 cc = { version = "1.0.67", features = ["parallel"] }
 cmake = "0.1.45"
 bindgen = "0.58.1"
+
+[target.'cfg(windows)'.build-dependencies]
+regex = "1"

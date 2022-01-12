@@ -72,7 +72,7 @@ impl TopologyRefiner {
     pub fn options(&self) -> TopologyRefinerOptions {
         let options = unsafe { &(*self.0)._subdivOptions };
         TopologyRefinerOptions {
-            scheme: unsafe { (*self.0)._subdivType }.try_into().unwrap(),
+            scheme: unsafe { (*self.0)._subdivType as u32 }.try_into().unwrap(),
             boundary_interpolation: options
                 ._vtxBoundInterp()
                 .try_into()
