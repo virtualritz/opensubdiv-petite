@@ -13,13 +13,14 @@ pub struct Options {
     pub face_varying_channel: u32,
 }
 
-pub type Stencil = crate::OpenSubdiv_v3_4_4_Far_StencilReal<f32>;
-pub type StencilTable = crate::OpenSubdiv_v3_4_4_Far_StencilTableReal;
+pub type Stencil = crate::OpenSubdiv_v3_5_0_Far_StencilReal<f32>;
+pub type StencilTable = crate::OpenSubdiv_v3_5_0_Far_StencilTableReal;
 pub type StencilTablePtr = *mut StencilTable;
 
+#[link(name = "osl-capi", kind = "static")]
 extern "C" {
     pub fn StencilTableFactory_Create(
-        refiner: *mut crate::OpenSubdiv_v3_4_4_Far_TopologyRefiner,
+        refiner: *mut crate::OpenSubdiv_v3_5_0_Far_TopologyRefiner,
         options: Options,
     ) -> StencilTablePtr;
 

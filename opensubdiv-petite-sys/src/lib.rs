@@ -8,7 +8,6 @@
 
 include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 
-#[link(name = "osl-capi", kind = "static")]
 pub mod far;
 pub use far::*;
 

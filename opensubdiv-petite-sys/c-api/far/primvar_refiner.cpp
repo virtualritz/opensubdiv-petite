@@ -3,6 +3,7 @@
 #include <opensubdiv/sdc/types.h>
 
 #include <stdio.h>
+#include <exception>
 
 typedef OpenSubdiv::Far::PrimvarRefiner PrimvarRefiner;
 typedef OpenSubdiv::Far::TopologyRefiner TopologyRefiner;

@@ -25,7 +25,8 @@ pub fn main() {
         .define("NO_DOC", "1")
         .define("NO_OPENCL", "1")
         .define("NO_CLEW", "1")
-        .define("NO_TBB", "1");
+        .define("NO_TBB", "1")
+        .define("NO_GLFW", "1");
 
     #[cfg(any(target_os = "macos", not(feature = "cuda")))]
     open_subdiv.define("NO_CUDA", "1");
@@ -116,6 +117,7 @@ pub fn main() {
 
     let bindings = bindgen::Builder::default()
         .header("wrapper.hpp")
+        .clang_arg("-IOpenSubdiv")
         .parse_callbacks(Box::new(bindgen::CargoCallbacks))
         .allowlist_type("OpenSubdiv.*")
         .derive_partialeq(true)
@@ -132,7 +134,7 @@ pub fn main() {
 
     let bindings_path = out_path.join("bindings.rs");
     bindings
-        .write_to_file(&bindings_path)
+        .write_to_file(bindings_path)
         .expect("Couldn't write bindings");
 
     println!("cargo:rerun-if-changed=build.rs");
