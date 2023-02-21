@@ -55,8 +55,7 @@ impl BufferDescriptor {
 
     /// Returns `true` if the descriptor values are internally consistent.
     pub fn is_valid(&self) -> bool {
-        (self.0.length != 0)
-            && (self.0.length <= self.0.stride - (self.local_offset() as i32))
+        (self.0.length != 0) && (self.0.length <= self.0.stride - (self.local_offset() as i32))
     }
 
     /// Returns `true` if this buffer descriptor is empty.

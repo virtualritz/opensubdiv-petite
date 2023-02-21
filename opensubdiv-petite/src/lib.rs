@@ -73,7 +73,8 @@
 //! For now crate versions reflect code maturity on the Rust side. They are not
 //! in any way related to the *OpenSubdiv* version that is wrapped.
 //!
-//! - `v0.1.x` – *OpenSubdiv* `v3.4.4`
+//! - `v0.1.x` – *OpenSubdiv* `v3.4.x`
+//! - `v0.2.x` – *OpenSubdiv* `v3.5.x`
 
 pub mod far;
 pub mod osd;

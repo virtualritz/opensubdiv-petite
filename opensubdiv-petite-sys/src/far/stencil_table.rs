@@ -30,18 +30,13 @@ extern "C" {
     /// Returns the number of control vertices indexed in the table
     pub fn StencilTable_GetNumControlVertices(st: StencilTablePtr) -> u32;
     /// Returns a Stencil at index i in the table
-    pub fn StencilTable_GetStencil(
-        st: StencilTablePtr,
-        index: Index,
-    ) -> Stencil;
+    pub fn StencilTable_GetStencil(st: StencilTablePtr, index: Index) -> Stencil;
     /// Returns the number of control vertices of each stencil in the table
     pub fn StencilTable_GetSizes(st: StencilTablePtr) -> IntVectorRef;
     /// Returns the offset to a given stencil (factory may leave empty)
     pub fn StencilTable_GetOffsets(st: StencilTablePtr) -> IndexVectorRef;
     /// Returns the indices of the control vertices
-    pub fn StencilTable_GetControlIndices(
-        st: StencilTablePtr,
-    ) -> IndexVectorRef;
+    pub fn StencilTable_GetControlIndices(st: StencilTablePtr) -> IndexVectorRef;
     /// Returns the stencil interpolation weights
     pub fn StencilTable_GetWeights(st: StencilTablePtr) -> FloatVectorRef;
 }

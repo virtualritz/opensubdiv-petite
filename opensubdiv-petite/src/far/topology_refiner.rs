@@ -27,26 +27,19 @@ use crate::{Error, Index};
 type Result<T, E = Error> = std::result::Result<T, E>;
 
 /// Stores topology data for a specified set of refinement options.
-pub struct TopologyRefiner(
-    pub(crate) sys::topology_refiner::TopologyRefinerPtr,
-);
+pub struct TopologyRefiner(pub(crate) sys::topology_refiner::TopologyRefinerPtr);
 
 impl TopologyRefiner {
     /// Create a new topology refiner.
-    pub fn new(
-        descriptor: TopologyDescriptor,
-        options: TopologyRefinerOptions,
-    ) -> Result<Self> {
-        let mut sdc_options: sys::sdc::Options = unsafe { std::mem::zeroed() };
-        sdc_options._bitfield_1 = sys::sdc::Options::new_bitfield_1(
-            options.boundary_interpolation as _,
-            options.face_varying_linear_interpolation as _,
-            options.creasing_method as _,
-            options.triangle_subdivision as _,
-        );
+    pub fn new(descriptor: TopologyDescriptor, options: TopologyRefinerOptions) -> Result<Self> {
+        let sdc_options = sys::sdc::Options {
+            _vtxBoundInterp: options.boundary_interpolation as _,
+            _fvarLinInterp: options.face_varying_linear_interpolation as _,
+            _creasingMethod: options.creasing_method as _,
+            _triangleSub: options.triangle_subdivision as _,
+        };
 
-        let mut sys_options: sys::far::topology_refiner::Options =
-            unsafe { std::mem::zeroed() };
+        let mut sys_options: sys::far::topology_refiner::Options = unsafe { std::mem::zeroed() };
         sys_options.schemeType = options.scheme as _;
         sys_options.schemeOptions = sdc_options;
 
@@ -73,16 +66,10 @@ impl TopologyRefiner {
         let options = unsafe { &(*self.0)._subdivOptions };
         TopologyRefinerOptions {
             scheme: unsafe { (*self.0)._subdivType }.try_into().unwrap(),
-            boundary_interpolation: options
-                ._vtxBoundInterp()
-                .try_into()
-                .unwrap(),
-            face_varying_linear_interpolation: options
-                ._fvarLinInterp()
-                .try_into()
-                .unwrap(),
-            creasing_method: options._creasingMethod().try_into().unwrap(),
-            triangle_subdivision: options._triangleSub().try_into().unwrap(),
+            boundary_interpolation: options._vtxBoundInterp.try_into().unwrap(),
+            face_varying_linear_interpolation: options._fvarLinInterp.try_into().unwrap(),
+            creasing_method: options._creasingMethod.try_into().unwrap(),
+            triangle_subdivision: options._triangleSub.try_into().unwrap(),
         }
     }
 
@@ -131,9 +118,7 @@ impl TopologyRefiner {
     /// Returns the total number of face vertices in all levels.
     #[inline]
     pub fn face_vertices_total_len(&self) -> usize {
-        unsafe {
-            sys::far::TopologyRefiner_GetNumFaceVerticesTotal(self.0) as _
-        }
+        unsafe { sys::far::TopologyRefiner_GetNumFaceVerticesTotal(self.0) as _ }
     }
 
     /// Returns the highest level of refinement.
@@ -149,12 +134,8 @@ impl TopologyRefiner {
         if level > self.max_level() {
             None
         } else {
-            let ptr = unsafe {
-                sys::far::TopologyRefiner_GetLevel(
-                    self.0,
-                    level.try_into().unwrap(),
-                )
-            };
+            let ptr =
+                unsafe { sys::far::TopologyRefiner_GetLevel(self.0, level.try_into().unwrap()) };
             if ptr.is_null() {
                 None
             } else {
@@ -205,14 +186,14 @@ impl TopologyRefiner {
             unsafe { std::mem::zeroed() };
 
         sys_options._bitfield_1 =
-        sys::far::topology_refiner::AdaptiveRefinementOptions::new_bitfield_1(
-            options.isolation_level.try_into().unwrap(),
-            options.secondary_level.try_into().unwrap(),
-            options.single_crease_patch as _,
-            options.infintely_sharp_patch as _,
-            options.consider_face_varying_channels as _,
-            options.order_vertices_from_faces_first as _,
-        );
+            sys::far::topology_refiner::AdaptiveRefinementOptions::new_bitfield_1(
+                options.isolation_level.try_into().unwrap(),
+                options.secondary_level.try_into().unwrap(),
+                options.single_crease_patch as _,
+                options.infintely_sharp_patch as _,
+                options.consider_face_varying_channels as _,
+                options.order_vertices_from_faces_first as _,
+            );
 
         let const_array = sys::topology_refiner::ConstIndexArray {
             _begin: selected_faces.as_ptr() as _,
@@ -244,8 +225,8 @@ impl Drop for TopologyRefiner {
 }
 
 pub use sys::far::topology_refiner::{
-    BoundaryInterpolation, CreasingMethod, FaceVaryingLinearInterpolation,
-    Scheme, TriangleSubdivision,
+    BoundaryInterpolation, CreasingMethod, FaceVaryingLinearInterpolation, Scheme,
+    TriangleSubdivision,
 };
 
 use super::topology_level::TopologyLevel;
@@ -292,8 +273,7 @@ impl Default for TopologyRefinerOptions {
         Self {
             scheme: Scheme::CatmullClark,
             boundary_interpolation: BoundaryInterpolation::None,
-            face_varying_linear_interpolation:
-                FaceVaryingLinearInterpolation::All,
+            face_varying_linear_interpolation: FaceVaryingLinearInterpolation::All,
             creasing_method: CreasingMethod::Uniform,
             triangle_subdivision: TriangleSubdivision::CatmullClark,
         }

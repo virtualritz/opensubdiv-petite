@@ -51,23 +51,13 @@ impl CpuVertexBuffer {
             panic!("CpuVertexBuffer_BindCpuBuffer() returned null");
         }
 
-        unsafe {
-            std::slice::from_raw_parts(
-                ptr,
-                (self.elements_len() * self.vertices_len()) as usize,
-            )
-        }
+        unsafe { std::slice::from_raw_parts(ptr, self.elements_len() * self.vertices_len()) }
     }
 
     /// This method is meant to be used in client code in order to provide
     /// coarse vertices data to Osd.
     #[inline]
-    pub fn update_data(
-        &mut self,
-        src: &[f32],
-        start_vertex: usize,
-        vertices_len: usize,
-    ) {
+    pub fn update_data(&mut self, src: &[f32], start_vertex: usize, vertices_len: usize) {
         // do some basic error checking
         let elements_len = self.elements_len();
 
