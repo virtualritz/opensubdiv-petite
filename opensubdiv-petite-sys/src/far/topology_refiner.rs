@@ -89,7 +89,7 @@ pub type ConstIndexArray = crate::OpenSubdiv_v3_5_0_Far_ConstIndexArray;
 pub type TopologyRefiner = crate::OpenSubdiv_v3_5_0_Far_TopologyRefiner;
 pub type TopologyRefinerPtr = *mut TopologyRefiner;
 
-#[link(name = "osl-capi", kind = "static")]
+#[link(name = "osd-capi", kind = "static")]
 extern "C" {
     pub fn TopologyRefinerFactory_TopologyDescriptor_Create(
         descriptor: *const crate::OpenSubdiv_v3_5_0_Far_TopologyDescriptor,

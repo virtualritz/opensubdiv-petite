@@ -9,7 +9,7 @@ pub struct CpuEvaluator_obj {
 }
 pub type CpuEvaluatorPtr = *mut CpuEvaluator_obj;
 
-#[link(name = "osl-capi", kind = "static")]
+#[link(name = "osd-capi", kind = "static")]
 extern "C" {
     pub fn CpuEvaluator_EvalStencils(
         src_buffer: CpuVertexBufferPtr,

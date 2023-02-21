@@ -7,7 +7,7 @@ pub struct CpuVertexBuffer_obj {
 }
 pub type CpuVertexBufferPtr = *mut CpuVertexBuffer_obj;
 
-#[link(name = "osl-capi", kind = "static")]
+#[link(name = "osd-capi", kind = "static")]
 extern "C" {
     /// Creator. Returns NULL if error.
     pub fn CpuVertexBuffer_Create(

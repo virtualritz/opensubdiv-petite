@@ -126,6 +126,9 @@ pub fn main() {
         .derive_debug(true)
         .layout_tests(false);
 
+    #[cfg(target_os = "linux")]
+    let bindings = bindings.clang_arg("-stdlib=libc++");
+
     let out_path = PathBuf::from(env::var_os("OUT_DIR").unwrap());
     let bindings = bindings
         .clang_args(&["-F", osd_inlude_path.to_str().unwrap()])

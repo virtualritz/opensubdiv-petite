@@ -17,7 +17,7 @@ pub type Stencil = crate::OpenSubdiv_v3_5_0_Far_StencilReal<f32>;
 pub type StencilTable = crate::OpenSubdiv_v3_5_0_Far_StencilTableReal;
 pub type StencilTablePtr = *mut StencilTable;
 
-#[link(name = "osl-capi", kind = "static")]
+#[link(name = "osd-capi", kind = "static")]
 extern "C" {
     pub fn StencilTableFactory_Create(
         refiner: *mut crate::OpenSubdiv_v3_5_0_Far_TopologyRefiner,
