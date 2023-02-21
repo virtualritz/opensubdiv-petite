@@ -1,5 +1,6 @@
-pub type PrimvarRefinerPtr = *mut crate::OpenSubdiv_v3_4_4_Far_PrimvarRefiner;
+pub type PrimvarRefinerPtr = *mut crate::OpenSubdiv_v3_5_0_Far_PrimvarRefiner;
 
+#[link(name = "osl-capi", kind = "static")]
 extern "C" {
     pub fn PrimvarRefiner_create(
         tr: crate::TopologyRefinerPtr,

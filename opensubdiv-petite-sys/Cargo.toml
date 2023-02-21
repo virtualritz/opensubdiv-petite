@@ -2,7 +2,7 @@
 name = "opensubdiv-petite-sys"
 version = "0.1.0"
 authors = ["Anders Langlands <anderslanglands@gmail.com>", "Moritz Moeller <virtualritz@protonmail.com>"]
-edition = "2018"
+edition = "2021"
 keywords = ["graphics", "rendering", "3d", "subdivision-surface", "polygon-mesh"]
 categories = ["graphics", "rendering::graphics-api", "api-bindings"]
 license = "Apache-2.0"
@@ -34,11 +34,11 @@ openmp = []
 ptex = []
 
 [dependencies]
-bitfield = "0.13.2"
-derive_more = "0.99.13"
-num_enum = "0.5.1"
+bitfield = "0.14.0"
+derive_more = "0.99.17"
+num_enum = "0.5.10"
 
 [build-dependencies]
-cc = { version = "1.0.67", features = ["parallel"] }
-cmake = "0.1.45"
-bindgen = "0.58.1"
+cc = { version = "1.0.79", features = ["parallel"] }
+cmake = "0.1.49"
+bindgen = "0.64.0"
