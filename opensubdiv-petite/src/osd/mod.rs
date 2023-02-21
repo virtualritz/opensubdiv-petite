@@ -1,24 +1,26 @@
 //! # OpenSubdiv
-//! `Osd` contains device dependent code that makes [`far`](crate::far)
+//!
+//! `Osd` contains device-dependent code that makes [`far`](crate::far)
 //! structures available on various backends such as *TBB*, *CUDA*, *OpenCL*,
 //! *GLSL*, etc. The main roles of `osd` are:
-//! * **Refinement**
 //!
+//! * **Refinement**<br>
 //!   Compute stencil-based uniform/adaptive subdivision on *CPU/GPU* backends.
-//! * **Limit Stencil Evaluation**
 //!
-//!    Compute limit surfaces by limit stencils on *CPU/GPU* backends.
-//! * **Limit Evaluation with `PatchTable`**
+//! * **Limit Stencil Evaluation**<br>
+//!   Compute limit surfaces by limit stencils on *CPU/GPU* backends.
 //!
+//! * **Limit Evaluation with `PatchTable`**<br>
 //!   Compute limit surfaces by patch evaluation on *CPU/GPU* backends.
-//! * **OpenGL/DX11/Metal Drawing with Hardware Tessellation**
 //!
+//! * **OpenGL/DX11/Metal Drawing with Hardware Tessellation**<br>
 //!   Provide *GLSL/HLSL/Metal* tessellation functions for patch table.
-//! * **Interleaved/Batched Buffer Configuration**
 //!
+//! * **Interleaved/Batched Buffer Configuration**<br>
 //!   Provide consistent buffer descriptor to deal with arbitrary buffer layout.
-//! * **Cross-Platform Implementation** Provide convenient ways to interop
-//!   between compute and draw APIs.
+//!
+//! * **Cross-Platform Implementation**<br>
+//!   Provide convenient ways to interop between compute and draw APIs.
 //!
 //! These are independently used by clients. For example, a client can use only
 //! the limit stencil evaluation, or a client can refine subdivision surfaces
