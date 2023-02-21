@@ -3,8 +3,8 @@ use opensubdiv_petite::far;
 fn main() {
     // Geomtry for a cube control polyhedron.
     let vertices = [
-        -0.5, -0.5, 0.5, 0.5, -0.5, 0.5, -0.5, 0.5, 0.5, 0.5, 0.5, 0.5, -0.5,
-        0.5, -0.5, 0.5, 0.5, -0.5, -0.5, -0.5, -0.5, 0.5, -0.5, -0.5,
+        -0.5, -0.5, 0.5, 0.5, -0.5, 0.5, -0.5, 0.5, 0.5, 0.5, 0.5, 0.5, -0.5, 0.5, -0.5, 0.5, 0.5,
+        -0.5, -0.5, -0.5, -0.5, 0.5, -0.5, -0.5,
     ];
 
     let num_vertices = vertices.len() / 3;
@@ -22,13 +22,9 @@ fn main() {
     // Create a refiner from a descriptor.
     let mut refiner = far::TopologyRefiner::new(
         // Populate the descriptor with our raw data.
-        far::TopologyDescriptor::new(
-            num_vertices as _,
-            &verts_per_face,
-            &vert_indices,
-        )
-        .creases(&creases, &crease_weights)
-        .clone(),
+        far::TopologyDescriptor::new(num_vertices as _, &verts_per_face, &vert_indices)
+            .creases(&creases, &crease_weights)
+            .clone(),
         far::TopologyRefinerOptions {
             scheme: far::Scheme::CatmullClark,
             boundary_interpolation: far::BoundaryInterpolation::EdgeOnly,

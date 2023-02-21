@@ -72,11 +72,9 @@ impl<'a> PrimvarRefiner<'a> {
     ) -> Option<Vec<f32>> {
         match self.topology_refiner.level(refinement_level) {
             Some(refiner_level) => {
-                let dest_len =
-                    (tuple_len * refiner_level.vertices_len()) as usize;
+                let dest_len = tuple_len * refiner_level.vertices_len();
                 let mut dest = Vec::<f32>::with_capacity(dest_len);
                 unsafe {
-                    dest.set_len(dest_len);
                     sys::far::PrimvarRefiner_Interpolate(
                         self.ptr,
                         tuple_len.try_into().unwrap(),
@@ -84,6 +82,7 @@ impl<'a> PrimvarRefiner<'a> {
                         source.as_ptr(),
                         dest.as_mut_ptr(),
                     );
+                    dest.set_len(dest_len);
                 }
                 Some(dest)
             }
@@ -111,11 +110,9 @@ impl<'a> PrimvarRefiner<'a> {
     ) -> Option<Vec<f32>> {
         match self.topology_refiner.level(refinement_level) {
             Some(refiner_level) => {
-                let dest_len =
-                    (tuple_len * refiner_level.vertices_len()) as usize;
+                let dest_len = tuple_len * refiner_level.vertices_len();
                 let mut dest = Vec::<f32>::with_capacity(dest_len);
                 unsafe {
-                    dest.set_len(dest_len);
                     sys::far::PrimvarRefiner_InterpolateFaceVarying(
                         self.ptr,
                         tuple_len.try_into().unwrap(),
@@ -123,6 +120,7 @@ impl<'a> PrimvarRefiner<'a> {
                         source.as_ptr(),
                         dest.as_mut_ptr(),
                     );
+                    dest.set_len(dest_len);
                 }
                 Some(dest)
             }
@@ -149,11 +147,9 @@ impl<'a> PrimvarRefiner<'a> {
     ) -> Option<Vec<f32>> {
         match self.topology_refiner.level(refinement_level) {
             Some(refiner_level) => {
-                let dest_len =
-                    (tuple_len * refiner_level.vertices_len()) as usize;
+                let dest_len = tuple_len * refiner_level.vertices_len();
                 let mut dest = Vec::<f32>::with_capacity(dest_len);
                 unsafe {
-                    dest.set_len(dest_len);
                     sys::far::PrimvarRefiner_InterpolateFaceUniform(
                         self.ptr,
                         tuple_len.try_into().unwrap(),
@@ -161,6 +157,7 @@ impl<'a> PrimvarRefiner<'a> {
                         source.as_ptr(),
                         dest.as_mut_ptr(),
                     );
+                    dest.set_len(dest_len);
                 }
                 Some(dest)
             }
@@ -186,11 +183,9 @@ impl<'a> PrimvarRefiner<'a> {
     ) -> Option<Vec<f32>> {
         match self.topology_refiner.level(refinement_level) {
             Some(refiner_level) => {
-                let dest_len =
-                    (tuple_len * refiner_level.vertices_len()) as usize;
+                let dest_len = tuple_len * refiner_level.vertices_len();
                 let mut dest = Vec::<f32>::with_capacity(dest_len);
                 unsafe {
-                    dest.set_len(dest_len);
                     sys::far::PrimvarRefiner_InterpolateVarying(
                         self.ptr,
                         tuple_len.try_into().unwrap(),
@@ -198,6 +193,7 @@ impl<'a> PrimvarRefiner<'a> {
                         source.as_ptr(),
                         dest.as_mut_ptr(),
                     );
+                    dest.set_len(dest_len);
                 }
                 Some(dest)
             }

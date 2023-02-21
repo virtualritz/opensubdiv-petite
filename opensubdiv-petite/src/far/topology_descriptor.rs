@@ -4,7 +4,7 @@
 //! ```
 //! # use opensubdiv_petite::far::TopologyDescriptor;
 //! // The positions as a flat buffer. This is commonly used later, with a PrimvarRefiner.
-//! let vertices = [1, 1, 1,  1, -1, -1, -1, 1, -1, -1, - 1, 1];
+//! let vertices = [1, 1, 1, 1, -1, -1, -1, 1, -1, -1, -1, 1];
 //!
 //! // Describe the basic topology of our tetrahedron.
 //! let mut tetrahedron = TopologyDescriptor::new(
@@ -59,7 +59,7 @@ use std::{convert::TryInto, marker::PhantomData};
 /// an example.
 #[derive(Clone, Copy, Debug)]
 pub struct TopologyDescriptor<'a> {
-    pub(crate) descriptor: sys::OpenSubdiv_v3_4_4_Far_TopologyDescriptor,
+    pub(crate) descriptor: sys::OpenSubdiv_v3_5_0_Far_TopologyDescriptor,
     // _marker needs to be invariant in 'a.
     // See "Making a struct outlive a parameter given to a method of
     // that struct": https://stackoverflow.com/questions/62374326/
@@ -73,7 +73,7 @@ impl<'a> TopologyDescriptor<'a> {
     ///
     /// ## Parameters
     /// * `vertices_len` - The number of vertices in the mesh.
-    /// * `vertices_per_face - A slice containing the number of vertices for
+    /// * `vertices_per_face` - A slice containing the number of vertices for
     ///   each face in the mesh. The length of this is the number of faces in
     ///   the mesh.
     /// * `vertex_indices_per_face` - A flat list of the vertex indices for each
@@ -84,14 +84,11 @@ impl<'a> TopologyDescriptor<'a> {
         vertices_per_face: &'a [u32],
         vertex_indices_per_face: &'a [u32],
     ) -> TopologyDescriptor<'a> {
-        let mut descriptor =
-            unsafe { sys::OpenSubdiv_v3_4_4_Far_TopologyDescriptor::new() };
+        let mut descriptor = unsafe { sys::OpenSubdiv_v3_5_0_Far_TopologyDescriptor::new() };
 
         #[cfg(feature = "topology_validation")]
         {
-            if vertex_indices_per_face.len()
-                != vertices_per_face.iter().sum::<u32>() as _
-            {
+            if vertex_indices_per_face.len() != vertices_per_face.iter().sum::<u32>() as _ {
                 panic!("The number of vertex indices is not equal to the sum of face arties.")
             }
             for index in vertex_indices_per_face.iter().enumerate() {
@@ -117,11 +114,7 @@ impl<'a> TopologyDescriptor<'a> {
 
     /// Add creases as vertex index pairs with corresponding sharpness.
     #[inline]
-    pub fn creases(
-        &mut self,
-        creases: &'a [u32],
-        sharpness: &'a [f32],
-    ) -> &mut Self {
+    pub fn creases(&mut self, creases: &'a [u32], sharpness: &'a [f32]) -> &mut Self {
         assert!(0 == creases.len() % 2);
         assert!(creases.len() / 2 <= sharpness.len());
 
@@ -145,11 +138,7 @@ impl<'a> TopologyDescriptor<'a> {
 
     /// Add corners as vertex indices with corresponding sharpness.
     #[inline]
-    pub fn corners(
-        &mut self,
-        corners: &'a [u32],
-        sharpness: &'a [f32],
-    ) -> &mut Self {
+    pub fn corners(&mut self, corners: &'a [u32], sharpness: &'a [f32]) -> &mut Self {
         assert!(corners.len() <= sharpness.len());
 
         #[cfg(feature = "topology_validation")]

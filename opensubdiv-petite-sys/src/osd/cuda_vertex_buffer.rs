@@ -31,8 +31,6 @@ extern "C" {
     /// Returns how many vertices allocated in this vertex buffer.
     pub fn CudaVertexBuffer_GetNumVertices(vb: CudaVertexBufferPtr) -> i32;
     /// Returns the address of CPU buffer
-    pub fn CudaVertexBuffer_BindCudaBuffer(
-        vb: CudaVertexBufferPtr,
-    ) -> *const f32;
+    pub fn CudaVertexBuffer_BindCudaBuffer(vb: CudaVertexBufferPtr) -> *const f32;
 
 }

@@ -35,55 +35,50 @@ pub fn to_triangle_mesh_buffers<'a>(
 
     let points_nested = vertices.nest::<[_; 3]>();
 
-    let (points_nested, normals_nested): (Vec<[f32; 3]>, Vec<[f32; 3]>) =
-        face_vertices_iter
-            .clone()
-            .flat_map(|face| {
-                face.iter()
-                    // Grab the three vertex index entries.
-                    .circular_tuple_windows::<(_, _, _)>()
-                    .map(|(&i0, &i1, &i2)| {
-                        let i0 = i0 as usize;
-                        let i1 = i1 as usize;
-                        let i2 = i2 as usize;
-                        // The middle point of our tuple
-                        let point = Point::new(
-                            points_nested[i1][0],
-                            points_nested[i1][1],
-                            points_nested[i1][2],
-                        );
-                        // Create a normal from that
-                        let normal = -orthogonal(
-                            &Point::new(
-                                points_nested[i0][0],
-                                points_nested[i0][1],
-                                points_nested[i0][2],
-                            ),
-                            &point,
-                            &Point::new(
-                                points_nested[i2][0],
-                                points_nested[i2][1],
-                                points_nested[i2][2],
-                            ),
-                        );
-                        let mag_sq = normal.mag_sq();
+    let (points_nested, normals_nested): (Vec<[f32; 3]>, Vec<[f32; 3]>) = face_vertices_iter
+        .clone()
+        .flat_map(|face| {
+            face.iter()
+                // Grab the three vertex index entries.
+                .circular_tuple_windows::<(_, _, _)>()
+                .map(|(&i0, &i1, &i2)| {
+                    let i0 = i0 as usize;
+                    let i1 = i1 as usize;
+                    let i2 = i2 as usize;
+                    // The middle point of our tuple
+                    let point = Point::new(
+                        points_nested[i1][0],
+                        points_nested[i1][1],
+                        points_nested[i1][2],
+                    );
+                    // Create a normal from that
+                    let normal = -orthogonal(
+                        &Point::new(
+                            points_nested[i0][0],
+                            points_nested[i0][1],
+                            points_nested[i0][2],
+                        ),
+                        &point,
+                        &Point::new(
+                            points_nested[i2][0],
+                            points_nested[i2][1],
+                            points_nested[i2][2],
+                        ),
+                    );
+                    let mag_sq = normal.mag_sq();
 
-                        // Check for collinearity:
-                        let normal = if mag_sq < EPSILON as _ {
-                            -face_normal(&index_as_points(face, points_nested))
-                                .unwrap()
-                        } else {
-                            -normal / mag_sq.sqrt()
-                        };
+                    // Check for collinearity:
+                    let normal = if mag_sq < EPSILON as _ {
+                        -face_normal(&index_as_points(face, points_nested)).unwrap()
+                    } else {
+                        -normal / mag_sq.sqrt()
+                    };
 
-                        (
-                            [point.x, point.y, point.z],
-                            [normal.x, normal.y, normal.z],
-                        )
-                    })
-                    .collect_vec()
-            })
-            .unzip();
+                    ([point.x, point.y, point.z], [normal.x, normal.y, normal.z])
+                })
+                .collect_vec()
+        })
+        .unzip();
 
     // Build a new face index. Same topology as the old one, only with new keys.
     let triangle_face_index = face_vertices_iter

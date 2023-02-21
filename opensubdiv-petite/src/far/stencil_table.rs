@@ -46,29 +46,18 @@ impl Drop for StencilTable {
 
 impl StencilTable {
     /// Create a new stencil table.
-    pub fn new(
-        refiner: &TopologyRefiner,
-        options: StencilTableOptions,
-    ) -> StencilTable {
+    pub fn new(refiner: &TopologyRefiner, options: StencilTableOptions) -> StencilTable {
         let ptr = unsafe {
             sys::far::StencilTableFactory_Create(
                 refiner.0,
                 sys::far::stencil_table::Options {
                     interpolation_mode: options.interpolation_mode as _,
                     generate_offsets: options.generate_offsets as _,
-                    generate_control_vertices: options.generate_control_vertices
-                        as _,
-                    generate_intermediate_levels: options
-                        .generate_intermediate_levels
-                        as _,
-                    factorize_intermediate_levels: options
-                        .factorize_intermediate_levels
-                        as _,
+                    generate_control_vertices: options.generate_control_vertices as _,
+                    generate_intermediate_levels: options.generate_intermediate_levels as _,
+                    factorize_intermediate_levels: options.factorize_intermediate_levels as _,
                     max_level: options.max_level.try_into().unwrap(),
-                    face_varying_channel: options
-                        .face_varying_channel
-                        .try_into()
-                        .unwrap(),
+                    face_varying_channel: options.face_varying_channel.try_into().unwrap(),
                 },
             )
         };
@@ -106,14 +95,8 @@ impl StencilTable {
             unsafe {
                 let stencil = sys::far::StencilTable_GetStencil(self.0, i);
                 Some(Stencil {
-                    indices: std::slice::from_raw_parts(
-                        stencil._indices as _,
-                        stencil._size as _,
-                    ),
-                    weights: std::slice::from_raw_parts(
-                        stencil._weights,
-                        stencil._size as _,
-                    ),
+                    indices: std::slice::from_raw_parts(stencil._indices as _, stencil._size as _),
+                    weights: std::slice::from_raw_parts(stencil._weights, stencil._size as _),
                 })
             }
         }

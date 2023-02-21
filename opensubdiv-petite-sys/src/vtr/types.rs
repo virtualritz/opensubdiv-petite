@@ -13,6 +13,7 @@ impl ConstIndexArray {
     pub fn begin(&self) -> *const Index {
         self.begin
     }
+
     pub fn size(&self) -> u32 {
         self.size
     }
@@ -28,6 +29,7 @@ impl ConstLocalIndexArray {
     pub fn begin(&self) -> *const LocalIndex {
         self.begin
     }
+
     pub fn size(&self) -> u32 {
         self.size
     }
@@ -43,6 +45,7 @@ impl IntVectorRef {
     pub fn data(&self) -> *const u32 {
         self.data
     }
+
     pub fn size(&self) -> usize {
         self.size
     }
@@ -58,6 +61,7 @@ impl IndexVectorRef {
     pub fn data(&self) -> *const Index {
         self.data
     }
+
     pub fn size(&self) -> usize {
         self.size
     }
@@ -73,6 +77,7 @@ impl FloatVectorRef {
     pub fn data(&self) -> *const f32 {
         self.data
     }
+
     pub fn size(&self) -> usize {
         self.size
     }

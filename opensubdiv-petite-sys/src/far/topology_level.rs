@@ -35,36 +35,18 @@ extern "C" {
     /// corresponds.
 
     /// Access the vertices incident a given face
-    pub fn TopologyLevel_GetFaceVertices(
-        tl: TopologyLevelPtr,
-        f: Index,
-    ) -> ConstIndexArray;
+    pub fn TopologyLevel_GetFaceVertices(tl: TopologyLevelPtr, f: Index) -> ConstIndexArray;
     /// Access the edges incident a given face
-    pub fn TopologyLevel_GetFaceEdges(
-        tl: TopologyLevelPtr,
-        f: Index,
-    ) -> ConstIndexArray;
+    pub fn TopologyLevel_GetFaceEdges(tl: TopologyLevelPtr, f: Index) -> ConstIndexArray;
     /// Access the vertices incident a given edge
-    pub fn TopologyLevel_GetEdgeVertices(
-        tl: TopologyLevelPtr,
-        e: Index,
-    ) -> ConstIndexArray;
+    pub fn TopologyLevel_GetEdgeVertices(tl: TopologyLevelPtr, e: Index) -> ConstIndexArray;
     /// Access the faces incident a given edge
-    pub fn TopologyLevel_GetEdgeFaces(
-        tl: TopologyLevelPtr,
-        e: Index,
-    ) -> ConstIndexArray;
+    pub fn TopologyLevel_GetEdgeFaces(tl: TopologyLevelPtr, e: Index) -> ConstIndexArray;
 
     /// Access the faces incident a given vertex
-    pub fn TopologyLevel_GetVertexFaces(
-        tl: TopologyLevelPtr,
-        v: Index,
-    ) -> ConstIndexArray;
+    pub fn TopologyLevel_GetVertexFaces(tl: TopologyLevelPtr, v: Index) -> ConstIndexArray;
     /// Access the edges incident a given vertex
-    pub fn TopologyLevel_GetVertexEdges(
-        tl: TopologyLevelPtr,
-        v: Index,
-    ) -> ConstIndexArray;
+    pub fn TopologyLevel_GetVertexEdges(tl: TopologyLevelPtr, v: Index) -> ConstIndexArray;
 
     /// Access the local indices of a vertex with respect to its incident
     /// faces
@@ -88,36 +70,22 @@ extern "C" {
     ) -> ConstLocalIndexArray;
 
     /// Identify the edge matching the given vertex pair
-    pub fn TopologyLevel_FindEdge(
-        tl: TopologyLevelPtr,
-        v0: Index,
-        v1: Index,
-    ) -> Index;
+    pub fn TopologyLevel_FindEdge(tl: TopologyLevelPtr, v0: Index, v1: Index) -> Index;
 
     /// Methods to inspect other topological properties of individual
     /// components:
 
     /// Return if the edge is non-manifold
-    pub fn TopologyLevel_IsEdgeNonManifold(
-        tl: TopologyLevelPtr,
-        e: Index,
-    ) -> bool;
+    pub fn TopologyLevel_IsEdgeNonManifold(tl: TopologyLevelPtr, e: Index) -> bool;
 
     /// Return if the vertex is non-manifold
-    pub fn TopologyLevel_IsVertexNonManifold(
-        tl: TopologyLevelPtr,
-        v: Index,
-    ) -> bool;
+    pub fn TopologyLevel_IsVertexNonManifold(tl: TopologyLevelPtr, v: Index) -> bool;
 
     /// Return if the edge is a boundary
-    pub fn TopologyLevel_IsEdgeBoundary(tl: TopologyLevelPtr, e: Index)
-        -> bool;
+    pub fn TopologyLevel_IsEdgeBoundary(tl: TopologyLevelPtr, e: Index) -> bool;
 
     /// Return if the vertex is a boundary
-    pub fn TopologyLevel_IsVertexBoundary(
-        tl: TopologyLevelPtr,
-        v: Index,
-    ) -> bool;
+    pub fn TopologyLevel_IsVertexBoundary(tl: TopologyLevelPtr, v: Index) -> bool;
 
     /// Methods to inspect feature tags for individual components:
     ///
@@ -126,16 +94,10 @@ extern "C" {
     /// components can be inspected.
 
     /// Return the sharpness assigned a given edge
-    pub fn TopologyLevel_GetEdgeSharpness(
-        tl: TopologyLevelPtr,
-        e: Index,
-    ) -> f32;
+    pub fn TopologyLevel_GetEdgeSharpness(tl: TopologyLevelPtr, e: Index) -> f32;
 
     /// Return the sharpness assigned a given vertex
-    pub fn TopologyLevel_GetVertexSharpness(
-        tl: TopologyLevelPtr,
-        v: Index,
-    ) -> f32;
+    pub fn TopologyLevel_GetVertexSharpness(tl: TopologyLevelPtr, v: Index) -> f32;
 
     /// Return if a given face has been tagged as a hole
     pub fn TopologyLevel_IsFaceHole(tl: TopologyLevelPtr, f: Index) -> bool;
@@ -181,10 +143,7 @@ extern "C" {
 
     /// Return the total number of face-varying values in a particular
     /// channel (the upper bound of a face-varying value index)
-    pub fn TopologyLevel_GetNumFVarValues(
-        tl: TopologyLevelPtr,
-        channel: i32,
-    ) -> u32;
+    pub fn TopologyLevel_GetNumFVarValues(tl: TopologyLevelPtr, channel: i32) -> u32;
 
     /// Access the face-varying values associated with a particular face
     pub fn TopologyLevel_GetFaceFVarValues(
@@ -218,46 +177,25 @@ extern "C" {
     /// of refinement:
 
     /// Access the child faces (in the next level) of a given face
-    pub fn TopologyLevel_GetFaceChildFaces(
-        tl: TopologyLevelPtr,
-        f: Index,
-    ) -> ConstIndexArray;
+    pub fn TopologyLevel_GetFaceChildFaces(tl: TopologyLevelPtr, f: Index) -> ConstIndexArray;
 
     /// Access the child edges (in the next level) of a given face
-    pub fn TopologyLevel_GetFaceChildEdges(
-        tl: TopologyLevelPtr,
-        f: Index,
-    ) -> ConstIndexArray;
+    pub fn TopologyLevel_GetFaceChildEdges(tl: TopologyLevelPtr, f: Index) -> ConstIndexArray;
 
     /// Access the child edges (in the next level) of a given edge
-    pub fn TopologyLevel_GetEdgeChildEdges(
-        tl: TopologyLevelPtr,
-        e: Index,
-    ) -> ConstIndexArray;
+    pub fn TopologyLevel_GetEdgeChildEdges(tl: TopologyLevelPtr, e: Index) -> ConstIndexArray;
 
     /// Return the child vertex (in the next level) of a given face
-    pub fn TopologyLevel_GetFaceChildVertex(
-        tl: TopologyLevelPtr,
-        f: Index,
-    ) -> Index;
+    pub fn TopologyLevel_GetFaceChildVertex(tl: TopologyLevelPtr, f: Index) -> Index;
 
     /// Return the child vertex (in the next level) of a given edge
-    pub fn TopologyLevel_GetEdgeChildVertex(
-        tl: TopologyLevelPtr,
-        e: Index,
-    ) -> Index;
+    pub fn TopologyLevel_GetEdgeChildVertex(tl: TopologyLevelPtr, e: Index) -> Index;
 
     /// Return the child vertex (in the next level) of a given vertex
-    pub fn TopologyLevel_GetVertexChildVertex(
-        tl: TopologyLevelPtr,
-        v: Index,
-    ) -> Index;
+    pub fn TopologyLevel_GetVertexChildVertex(tl: TopologyLevelPtr, v: Index) -> Index;
 
     /// Return the parent face (in the previous level) of a given face
-    pub fn TopologyLevel_GetFaceParentFace(
-        tl: TopologyLevelPtr,
-        f: Index,
-    ) -> Index;
+    pub fn TopologyLevel_GetFaceParentFace(tl: TopologyLevelPtr, f: Index) -> Index;
 
     /// Debugging aides:
     pub fn TopologyLevel_ValidateTopology(tl: TopologyLevelPtr) -> bool;

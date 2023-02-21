@@ -2,8 +2,8 @@ use opensubdiv_petite::{far, osd};
 
 fn main() {
     let vertices = [
-        -0.5, -0.5, 0.5, 0.5, -0.5, 0.5, -0.5, 0.5, 0.5, 0.5, 0.5, 0.5, -0.5,
-        0.5, -0.5, 0.5, 0.5, -0.5, -0.5, -0.5, -0.5, 0.5, -0.5, -0.5,
+        -0.5, -0.5, 0.5, 0.5, -0.5, 0.5, -0.5, 0.5, 0.5, 0.5, 0.5, 0.5, -0.5, 0.5, -0.5, 0.5, 0.5,
+        -0.5, -0.5, -0.5, -0.5, 0.5, -0.5, -0.5,
     ];
     let num_vertices = vertices.len() / 3;
 
@@ -15,11 +15,7 @@ fn main() {
 
     // instantiate a TopologyRefiner from a descriptor
     let mut refiner = far::TopologyRefiner::new(
-        far::TopologyDescriptor::new(
-            num_vertices as _,
-            &verts_per_face,
-            &vert_indices,
-        ),
+        far::TopologyDescriptor::new(num_vertices as _, &verts_per_face, &vert_indices),
         far::TopologyRefinerOptions {
             scheme: far::Scheme::CatmullClark,
             boundary_interpolation: far::BoundaryInterpolation::EdgeOnly,

@@ -2,9 +2,7 @@ pub type PrimvarRefinerPtr = *mut crate::OpenSubdiv_v3_5_0_Far_PrimvarRefiner;
 
 #[link(name = "osd-capi", kind = "static")]
 extern "C" {
-    pub fn PrimvarRefiner_create(
-        tr: crate::TopologyRefinerPtr,
-    ) -> PrimvarRefinerPtr;
+    pub fn PrimvarRefiner_create(tr: crate::TopologyRefinerPtr) -> PrimvarRefinerPtr;
     pub fn PrimvarRefiner_destroy(pr: PrimvarRefinerPtr);
     pub fn PrimvarRefiner_GetTopologyRefiner(pr: PrimvarRefinerPtr);
     pub fn PrimvarRefiner_Interpolate(

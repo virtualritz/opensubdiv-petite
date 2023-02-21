@@ -1,32 +1,34 @@
 use bevy::prelude::*;
-use bevy::render::mesh::Indices;
-use bevy::render::pipeline::PrimitiveTopology;
-use bevy_orbit_controls::*;
+use bevy::render::mesh::{Indices, Mesh, PrimitiveTopology};
 use opensubdiv_petite::{far, tri_mesh_buffers};
+use smooth_bevy_cameras::{
+    controllers::orbit::{OrbitCameraBundle, OrbitCameraController, OrbitCameraPlugin},
+    LookTransformPlugin,
+};
 
 // Uniformly refine up to 'max level' of 3.
 static MAX_LEVEL: usize = 3;
 
 fn main() {
-    App::build()
+    App::new()
         .insert_resource(Msaa { samples: 4 })
         .add_plugins(DefaultPlugins)
-        .add_plugin(OrbitCameraPlugin)
-        .add_startup_system(setup.system())
-        .add_system(rotator_system.system())
+        .add_plugin(LookTransformPlugin)
+        .add_plugin(OrbitCameraPlugin::default())
+        .add_startup_system(setup)
+        .add_system(rotator_system)
+        .add_system(bevy::window::close_on_esc)
         .run();
 }
 
 /// this component indicates what entities should rotate
+#[derive(Component)]
 struct Rotator;
 
 /// rotates the parent, which will result in the child also rotating
-fn rotator_system(
-    time: Res<Time>,
-    mut query: Query<&mut Transform, With<Rotator>>,
-) {
-    for mut transform in query.iter_mut() {
-        transform.rotation *= Quat::from_rotation_y(3.0 * time.delta_seconds());
+fn rotator_system(time: Res<Time>, mut query: Query<&mut Transform, With<Rotator>>) {
+    for mut transform in &mut query {
+        transform.rotate_x(3.0 * time.delta_seconds());
     }
 }
 
@@ -37,8 +39,9 @@ fn setup(
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     // chamfered_tetrahedron
+
     commands
-        .spawn_bundle(PbrBundle {
+        .spawn(PbrBundle {
             mesh: meshes.add(subdivided_chamfered_tetrahedron()),
             material: materials.add(Color::rgb(0.8, 0.7, 0.6).into()),
             transform: Transform::from_xyz(0.0, 0.25, 0.0)
@@ -46,19 +49,23 @@ fn setup(
             ..Default::default()
         })
         .insert(Rotator);
-    // light
-    commands.spawn_bundle(LightBundle {
-        transform: Transform::from_xyz(4.0, 8.0, 4.0),
-        ..Default::default()
-    });
-    // camera
+
     commands
-        .spawn_bundle(PerspectiveCameraBundle {
-            transform: Transform::from_xyz(-2.0, 2.5, 5.0)
-                .looking_at(Vec3::ZERO, Vec3::Y),
+        // light
+        .spawn(DirectionalLightBundle {
+            transform: Transform::from_translation(Vec3::new(4.0, 8.0, 4.0)),
             ..Default::default()
-        })
-        .insert(OrbitCamera::default());
+        });
+
+    commands
+        // camera
+        .spawn(Camera3dBundle::default())
+        .insert(OrbitCameraBundle::new(
+            OrbitCameraController::default(),
+            Vec3::new(-2.0, 2.5, 5.0),
+            Vec3::new(0., 0., 0.),
+            Vec3::new(0., -1., 0.),
+        ));
 }
 
 fn subdivided_chamfered_tetrahedron() -> Mesh {
@@ -120,15 +127,13 @@ fn subdivided_chamfered_tetrahedron() -> Mesh {
     let face_arities = [3u32, 3, 3, 3, 6, 6, 6, 6, 6, 6];
 
     let face_vertices = [
-        4u32, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0, 9, 8, 2, 4, 6, 0, 12,
-        11, 3, 7, 9, 1, 15, 14, 3, 11, 10, 0, 6, 5, 1, 10, 12, 2, 8, 7, 3, 14,
-        13, 1, 5, 4, 2, 13, 15,
+        4u32, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0, 9, 8, 2, 4, 6, 0, 12, 11, 3, 7, 9, 1, 15,
+        14, 3, 11, 10, 0, 6, 5, 1, 10, 12, 2, 8, 7, 3, 14, 13, 1, 5, 4, 2, 13, 15,
     ];
 
     let creases = [
-        4u32, 5, 5, 6, 7, 8, 8, 9, 10, 11, 11, 12, 13, 14, 14, 15, 0, 9, 2, 4,
-        4, 6, 0, 12, 3, 7, 7, 9, 1, 15, 3, 11, 0, 6, 1, 10, 10, 12, 2, 8, 3,
-        14, 1, 5, 2, 13, 13, 15,
+        4u32, 5, 5, 6, 7, 8, 8, 9, 10, 11, 11, 12, 13, 14, 14, 15, 0, 9, 2, 4, 4, 6, 0, 12, 3, 7,
+        7, 9, 1, 15, 3, 11, 0, 6, 1, 10, 10, 12, 2, 8, 3, 14, 1, 5, 2, 13, 13, 15,
     ];
 
     let crease_weights = [2.0; 24];
@@ -136,14 +141,10 @@ fn subdivided_chamfered_tetrahedron() -> Mesh {
     // Create a refiner (a subdivider) from a topology descriptor.
     let mut refiner = far::TopologyRefiner::new(
         // Populate the descriptor with our raw data.
-        far::TopologyDescriptor::new(
-            vertices.len() / 3,
-            &face_arities,
-            &face_vertices,
-        )
-        .creases(&creases, &crease_weights)
-        .left_handed(true)
-        .clone(),
+        far::TopologyDescriptor::new(vertices.len() / 3, &face_arities, &face_vertices)
+            .creases(&creases, &crease_weights)
+            .left_handed(true)
+            .clone(),
         far::TopologyRefinerOptions {
             scheme: far::Scheme::CatmullClark,
             boundary_interpolation: far::BoundaryInterpolation::EdgeOnly,
@@ -152,8 +153,7 @@ fn subdivided_chamfered_tetrahedron() -> Mesh {
     )
     .expect("Could not create TopologyRefiner");
 
-    // Refine (subdivice) the topology uniformy MAX_LEVEL
-    // times.
+    // Refine (subdivice) the topology uniformy MAX_LEVEL times.
     refiner.refine_uniform(far::topology_refiner::UniformRefinementOptions {
         refinement_level: MAX_LEVEL,
         ..Default::default()
@@ -185,14 +185,10 @@ fn subdivided_chamfered_tetrahedron() -> Mesh {
     );
 
     let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
-    // Bevy forces UVs. We create some fake UVs by just projecting through,
-    // onto the XY plane.
-    let uvs = points.iter().map(|p| [p[0], p[1]]).collect::<Vec<_>>();
 
     mesh.set_indices(Some(Indices::U32(index)));
-    mesh.set_attribute(Mesh::ATTRIBUTE_POSITION, points);
-    mesh.set_attribute(Mesh::ATTRIBUTE_NORMAL, normals);
-    mesh.set_attribute(Mesh::ATTRIBUTE_UV_0, uvs);
+    mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, points);
+    mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, normals);
 
     mesh
 }
