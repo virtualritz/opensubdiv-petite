@@ -52,7 +52,7 @@ impl<'a> TopologyLevel<'a> {
     }
 
     /// Returns an iterator over the face vertices of this level.
-    pub fn face_vertices_iter(&self) -> FaceVerticesIterator {
+    pub fn face_vertices_iter(&self) -> FaceVerticesIterator<'_> {
         FaceVerticesIterator {
             level: self,
             current: 0,

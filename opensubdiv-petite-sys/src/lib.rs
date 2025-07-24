@@ -12,7 +12,6 @@ pub mod far;
 pub use far::*;
 
 pub mod sdc;
-pub use sdc::*;
 
 pub mod osd;
 

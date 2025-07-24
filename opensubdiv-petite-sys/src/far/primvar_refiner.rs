@@ -1,4 +1,4 @@
-pub type PrimvarRefinerPtr = *mut crate::OpenSubdiv_v3_5_0_Far_PrimvarRefiner;
+pub type PrimvarRefinerPtr = *mut crate::OpenSubdiv_v3_6_1_Far_PrimvarRefiner;
 
 #[link(name = "osd-capi", kind = "static")]
 extern "C" {

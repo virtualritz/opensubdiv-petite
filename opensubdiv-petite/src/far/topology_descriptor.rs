@@ -59,7 +59,7 @@ use std::{convert::TryInto, marker::PhantomData};
 /// an example.
 #[derive(Clone, Copy, Debug)]
 pub struct TopologyDescriptor<'a> {
-    pub(crate) descriptor: sys::OpenSubdiv_v3_5_0_Far_TopologyDescriptor,
+    pub(crate) descriptor: sys::OpenSubdiv_v3_6_1_Far_TopologyDescriptor,
     // _marker needs to be invariant in 'a.
     // See "Making a struct outlive a parameter given to a method of
     // that struct": https://stackoverflow.com/questions/62374326/
@@ -84,7 +84,7 @@ impl<'a> TopologyDescriptor<'a> {
         vertices_per_face: &'a [u32],
         vertex_indices_per_face: &'a [u32],
     ) -> TopologyDescriptor<'a> {
-        let mut descriptor = unsafe { sys::OpenSubdiv_v3_5_0_Far_TopologyDescriptor::new() };
+        let mut descriptor = unsafe { sys::OpenSubdiv_v3_6_1_Far_TopologyDescriptor::new() };
 
         #[cfg(feature = "topology_validation")]
         {
@@ -115,7 +115,7 @@ impl<'a> TopologyDescriptor<'a> {
     /// Add creases as vertex index pairs with corresponding sharpness.
     #[inline]
     pub fn creases(&mut self, creases: &'a [u32], sharpness: &'a [f32]) -> &mut Self {
-        assert!(0 == creases.len() % 2);
+        assert!(creases.len().is_multiple_of(2));
         assert!(creases.len() / 2 <= sharpness.len());
 
         #[cfg(feature = "topology_validation")]

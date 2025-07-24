@@ -1,1 +1,1 @@
-pub type BufferDescriptor = crate::OpenSubdiv_v3_5_0_Osd_BufferDescriptor;
+pub type BufferDescriptor = crate::OpenSubdiv_v3_6_1_Osd_BufferDescriptor;

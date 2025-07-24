@@ -1,6 +1,6 @@
 [package]
 name = "opensubdiv-petite-sys"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["Anders Langlands <anderslanglands@gmail.com>", "Moritz Moeller <virtualritz@protonmail.com>"]
 edition = "2021"
 keywords = ["graphics", "rendering", "3d", "subdivision-surface", "polygon-mesh"]
@@ -36,7 +36,7 @@ ptex = []
 [dependencies]
 bitfield = "0.14.0"
 derive_more = "0.99.17"
-num_enum = "0.5.10"
+num_enum = "0.5.11"
 
 [build-dependencies]
 cc = { version = "1.0.79", features = ["parallel"] }

@@ -130,7 +130,7 @@ impl TopologyRefiner {
     /// Returns a handle to access data specific to a particular refinement
     /// level.
     #[inline]
-    pub fn level(&self, level: usize) -> Option<TopologyLevel> {
+    pub fn level(&self, level: usize) -> Option<TopologyLevel<'_>> {
         if level > self.max_level() {
             None
         } else {
