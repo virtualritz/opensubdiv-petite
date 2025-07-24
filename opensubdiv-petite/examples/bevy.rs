@@ -11,7 +11,7 @@ static MAX_LEVEL: usize = 3;
 
 fn main() {
     App::new()
-        .insert_resource(Msaa { samples: 4 })
+        .insert_resource(Msaa::Sample4)
         .add_plugins(DefaultPlugins)
         .add_plugin(LookTransformPlugin)
         .add_plugin(OrbitCameraPlugin::default())
@@ -59,7 +59,19 @@ fn setup(
 
     commands
         // camera
-        .spawn(Camera3dBundle::default())
+        .spawn((
+            Camera3dBundle {
+                camera: Camera {
+                    hdr: true,
+                    ..default()
+                },
+                ..default()
+            },
+            EnvironmentMapLight {
+                diffuse_map: asset_server.load("environment_maps/pisa_diffuse_rgb9e5_zstd.ktx2"),
+                specular_map: asset_server.load("environment_maps/pisa_specular_rgb9e5_zstd.ktx2"),
+            },
+        ))
         .insert(OrbitCameraBundle::new(
             OrbitCameraController::default(),
             Vec3::new(-2.0, 2.5, 5.0),

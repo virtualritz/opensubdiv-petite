@@ -1,6 +1,6 @@
 use crate::vtr::types::*;
 
-pub type TopologyLevelPtr = *mut crate::OpenSubdiv_v3_5_0_Far_TopologyLevel;
+pub type TopologyLevelPtr = *mut crate::OpenSubdiv_v3_6_1_Far_TopologyLevel;
 
 #[link(name = "osd-capi", kind = "static")]
 extern "C" {

@@ -89,8 +89,8 @@ extern crate derive_more;
 
 #[derive(Display, Debug, Error)]
 pub enum Error {
-    #[display(fmt = "Failed to create TopologyRefiner")]
+    #[display("Failed to create TopologyRefiner")]
     CreateTopologyRefinerFailed,
-    #[display(fmt = "Stencil evaluation failed")]
+    #[display("Stencil evaluation failed")]
     EvalStencilsFailed,
 }

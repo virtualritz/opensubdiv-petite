@@ -26,9 +26,13 @@ pub fn main() {
         .define("NO_OPENCL", "1")
         .define("NO_CLEW", "1")
         .define("NO_TBB", "1")
-        .define("NO_GLFW", "1");
+        .define("NO_GLFW", "1")
+        .define("NO_OPENGL", "1")  // Disable OpenGL to avoid GPU-related build issues
+        .define("NO_DX", "1")      // Disable DirectX
+        .define("CMAKE_CXX_STANDARD", "14");
 
-    #[cfg(any(target_os = "macos", not(feature = "cuda")))]
+    // Always disable CUDA unless explicitly enabled
+    #[cfg(not(feature = "cuda"))]
     open_subdiv.define("NO_CUDA", "1");
 
     #[cfg(any(target_os = "macos", not(feature = "openmp")))]

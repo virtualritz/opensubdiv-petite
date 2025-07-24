@@ -8,8 +8,39 @@ A selective Rust wrapper for *Pixar*’s
 For now crate versions reflect code maturity on the Rust side. They are not in
 any way related to the *OpenSubdiv* version that is wrapped.
 
+- `v0.3.x` – *OpenSubdiv* `v3.6.x`
 - `v0.2.x` – *OpenSubdiv* `v3.5.0`
 - `v0.1.x` – *OpenSubdiv* `v3.4.4`
+
+## Build Requirements
+
+### Ubuntu/Debian
+
+This crate requires a working C++ compiler with standard library support. Due to issues with
+some compiler configurations, we recommend using Clang 17 with libc++:
+
+```bash
+# Install required packages
+sudo apt install -y clang-17 libc++-17-dev libc++abi-17-dev cmake
+
+# Build with the recommended compiler
+CC=clang-17 CXX=clang++-17 CXXFLAGS="-stdlib=libc++" cargo build
+```
+
+**Known Issues:**
+- The default system Clang (version 20+) may have compatibility issues
+- GNU libstdc++ packages may have missing headers on some systems
+- If you have `CC`/`CXX` environment variables set in your shell configuration,
+  they may override the build settings. Unset them or use the explicit command above.
+
+### macOS
+
+The crate should build with the default Xcode toolchain. For OpenMP support, see the
+section below.
+
+### Windows
+
+Use MSVC or MinGW-w64. CUDA support requires MSVC.
 
 ## Features
 
