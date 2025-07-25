@@ -163,3 +163,192 @@ fn test_creased_cube_to_step() {
     
     println!("Successfully generated creased_cube.step with higher-order surfaces");
 }
+
+#[cfg(feature = "truck")]
+#[test]
+fn test_creased_cube_direct_nurbs_export() {
+    use opensubdiv_petite::far::{
+        PatchTable, TopologyDescriptor, TopologyRefiner, TopologyRefinerOptions,
+        PatchType, PrimvarRefiner, AdaptiveRefinementOptions, PatchTableOptions, EndCapType,
+    };
+    use std::fs;
+    
+    // Define the creased cube vertices (same as above)
+    let vertex_positions = vec![
+        [-0.5, -0.5, 0.5],
+        [0.5, -0.5, 0.5],
+        [-0.5, 0.5, 0.5],
+        [0.5, 0.5, 0.5],
+        [-0.5, 0.5, -0.5],
+        [0.5, 0.5, -0.5],
+        [-0.5, -0.5, -0.5],
+        [0.5, -0.5, -0.5],
+    ];
+
+    let face_vertex_counts = vec![4, 4, 4, 4, 4, 4];
+    let face_vertex_indices = vec![
+        0, 1, 3, 2,  // front
+        2, 3, 5, 4,  // top
+        4, 5, 7, 6,  // back
+        6, 7, 1, 0,  // bottom
+        0, 2, 4, 6,  // left
+        1, 7, 5, 3,  // right
+    ];
+
+    // Define creases
+    let crease_indices = vec![
+        0, 1,  // bottom front edge
+        1, 3,  // right front edge
+        3, 2,  // top front edge
+        2, 0,  // left front edge
+    ];
+    let crease_weights = vec![2.0, 2.0, 2.0, 2.0];
+
+    // Create topology descriptor
+    let mut descriptor = TopologyDescriptor::new(
+        vertex_positions.len(),
+        &face_vertex_counts,
+        &face_vertex_indices,
+    );
+    descriptor.creases(&crease_indices, &crease_weights);
+
+    // Create topology refiner
+    let refiner_options = TopologyRefinerOptions::default();
+    let mut refiner = TopologyRefiner::new(descriptor, refiner_options)
+        .expect("Failed to create topology refiner");
+
+    // Use adaptive refinement
+    let mut adaptive_options = AdaptiveRefinementOptions::default();
+    adaptive_options.isolation_level = 2;
+    refiner.refine_adaptive(adaptive_options, &[]);
+
+    // Create patch table
+    let patch_options = PatchTableOptions::new()
+        .end_cap_type(EndCapType::BSplineBasis);
+    let patch_table = PatchTable::new(&refiner, Some(patch_options))
+        .expect("Failed to create patch table");
+
+    // Build vertex buffer
+    let primvar_refiner = PrimvarRefiner::new(&refiner);
+    let total_vertices = refiner.vertex_total_count();
+    let flat_positions: Vec<f32> = vertex_positions
+        .iter()
+        .flat_map(|v| v.iter().copied())
+        .collect();
+    
+    let mut all_vertices = Vec::with_capacity(total_vertices);
+    
+    // Add base level vertices
+    for v in &vertex_positions {
+        all_vertices.push(*v);
+    }
+    
+    // Add refined vertices
+    let num_levels = refiner.refinement_levels();
+    for level in 1..num_levels {
+        if let Some(refined) = primvar_refiner.interpolate(level, 3, &flat_positions) {
+            let level_vertices: Vec<[f32; 3]> = refined
+                .chunks_exact(3)
+                .map(|chunk| [chunk[0], chunk[1], chunk[2]])
+                .collect();
+            all_vertices.extend_from_slice(&level_vertices);
+        }
+    }
+    
+    println!("Direct NURBS export: {} total vertices", all_vertices.len());
+    println!("Direct NURBS export: {} patch arrays", patch_table.patch_arrays_len());
+    
+    // Create STEP file manually
+    let mut step_content = String::new();
+    
+    // Write STEP header
+    step_content.push_str("ISO-10303-21;\n");
+    step_content.push_str("HEADER;\n");
+    step_content.push_str("FILE_DESCRIPTION(('Direct NURBS export from OpenSubdiv patches'),'2;1');\n");
+    step_content.push_str("FILE_NAME('creased_cube_direct_nurbs.step','2024-01-01T00:00:00',(),(),'','','');\n");
+    step_content.push_str("FILE_SCHEMA(('AUTOMOTIVE_DESIGN'));\n");
+    step_content.push_str("ENDSEC;\n");
+    step_content.push_str("DATA;\n");
+    
+    let mut entity_id = 1;
+    let mut surface_ids = Vec::new();
+    
+    // Process each patch array
+    for array_idx in 0..patch_table.patch_arrays_len() {
+        if let Some(desc) = patch_table.patch_array_descriptor(array_idx) {
+            let patch_type = desc.patch_type();
+            let num_patches = patch_table.patch_array_patches_len(array_idx);
+            
+            println!("Direct NURBS export: Processing {} patches of type {:?}", num_patches, patch_type);
+            
+            // Only process B-spline patches
+            if patch_type == PatchType::Regular {
+                // Regular patches are bicubic B-splines (4x4 control points)
+                if let Some(patch_vertices) = patch_table.patch_array_vertices(array_idx) {
+                    for patch_idx in 0..num_patches {
+                        // Get control point indices for this patch (16 control points)
+                        let cp_start = patch_idx * 16;
+                        let control_indices: Vec<_> = patch_vertices[cp_start..cp_start + 16]
+                            .iter()
+                            .copied()
+                            .collect();
+                    
+                    // Write control points as Cartesian points
+                    let mut cp_ids = Vec::new();
+                    for &idx in &control_indices {
+                        if let Some(vertex) = all_vertices.get(idx.0 as usize) {
+                            step_content.push_str(&format!(
+                                "#{} = CARTESIAN_POINT('',({},{},{}));\n",
+                                entity_id, vertex[0], vertex[1], vertex[2]
+                            ));
+                            cp_ids.push(entity_id);
+                            entity_id += 1;
+                        }
+                    }
+                    
+                    // Create B-spline surface with basis functions
+                    // For bicubic B-spline: degree 3 in both u and v
+                    let degree = 3;
+                    let knot_multiplicities = "(4,4)"; // Multiplicities for open knot vector
+                    let knots = "(0.,1.)"; // Knot values
+                    
+                    // Create B-spline surface
+                    step_content.push_str(&format!(
+                        "#{} = B_SPLINE_SURFACE_WITH_KNOTS('',{},{},((#{},#{},#{},#{}),(#{},#{},#{},#{}),(#{},#{},#{},#{}),(#{},#{},#{},#{})),\n.UNSPECIFIED.,.F.,.F.,.F.,{},{},{},{},(),.UNSPECIFIED.);\n",
+                        entity_id,
+                        degree, degree,
+                        cp_ids[0], cp_ids[1], cp_ids[2], cp_ids[3],
+                        cp_ids[4], cp_ids[5], cp_ids[6], cp_ids[7],
+                        cp_ids[8], cp_ids[9], cp_ids[10], cp_ids[11],
+                        cp_ids[12], cp_ids[13], cp_ids[14], cp_ids[15],
+                        knot_multiplicities, knots, knot_multiplicities, knots
+                    ));
+                    
+                    surface_ids.push(entity_id);
+                    entity_id += 1;
+                    }
+                }
+            }
+        }
+    }
+    
+    // Create geometric set for all surfaces (if any)
+    if !surface_ids.is_empty() {
+        step_content.push_str(&format!(
+            "#{} = GEOMETRIC_SET('OpenSubdiv Patches',({}));\n",
+            entity_id,
+            surface_ids.iter().map(|id| format!("#{}", id)).collect::<Vec<_>>().join(",")
+        ));
+    }
+    
+    step_content.push_str("ENDSEC;\n");
+    step_content.push_str("END-ISO-10303-21;\n");
+    
+    // Save to test output directory
+    let output_path = test_utils::test_output_path("creased_cube_direct_nurbs.step");
+    fs::write(&output_path, &step_content).expect("Failed to write STEP file");
+    
+    test_utils::assert_file_matches(&output_path, "creased_cube_direct_nurbs.step");
+    
+    println!("Successfully generated creased_cube_direct_nurbs.step with {} B-spline surfaces", surface_ids.len());
+}
