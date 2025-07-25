@@ -33,13 +33,19 @@ impl TopologyRefiner {
     /// Create a new topology refiner.
     pub fn new(descriptor: TopologyDescriptor, options: TopologyRefinerOptions) -> Result<Self> {
         let sdc_options = sys::sdc::Options {
-            _vtxBoundInterp: options.boundary_interpolation as _,
-            _fvarLinInterp: options.face_varying_linear_interpolation as _,
+            _vtxBoundInterp: match options.boundary_interpolation {
+                Some(interp) => interp as _,
+                None => sys::far::topology_refiner::VTX_BOUNDARY_NONE,
+            },
+            _fvarLinInterp: match options.face_varying_linear_interpolation {
+                Some(interp) => interp as _,
+                None => sys::far::topology_refiner::FVAR_LINEAR_NONE,
+            },
             _creasingMethod: options.creasing_method as _,
             _triangleSub: options.triangle_subdivision as _,
         };
 
-        let mut sys_options: sys::far::topology_refiner::Options = unsafe { std::mem::zeroed() };
+        let mut sys_options: sys::far::topology_refiner::TopologyRefinerFactoryOptions = unsafe { std::mem::zeroed() };
         sys_options.schemeType = options.scheme as _;
         sys_options.schemeOptions = sdc_options;
 
@@ -47,7 +53,7 @@ impl TopologyRefiner {
         sys_options.set_validateFullTopology(true as _);
 
         let ptr = unsafe {
-            sys::TopologyRefinerFactory_TopologyDescriptor_Create(
+            sys::far::topology_refiner::TopologyRefinerFactory_TopologyDescriptor_Create(
                 &descriptor.descriptor as _,
                 sys_options,
             )
@@ -66,8 +72,16 @@ impl TopologyRefiner {
         let options = unsafe { &(*self.0)._subdivOptions };
         TopologyRefinerOptions {
             scheme: unsafe { (*self.0)._subdivType }.try_into().unwrap(),
-            boundary_interpolation: options._vtxBoundInterp.try_into().unwrap(),
-            face_varying_linear_interpolation: options._fvarLinInterp.try_into().unwrap(),
+            boundary_interpolation: if options._vtxBoundInterp == sys::far::topology_refiner::VTX_BOUNDARY_NONE {
+                None
+            } else {
+                Some(options._vtxBoundInterp.try_into().unwrap())
+            },
+            face_varying_linear_interpolation: if options._fvarLinInterp == sys::far::topology_refiner::FVAR_LINEAR_NONE {
+                None
+            } else {
+                Some(options._fvarLinInterp.try_into().unwrap())
+            },
             creasing_method: options._creasingMethod.try_into().unwrap(),
             triangle_subdivision: options._triangleSub.try_into().unwrap(),
         }
@@ -82,7 +96,7 @@ impl TopologyRefiner {
     /// Returns the number of refinement levels.
     #[inline]
     pub fn refinement_levels(&self) -> usize {
-        unsafe { sys::far::TopologyRefiner_GetNumLevels(self.0) as _ }
+        unsafe { sys::far::topology_refiner::TopologyRefiner_GetNumLevels(self.0) as _ }
     }
 
     /// Returns the maximum vertex valence in all levels
@@ -99,26 +113,54 @@ impl TopologyRefiner {
 
     /// Returns the total number of vertices in all levels.
     #[inline]
+    pub fn vertex_total_count(&self) -> usize {
+        unsafe { sys::far::topology_refiner::TopologyRefiner_GetNumVerticesTotal(self.0) as _ }
+    }
+
+    /// Returns the total number of vertices in all levels.
+    #[deprecated(since = "0.3.0", note = "Use `vertex_total_count` instead")]
+    #[inline]
     pub fn vertices_total_len(&self) -> usize {
-        unsafe { sys::far::TopologyRefiner_GetNumVerticesTotal(self.0) as _ }
+        self.vertex_total_count()
     }
 
     /// Returns the total number of edges in all levels.
     #[inline]
+    pub fn edge_total_count(&self) -> usize {
+        unsafe { sys::far::topology_refiner::TopologyRefiner_GetNumEdgesTotal(self.0) as _ }
+    }
+
+    /// Returns the total number of edges in all levels.
+    #[deprecated(since = "0.3.0", note = "Use `edge_total_count` instead")]
+    #[inline]
     pub fn edges_total_len(&self) -> usize {
-        unsafe { sys::far::TopologyRefiner_GetNumEdgesTotal(self.0) as _ }
+        self.edge_total_count()
     }
 
     /// Returns the total number of faces in all levels.
     #[inline]
+    pub fn face_total_count(&self) -> usize {
+        unsafe { sys::far::topology_refiner::TopologyRefiner_GetNumFacesTotal(self.0) as _ }
+    }
+
+    /// Returns the total number of faces in all levels.
+    #[deprecated(since = "0.3.0", note = "Use `face_total_count` instead")]
+    #[inline]
     pub fn faces_total_len(&self) -> usize {
-        unsafe { sys::far::TopologyRefiner_GetNumFacesTotal(self.0) as _ }
+        self.face_total_count()
     }
 
     /// Returns the total number of face vertices in all levels.
     #[inline]
+    pub fn face_vertex_total_count(&self) -> usize {
+        unsafe { sys::far::topology_refiner::TopologyRefiner_GetNumFaceVerticesTotal(self.0) as _ }
+    }
+
+    /// Returns the total number of face vertices in all levels.
+    #[deprecated(since = "0.3.0", note = "Use `face_vertex_total_count` instead")]
+    #[inline]
     pub fn face_vertices_total_len(&self) -> usize {
-        unsafe { sys::far::TopologyRefiner_GetNumFaceVerticesTotal(self.0) as _ }
+        self.face_vertex_total_count()
     }
 
     /// Returns the highest level of refinement.
@@ -135,7 +177,7 @@ impl TopologyRefiner {
             None
         } else {
             let ptr =
-                unsafe { sys::far::TopologyRefiner_GetLevel(self.0, level.try_into().unwrap()) };
+                unsafe { sys::far::topology_refiner::TopologyRefiner_GetLevel(self.0, level.try_into().unwrap()) };
             if ptr.is_null() {
                 None
             } else {
@@ -233,23 +275,44 @@ use super::topology_level::TopologyLevel;
 
 /// All supported options applying to a subdivision scheme.
 ///
-/// This  contains all supported options that can be applied to a subdivision
+/// This contains all supported options that can be applied to a subdivision
 /// [`Scheme`] to affect the shape of the limit surface. These differ
-/// from approximations that may be applied at a higher level.  I.e. options to
+/// from approximations that may be applied at a higher level -- options to
 /// limit the level of feature adaptive subdivision, options to ignore
-/// fractional creasing, or creasing entirely, etc.  These options define the
-/// shape of a particular limit surface, including the ‘shape of primitive
+/// fractional creasing, or creasing entirely, etc. These options define the
+/// shape of a particular limit surface, including the shape of primitive
 /// variable data associated with it.
 ///
 /// The intent is that these sets of options be defined at a high level and
 /// propagated into the lowest-level computation in support of each subdivision
-/// scheme.  Ideally it remains a set of bit-fields (essentially an int) and so
+/// scheme. Ideally it remains a set of bit-fields (essentially an int) and so
 /// remains light weight and easily passed around by value.
+///
+/// # Examples
+///
+/// ```
+/// use opensubdiv_petite::far::{
+///     TopologyRefinerOptions, Scheme, BoundaryInterpolation,
+///     FaceVaryingLinearInterpolation, CreasingMethod, TriangleSubdivision
+/// };
+///
+/// // Create options with defaults
+/// let options = TopologyRefinerOptions::default();
+///
+/// // Create custom options
+/// let custom_options = TopologyRefinerOptions {
+///     scheme: Scheme::CatmullClark,
+///     boundary_interpolation: Some(BoundaryInterpolation::EdgeOnly),
+///     face_varying_linear_interpolation: None, // No interpolation
+///     creasing_method: CreasingMethod::Chaikin,
+///     triangle_subdivision: TriangleSubdivision::Smooth,
+/// };
+/// ```
 #[derive(Copy, Clone, Debug)]
 pub struct TopologyRefinerOptions {
     pub scheme: Scheme,
-    pub boundary_interpolation: BoundaryInterpolation,
-    pub face_varying_linear_interpolation: FaceVaryingLinearInterpolation,
+    pub boundary_interpolation: Option<BoundaryInterpolation>,
+    pub face_varying_linear_interpolation: Option<FaceVaryingLinearInterpolation>,
     pub creasing_method: CreasingMethod,
     pub triangle_subdivision: TriangleSubdivision,
 }
@@ -257,23 +320,18 @@ pub struct TopologyRefinerOptions {
 impl Default for TopologyRefinerOptions {
     /// Create options with the following defaults:
     ///
-    /// | Property                            | Value
-    /// | |----------------
-    /// --|-----------------------------------------------------| | `scheme`
-    /// | [`CatmullClark`](Scheme::CatmullClark)              |
-    /// | `boundary_interpolation`            |
-    /// [`None`](BoundaryInterpolation::None)               |
-    /// | `face_varying_linear_interpolation` |
-    /// [`All`](FaceVaryingLinearInterpolation::All)        |
-    /// | `creasing_method`                   |
-    /// [`Uniform`](CreasingMethod::Uniform)                |
-    /// | `triangle_subdivision`              |
-    /// [`CatmullClark`](TriangleSubdivision::CatmullClark) |
+    /// | Property                            | Value                                                |
+    /// |-------------------------------------|------------------------------------------------------|
+    /// | `scheme`                            | [`CatmullClark`](Scheme::CatmullClark)              |
+    /// | `boundary_interpolation`            | `None`                                               |
+    /// | `face_varying_linear_interpolation` | `Some(`[`All`](FaceVaryingLinearInterpolation::All)`)` |
+    /// | `creasing_method`                   | [`Uniform`](CreasingMethod::Uniform)                |
+    /// | `triangle_subdivision`              | [`CatmullClark`](TriangleSubdivision::CatmullClark) |
     fn default() -> Self {
         Self {
             scheme: Scheme::CatmullClark,
-            boundary_interpolation: BoundaryInterpolation::None,
-            face_varying_linear_interpolation: FaceVaryingLinearInterpolation::All,
+            boundary_interpolation: None,
+            face_varying_linear_interpolation: Some(FaceVaryingLinearInterpolation::All),
             creasing_method: CreasingMethod::Uniform,
             triangle_subdivision: TriangleSubdivision::CatmullClark,
         }

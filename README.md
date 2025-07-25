@@ -18,6 +18,28 @@ git submodule update --init
 
 to pull them in.
 
+## Building
+
+This project uses [just](https://github.com/casey/just) for common build tasks. Run `just` to see available commands.
+
+### Quick Start
+
+```shell
+# Build the project
+just build
+
+# Build with recommended compiler on Linux (clang-17)
+just build-linux-clang17
+
+# Run tests
+just test
+
+# Build documentation
+just doc
+```
+
+See the `justfile` for all available commands including release builds, cleaning, and running examples.
+
 ## Documentation
 
 It is suggested you only build (and look at) the documentation of the high level

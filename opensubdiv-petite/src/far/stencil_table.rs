@@ -40,7 +40,7 @@ pub struct StencilTable(pub(crate) sys::far::StencilTablePtr);
 impl Drop for StencilTable {
     #[inline]
     fn drop(&mut self) {
-        unsafe { sys::far::StencilTable_destroy(self.0) }
+        unsafe { sys::far::stencil_table::StencilTable_destroy(self.0) }
     }
 }
 
@@ -48,9 +48,9 @@ impl StencilTable {
     /// Create a new stencil table.
     pub fn new(refiner: &TopologyRefiner, options: StencilTableOptions) -> StencilTable {
         let ptr = unsafe {
-            sys::far::StencilTableFactory_Create(
+            sys::far::stencil_table::StencilTableFactory_Create(
                 refiner.0,
-                sys::far::stencil_table::Options {
+                sys::far::stencil_table::StencilTableOptions {
                     interpolation_mode: options.interpolation_mode as _,
                     generate_offsets: options.generate_offsets as _,
                     generate_control_vertices: options.generate_control_vertices as _,
@@ -72,7 +72,7 @@ impl StencilTable {
     /// Returns the number of stencils in the table.
     #[inline]
     pub fn len(&self) -> usize {
-        unsafe { sys::far::StencilTable_GetNumStencils(self.0) as _ }
+        unsafe { sys::far::stencil_table::StencilTable_GetNumStencils(self.0) as _ }
     }
 
     #[inline]
@@ -82,18 +82,25 @@ impl StencilTable {
 
     /// Returns the number of control vertices indexed in the table.
     #[inline]
+    pub fn control_vertex_count(&self) -> usize {
+        unsafe { sys::far::stencil_table::StencilTable_GetNumControlVertices(self.0) as _ }
+    }
+
+    /// Returns the number of control vertices indexed in the table.
+    #[deprecated(since = "0.3.0", note = "Use `control_vertex_count` instead")]
+    #[inline]
     pub fn control_vertices_len(&self) -> usize {
-        unsafe { sys::far::StencilTable_GetNumControlVertices(self.0) as _ }
+        self.control_vertex_count()
     }
 
     /// Returns a Stencil at index i in the table.
     #[inline]
-    pub fn stencil(&self, i: Index) -> Option<Stencil> {
-        if self.len() <= i as _ {
+    pub fn stencil(&self, i: Index) -> Option<Stencil<'_>> {
+        if self.len() <= i.into() {
             None
         } else {
             unsafe {
-                let stencil = sys::far::StencilTable_GetStencil(self.0, i);
+                let stencil = sys::far::stencil_table::StencilTable_GetStencil(self.0, i.into());
                 Some(Stencil {
                     indices: std::slice::from_raw_parts(stencil._indices as _, stencil._size as _),
                     weights: std::slice::from_raw_parts(stencil._weights, stencil._size as _),
@@ -106,7 +113,7 @@ impl StencilTable {
     #[inline]
     pub fn sizes(&self) -> &[i32] {
         unsafe {
-            let vr = sys::far::StencilTable_GetSizes(self.0);
+            let vr = sys::far::stencil_table::StencilTable_GetSizes(self.0);
             std::slice::from_raw_parts(vr.data() as _, vr.size())
         }
     }
@@ -115,8 +122,8 @@ impl StencilTable {
     #[inline]
     pub fn offsets(&self) -> &[Index] {
         unsafe {
-            let vr = sys::far::StencilTable_GetOffsets(self.0);
-            std::slice::from_raw_parts(vr.data() as _, vr.size())
+            let vr = sys::far::stencil_table::StencilTable_GetOffsets(self.0);
+            std::slice::from_raw_parts(vr.data() as *const Index, vr.size())
         }
     }
 
@@ -124,8 +131,8 @@ impl StencilTable {
     #[inline]
     pub fn control_indices(&self) -> &[Index] {
         unsafe {
-            let vr = sys::far::StencilTable_GetControlIndices(self.0);
-            std::slice::from_raw_parts(vr.data(), vr.size())
+            let vr = sys::far::stencil_table::StencilTable_GetControlIndices(self.0);
+            std::slice::from_raw_parts(vr.data() as *const Index, vr.size())
         }
     }
 
@@ -133,7 +140,7 @@ impl StencilTable {
     #[inline]
     pub fn weights(&self) -> &[f32] {
         unsafe {
-            let vr = sys::far::StencilTable_GetWeights(self.0);
+            let vr = sys::far::stencil_table::StencilTable_GetWeights(self.0);
             std::slice::from_raw_parts(vr.data(), vr.size())
         }
     }

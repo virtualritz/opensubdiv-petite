@@ -82,7 +82,53 @@ pub mod osd;
 #[cfg(feature = "tri_mesh_buffers")]
 pub mod tri_mesh_buffers;
 
-pub use opensubdiv_petite_sys::vtr::Index;
+/// A vertex, edge, or face index in the topology.
+///
+/// # Examples
+///
+/// ```
+/// use opensubdiv_petite::Index;
+///
+/// // Create an index from a u32
+/// let idx = Index::from(42u32);
+/// assert_eq!(idx.0, 42);
+///
+/// // Convert back to u32
+/// let value: u32 = idx.into();
+/// assert_eq!(value, 42);
+///
+/// // Create from usize
+/// let idx = Index::from(100usize);
+/// let as_usize: usize = idx.into();
+/// assert_eq!(as_usize, 100);
+/// ```
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[repr(transparent)]
+pub struct Index(pub u32);
+
+impl From<u32> for Index {
+    fn from(value: u32) -> Self {
+        Index(value)
+    }
+}
+
+impl From<Index> for u32 {
+    fn from(index: Index) -> Self {
+        index.0
+    }
+}
+
+impl From<usize> for Index {
+    fn from(value: usize) -> Self {
+        Index(value as u32)
+    }
+}
+
+impl From<Index> for usize {
+    fn from(index: Index) -> Self {
+        index.0 as usize
+    }
+}
 
 #[macro_use]
 extern crate derive_more;

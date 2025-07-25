@@ -1,6 +1,10 @@
 use super::topology_level::TopologyLevelPtr;
 use num_enum::TryFromPrimitive;
 
+// Constants for "None" values that are used when Option::None is passed
+pub const VTX_BOUNDARY_NONE: u8 = crate::OpenSubdiv_v3_6_1_Sdc_Options_VtxBoundaryInterpolation_VTX_BOUNDARY_NONE as u8;
+pub const FVAR_LINEAR_NONE: u8 = crate::OpenSubdiv_v3_6_1_Sdc_Options_FVarLinearInterpolation_FVAR_LINEAR_NONE as u8;
+
 #[repr(u32)]
 #[derive(TryFromPrimitive, Copy, Clone, Debug)]
 pub enum Scheme {
@@ -15,14 +19,6 @@ pub enum Scheme {
 #[repr(u8)]
 #[derive(TryFromPrimitive, Copy, Clone, Debug)]
 pub enum BoundaryInterpolation {
-    /// No boundary edge interpolation is applied by default.  Boundary faces
-    /// are tagged as holes so that the boundary vertices continue to support
-    /// the adjacent interior faces, but no surface corresponding to the
-    /// boundary faces is generated.
-    ///
-    /// Boundary faces can be selectively interpolated by sharpening all
-    /// boundary edges incident the vertices of the face.
-    None = crate::OpenSubdiv_v3_6_1_Sdc_Options_VtxBoundaryInterpolation_VTX_BOUNDARY_NONE as _,
     /// A sequence of boundary vertices defines a smooth curve to which the
     /// limit surface along boundary faces extends.
     EdgeOnly =
@@ -38,8 +34,6 @@ pub enum BoundaryInterpolation {
 #[repr(u8)]
 #[derive(TryFromPrimitive, Copy, Clone, Debug)]
 pub enum FaceVaryingLinearInterpolation {
-    /// Smooth everywhere the mesh is smooth.
-    None = crate::OpenSubdiv_v3_6_1_Sdc_Options_FVarLinearInterpolation_FVAR_LINEAR_NONE as _,
     /// Linearly interpolate (sharpen or pin) corners only,
     CornersOnly =
         crate::OpenSubdiv_v3_6_1_Sdc_Options_FVarLinearInterpolation_FVAR_LINEAR_CORNERS_ONLY as _,
@@ -87,7 +81,7 @@ pub enum TriangleSubdivision {
 
 pub type UniformRefinementOptions = crate::OpenSubdiv_v3_6_1_Far_TopologyRefiner_UniformOptions;
 pub type AdaptiveRefinementOptions = crate::OpenSubdiv_v3_6_1_Far_TopologyRefiner_AdaptiveOptions;
-pub type Options = crate::OpenSubdiv_v3_6_1_Far_TopologyRefinerFactory_Options;
+pub type TopologyRefinerFactoryOptions = crate::OpenSubdiv_v3_6_1_Far_TopologyRefinerFactory_Options;
 pub type ConstIndexArray = crate::OpenSubdiv_v3_6_1_Far_ConstIndexArray;
 pub type TopologyRefiner = crate::OpenSubdiv_v3_6_1_Far_TopologyRefiner;
 pub type TopologyRefinerPtr = *mut TopologyRefiner;
@@ -96,7 +90,7 @@ pub type TopologyRefinerPtr = *mut TopologyRefiner;
 extern "C" {
     pub fn TopologyRefinerFactory_TopologyDescriptor_Create(
         descriptor: *const crate::OpenSubdiv_v3_6_1_Far_TopologyDescriptor,
-        options: crate::OpenSubdiv_v3_6_1_Far_TopologyRefinerFactory_Options,
+        options: TopologyRefinerFactoryOptions,
     ) -> TopologyRefinerPtr;
     /// \brief Returns true if uniform refinement has been applied
     pub fn TopologyRefiner_GetNumLevels(refiner: TopologyRefinerPtr) -> u32;
