@@ -267,8 +267,9 @@ fn test_creased_cube_direct_nurbs_export() {
     step_content.push_str("ISO-10303-21;\n");
     step_content.push_str("HEADER;\n");
     step_content.push_str("FILE_DESCRIPTION(('Direct NURBS Export Test'),'2;1');\n");
-    step_content.push_str("FILE_NAME('creased_cube_direct_nurbs.step','2024-01-01T00:00:00',(),(),'','','');\n");
-    step_content.push_str("FILE_SCHEMA(('CONFIG_CONTROL_DESIGN'));\n");
+    step_content.push_str("FILE_NAME('creased_cube_direct_nurbs.step','2024-01-01T00:00:00',(''),(''),\n");
+    step_content.push_str("  'OpenSubdiv STEP Exporter','OpenSubdiv STEP Exporter','');\n");
+    step_content.push_str("FILE_SCHEMA(('AP203'));\n");
     step_content.push_str("ENDSEC;\n");
     step_content.push_str("DATA;\n");
     
@@ -339,15 +340,27 @@ fn test_creased_cube_direct_nurbs_export() {
         }
     }
     
-    // Create geometric set to hold all surfaces
-    step_content.push_str(&format!("#{} = GEOMETRIC_SET('',(", entity_id));
+    // Create shape representation for surfaces
+    let shape_rep_id = entity_id;
+    
+    step_content.push_str(&format!("#{} = GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION('',(", shape_rep_id));
     for (i, surf_id) in surface_ids.iter().enumerate() {
         step_content.push_str(&format!("#{}", surf_id));
         if i < surface_ids.len() - 1 {
             step_content.push_str(",");
         }
     }
-    step_content.push_str("));\n");
+    step_content.push_str("),#1000);\n");
+    
+    // Add a geometric representation context (required for shape representation)
+    step_content.push_str("#1000 = (GEOMETRIC_REPRESENTATION_CONTEXT(3)\n");
+    step_content.push_str("GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT((#1001))\n");
+    step_content.push_str("GLOBAL_UNIT_ASSIGNED_CONTEXT((#1002,#1003,#1004))\n");
+    step_content.push_str("REPRESENTATION_CONTEXT('ID1','3D'));\n");
+    step_content.push_str("#1001 = UNCERTAINTY_MEASURE_WITH_UNIT(LENGTH_MEASURE(1.E-06),#1002,'distance accuracy','');\n");
+    step_content.push_str("#1002 = (LENGTH_UNIT() NAMED_UNIT(*) SI_UNIT(.MILLI.,.METRE.));\n");
+    step_content.push_str("#1003 = (NAMED_UNIT(*) PLANE_ANGLE_UNIT() SI_UNIT($,.RADIAN.));\n");
+    step_content.push_str("#1004 = (NAMED_UNIT(*) SI_UNIT($,.STERADIAN.) SOLID_ANGLE_UNIT());\n");
     
     step_content.push_str("ENDSEC;\n");
     step_content.push_str("END-ISO-10303-21;\n");

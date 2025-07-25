@@ -26,7 +26,6 @@ ptex = ["opensubdiv-petite-sys/ptex"]
 tri_mesh_buffers = ["itertools", "ultraviolet", "slice-of-array"]
 topology_validation = []
 truck = ["truck-geometry", "truck-modeling"]
-bevy_examples = ["bevy", "dep:smooth-bevy-cameras"]
 
 [dependencies]
 derive_more = { version = "2", features = ["full"] }
