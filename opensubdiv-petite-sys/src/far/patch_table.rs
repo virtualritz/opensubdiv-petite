@@ -136,3 +136,59 @@ extern "C" {
     pub fn PatchParam_GetBoundary(param: *const PatchParam) -> c_int;
     pub fn PatchParam_GetTransition(param: *const PatchParam) -> c_int;
 }
+
+// Patch evaluation structures and functions
+#[repr(C)]
+pub struct PatchEvalResult {
+    pub point: [f32; 3],
+    pub du: [f32; 3],
+    pub dv: [f32; 3],
+    pub duu: [f32; 3],
+    pub duv: [f32; 3],
+    pub dvv: [f32; 3],
+}
+
+/// Opaque type for Far::PatchMap
+#[repr(C)]
+pub struct PatchMap {
+    _unused: [u8; 0],
+}
+
+extern "C" {
+    // Patch evaluation functions
+    pub fn PatchTable_EvaluateBasis(
+        table: *const PatchTable,
+        patch_index: c_int,
+        u: c_float,
+        v: c_float,
+        w_p: *mut c_float,
+        w_du: *mut c_float,
+        w_dv: *mut c_float,
+        w_duu: *mut c_float,
+        w_duv: *mut c_float,
+        w_dvv: *mut c_float,
+    ) -> bool;
+
+    pub fn PatchTable_EvaluatePoint(
+        table: *const PatchTable,
+        patch_index: c_int,
+        u: c_float,
+        v: c_float,
+        control_points: *const c_float,
+        num_control_points: c_int,
+        result: *mut PatchEvalResult,
+    ) -> bool;
+
+    // PatchMap functions
+    pub fn PatchMap_Create(table: *const PatchTable) -> *mut PatchMap;
+    pub fn PatchMap_delete(map: *mut PatchMap);
+    pub fn PatchMap_FindPatch(
+        map: *const PatchMap,
+        face_index: c_int,
+        u: c_float,
+        v: c_float,
+        patch_index: *mut c_int,
+        patch_u: *mut c_float,
+        patch_v: *mut c_float,
+    ) -> bool;
+}
