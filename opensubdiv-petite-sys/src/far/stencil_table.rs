@@ -13,8 +13,8 @@ pub struct StencilTableOptions {
     pub face_varying_channel: u32,
 }
 
-pub type Stencil = crate::OpenSubdiv_v3_6_1_Far_StencilReal<f32>;
-pub type StencilTable = crate::OpenSubdiv_v3_6_1_Far_StencilTableReal;
+pub type Stencil = crate::OpenSubdiv_v3_6_1_Far_Stencil;
+pub type StencilTable = crate::OpenSubdiv_v3_6_1_Far_StencilTable;
 pub type StencilTablePtr = *mut StencilTable;
 
 #[link(name = "osd-capi", kind = "static")]

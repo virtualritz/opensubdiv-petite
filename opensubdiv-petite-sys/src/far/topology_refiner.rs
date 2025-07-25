@@ -2,8 +2,10 @@ use super::topology_level::TopologyLevelPtr;
 use num_enum::TryFromPrimitive;
 
 // Constants for "None" values that are used when Option::None is passed
-pub const VTX_BOUNDARY_NONE: u8 = crate::OpenSubdiv_v3_6_1_Sdc_Options_VtxBoundaryInterpolation_VTX_BOUNDARY_NONE as u8;
-pub const FVAR_LINEAR_NONE: u8 = crate::OpenSubdiv_v3_6_1_Sdc_Options_FVarLinearInterpolation_FVAR_LINEAR_NONE as u8;
+pub const VTX_BOUNDARY_NONE: u8 =
+    crate::OpenSubdiv_v3_6_1_Sdc_Options_VtxBoundaryInterpolation_VTX_BOUNDARY_NONE as u8;
+pub const FVAR_LINEAR_NONE: u8 =
+    crate::OpenSubdiv_v3_6_1_Sdc_Options_FVarLinearInterpolation_FVAR_LINEAR_NONE as u8;
 
 #[repr(u32)]
 #[derive(TryFromPrimitive, Copy, Clone, Debug)]
@@ -81,7 +83,8 @@ pub enum TriangleSubdivision {
 
 pub type UniformRefinementOptions = crate::OpenSubdiv_v3_6_1_Far_TopologyRefiner_UniformOptions;
 pub type AdaptiveRefinementOptions = crate::OpenSubdiv_v3_6_1_Far_TopologyRefiner_AdaptiveOptions;
-pub type TopologyRefinerFactoryOptions = crate::OpenSubdiv_v3_6_1_Far_TopologyRefinerFactory_Options;
+pub type TopologyRefinerFactoryOptions =
+    crate::OpenSubdiv_v3_6_1_Far_TopologyRefinerFactory_Options;
 pub type ConstIndexArray = crate::OpenSubdiv_v3_6_1_Far_ConstIndexArray;
 pub type TopologyRefiner = crate::OpenSubdiv_v3_6_1_Far_TopologyRefiner;
 pub type TopologyRefinerPtr = *mut TopologyRefiner;

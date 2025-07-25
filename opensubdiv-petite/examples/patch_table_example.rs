@@ -1,8 +1,8 @@
 //! Example demonstrating patch table creation and usage
 
 use opensubdiv_petite::far::{
-    EndCapType, PatchTable, PatchTableOptions, PatchType, TopologyDescriptor, TopologyRefiner,
-    TopologyRefinerOptions, PatchEvalResult,
+    EndCapType, PatchEvalResult, PatchTable, PatchTableOptions, PatchType, TopologyDescriptor,
+    TopologyRefiner, TopologyRefinerOptions,
 };
 
 fn main() {
@@ -13,7 +13,7 @@ fn main() {
     let face_vertex_counts = vec![4, 4, 4, 4, 4, 4]; // 6 faces with 4 vertices each
     let face_vertex_indices = vec![
         0, 1, 3, 2, // bottom
-        2, 3, 5, 4, // front  
+        2, 3, 5, 4, // front
         4, 5, 7, 6, // top
         6, 7, 1, 0, // back
         0, 2, 4, 6, // left
@@ -22,21 +22,19 @@ fn main() {
 
     let vertex_positions = vec![
         -1.0, -1.0, -1.0, // 0
-        1.0, -1.0, -1.0,  // 1
-        -1.0, -1.0, 1.0,  // 2
-        1.0, -1.0, 1.0,   // 3
-        -1.0, 1.0, 1.0,   // 4
-        1.0, 1.0, 1.0,    // 5
-        -1.0, 1.0, -1.0,  // 6
-        1.0, 1.0, -1.0,   // 7
+        1.0, -1.0, -1.0, // 1
+        -1.0, -1.0, 1.0, // 2
+        1.0, -1.0, 1.0, // 3
+        -1.0, 1.0, 1.0, // 4
+        1.0, 1.0, 1.0, // 5
+        -1.0, 1.0, -1.0, // 6
+        1.0, 1.0, -1.0, // 7
     ];
 
     // Create topology descriptor
-    let descriptor = TopologyDescriptor::new(
-        face_vertex_counts.clone(),
-        face_vertex_indices.clone(),
-    )
-    .expect("Failed to create topology descriptor");
+    let descriptor =
+        TopologyDescriptor::new(face_vertex_counts.clone(), face_vertex_indices.clone())
+            .expect("Failed to create topology descriptor");
 
     println!("Created topology descriptor for a cube:");
     println!("  {} vertices", vertex_positions.len() / 3);
@@ -52,20 +50,25 @@ fn main() {
     // Refine uniformly to level 2
     refiner.refine_uniform(2);
     println!("Refined uniformly to level 2");
-    
+
     // Create patch table with B-spline end caps
-    let patch_options = PatchTableOptions::new()
-        .end_cap_type(EndCapType::BSplineBasis);
-    
+    let patch_options = PatchTableOptions::new().end_cap_type(EndCapType::BSplineBasis);
+
     println!("\nCreating patch table with B-spline end caps...");
-    let patch_table = PatchTable::new(&refiner, Some(patch_options))
-        .expect("Failed to create patch table");
+    let patch_table =
+        PatchTable::new(&refiner, Some(patch_options)).expect("Failed to create patch table");
 
     // Report patch table statistics
     println!("\nPatch Table Statistics:");
-    println!("  Number of patch arrays: {}", patch_table.patch_arrays_len());
+    println!(
+        "  Number of patch arrays: {}",
+        patch_table.patch_arrays_len()
+    );
     println!("  Total number of patches: {}", patch_table.patches_len());
-    println!("  Number of control vertices: {}", patch_table.control_vertices_len());
+    println!(
+        "  Number of control vertices: {}",
+        patch_table.control_vertices_len()
+    );
     println!("  Maximum valence: {}", patch_table.max_valence());
 
     // Iterate through patch arrays
@@ -111,12 +114,15 @@ fn main() {
     // Access control vertex indices
     if let Some(cv_table) = patch_table.control_vertices_table() {
         println!("\nControl vertex table has {} entries", cv_table.len());
-        println!("First 16 control vertex indices: {:?}", &cv_table[..16.min(cv_table.len())]);
+        println!(
+            "First 16 control vertex indices: {:?}",
+            &cv_table[..16.min(cv_table.len())]
+        );
     }
 
     // Demonstrate patch evaluation
     println!("\nPatch Evaluation Demo:");
-    
+
     // Convert vertex positions to the format needed for evaluation
     let control_points: Vec<[f32; 3]> = (0..vertex_positions.len() / 3)
         .map(|i| {
@@ -128,13 +134,13 @@ fn main() {
             ]
         })
         .collect();
-    
+
     // Evaluate the first regular patch at several parametric coordinates
     for array_idx in 0..patch_table.patch_arrays_len().min(1) {
         if let Some(desc) = patch_table.patch_array_descriptor(array_idx) {
             if desc.patch_type() == PatchType::Regular {
                 println!("  Evaluating first regular patch:");
-                
+
                 for (u, v) in &[(0.0, 0.0), (0.5, 0.5), (1.0, 1.0)] {
                     if let Some(result) = patch_table.evaluate_point(0, *u, *v, &control_points) {
                         println!(

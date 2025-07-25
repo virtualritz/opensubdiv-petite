@@ -88,7 +88,10 @@ extern "C" {
     pub fn PatchTable_GetNumPatches(table: *const PatchTable) -> c_int;
     pub fn PatchTable_GetNumControlVertices(table: *const PatchTable) -> c_int;
     pub fn PatchTable_GetMaxValence(table: *const PatchTable) -> c_int;
-    pub fn PatchTable_GetNumPatches_PatchArray(table: *const PatchTable, array_index: c_int) -> c_int;
+    pub fn PatchTable_GetNumPatches_PatchArray(
+        table: *const PatchTable,
+        array_index: c_int,
+    ) -> c_int;
     pub fn PatchTable_GetPatchArrayDescriptor(
         table: *const PatchTable,
         array_index: c_int,
@@ -109,8 +112,13 @@ extern "C" {
     // PatchTableFactory::Options functions
     pub fn PatchTableFactory_Options_new() -> *mut PatchTableFactoryOptions;
     pub fn PatchTableFactory_Options_delete(options: *mut PatchTableFactoryOptions);
-    pub fn PatchTableFactory_Options_SetEndCapType(options: *mut PatchTableFactoryOptions, end_cap_type: c_int);
-    pub fn PatchTableFactory_Options_GetEndCapType(options: *const PatchTableFactoryOptions) -> c_int;
+    pub fn PatchTableFactory_Options_SetEndCapType(
+        options: *mut PatchTableFactoryOptions,
+        end_cap_type: c_int,
+    );
+    pub fn PatchTableFactory_Options_GetEndCapType(
+        options: *const PatchTableFactoryOptions,
+    ) -> c_int;
     pub fn PatchTableFactory_Options_SetTriangleSubdivision(
         options: *mut PatchTableFactoryOptions,
         triangle_subdivision: c_int,

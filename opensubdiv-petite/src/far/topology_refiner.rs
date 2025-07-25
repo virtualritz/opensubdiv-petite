@@ -45,7 +45,8 @@ impl TopologyRefiner {
             _triangleSub: options.triangle_subdivision as _,
         };
 
-        let mut sys_options: sys::far::topology_refiner::TopologyRefinerFactoryOptions = unsafe { std::mem::zeroed() };
+        let mut sys_options: sys::far::topology_refiner::TopologyRefinerFactoryOptions =
+            unsafe { std::mem::zeroed() };
         sys_options.schemeType = options.scheme as _;
         sys_options.schemeOptions = sdc_options;
 
@@ -72,12 +73,16 @@ impl TopologyRefiner {
         let options = unsafe { &(*self.0)._subdivOptions };
         TopologyRefinerOptions {
             scheme: unsafe { (*self.0)._subdivType }.try_into().unwrap(),
-            boundary_interpolation: if options._vtxBoundInterp == sys::far::topology_refiner::VTX_BOUNDARY_NONE {
+            boundary_interpolation: if options._vtxBoundInterp
+                == sys::far::topology_refiner::VTX_BOUNDARY_NONE
+            {
                 None
             } else {
                 Some(options._vtxBoundInterp.try_into().unwrap())
             },
-            face_varying_linear_interpolation: if options._fvarLinInterp == sys::far::topology_refiner::FVAR_LINEAR_NONE {
+            face_varying_linear_interpolation: if options._fvarLinInterp
+                == sys::far::topology_refiner::FVAR_LINEAR_NONE
+            {
                 None
             } else {
                 Some(options._fvarLinInterp.try_into().unwrap())
@@ -176,8 +181,12 @@ impl TopologyRefiner {
         if level > self.max_level() {
             None
         } else {
-            let ptr =
-                unsafe { sys::far::topology_refiner::TopologyRefiner_GetLevel(self.0, level.try_into().unwrap()) };
+            let ptr = unsafe {
+                sys::far::topology_refiner::TopologyRefiner_GetLevel(
+                    self.0,
+                    level.try_into().unwrap(),
+                )
+            };
             if ptr.is_null() {
                 None
             } else {
