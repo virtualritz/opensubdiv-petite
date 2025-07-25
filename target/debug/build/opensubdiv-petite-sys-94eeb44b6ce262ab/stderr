@@ -1,0 +1,4 @@
+Warning: can't set `wrap_comments = true`, unstable features are only available in nightly channel.
+Warning: can't set `format_code_in_doc_comments = true`, unstable features are only available in nightly channel.
+Warning: can't set `reorder_impl_items = true`, unstable features are only available in nightly channel.
+Warning: can't set `unstable_features = true`, unstable features are only available in nightly channel.

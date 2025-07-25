@@ -1,0 +1,20 @@
+/root/repo/target/debug/deps/rustversion-8fda1402eb777bd6.d: /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rustversion-1.0.21/src/lib.rs /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rustversion-1.0.21/src/attr.rs /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rustversion-1.0.21/src/bound.rs /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rustversion-1.0.21/src/constfn.rs /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rustversion-1.0.21/src/date.rs /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rustversion-1.0.21/src/error.rs /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rustversion-1.0.21/src/expand.rs /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rustversion-1.0.21/src/expr.rs /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rustversion-1.0.21/src/iter.rs /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rustversion-1.0.21/src/release.rs /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rustversion-1.0.21/src/time.rs /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rustversion-1.0.21/src/token.rs /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rustversion-1.0.21/src/version.rs /root/repo/target/debug/build/rustversion-2f96bde23cc33751/out/version.expr
+
+/root/repo/target/debug/deps/librustversion-8fda1402eb777bd6.so: /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rustversion-1.0.21/src/lib.rs /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rustversion-1.0.21/src/attr.rs /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rustversion-1.0.21/src/bound.rs /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rustversion-1.0.21/src/constfn.rs /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rustversion-1.0.21/src/date.rs /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rustversion-1.0.21/src/error.rs /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rustversion-1.0.21/src/expand.rs /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rustversion-1.0.21/src/expr.rs /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rustversion-1.0.21/src/iter.rs /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rustversion-1.0.21/src/release.rs /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rustversion-1.0.21/src/time.rs /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rustversion-1.0.21/src/token.rs /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rustversion-1.0.21/src/version.rs /root/repo/target/debug/build/rustversion-2f96bde23cc33751/out/version.expr
+
+/root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rustversion-1.0.21/src/lib.rs:
+/root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rustversion-1.0.21/src/attr.rs:
+/root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rustversion-1.0.21/src/bound.rs:
+/root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rustversion-1.0.21/src/constfn.rs:
+/root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rustversion-1.0.21/src/date.rs:
+/root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rustversion-1.0.21/src/error.rs:
+/root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rustversion-1.0.21/src/expand.rs:
+/root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rustversion-1.0.21/src/expr.rs:
+/root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rustversion-1.0.21/src/iter.rs:
+/root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rustversion-1.0.21/src/release.rs:
+/root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rustversion-1.0.21/src/time.rs:
+/root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rustversion-1.0.21/src/token.rs:
+/root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/rustversion-1.0.21/src/version.rs:
+/root/repo/target/debug/build/rustversion-2f96bde23cc33751/out/version.expr:
+
+# env-dep:OUT_DIR=/root/repo/target/debug/build/rustversion-2f96bde23cc33751/out
