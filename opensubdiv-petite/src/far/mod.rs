@@ -9,20 +9,20 @@
 //!
 //! ## Topology Refinement
 //! *Topology refinement* is the process of splitting the mesh topology
-//! according to the specified subdivison rules to generate new topological
+//! according to the specified subdivision rules to generate new topological
 //! vertices, edges, and faces.
 //!
-//! This process is purely topological and does not depend on the speciific
+//! This process is purely topological and does not depend on the specific
 //! values of any primvar data (point positions, etc.). Topology refinement can
 //! be either uniform or adaptive, where extraordinary features are
 //! automatically isolated (see feature adaptive subdivision).
 //!
 //! The main data structures in `far` related to topology refinement are:
 //!
-//! * [`TopologyDescriptor`] – Describes a mesh.
-//! * [`TopologyRefiner`](crate::far::topology_refiner::TopologyRefiner) –
+//! * [`TopologyDescriptor`] -- Describes a mesh.
+//! * [`TopologyRefiner`] --
 //!   Encapsulates mesh refinement.
-//! * [`TopologyLevel`](crate::far::topology_level::TopologyLevel) – Representis
+//! * [`TopologyLevel`] -- Represents
 //!   one level of refinement within a `TopologyRefiner`.
 //!
 //! ## Primvar Refinement
@@ -38,14 +38,14 @@
 //! subdivision limit surface.
 //!
 //! The main data structures in `far` related to primvar refinement are:
-//! * [`PrimvarRefiner`] –  Implements refinement of primvar data at the
+//! * [`PrimvarRefiner`] -- Implements refinement of primvar data at the
 //!   locations of topological vertices.
-//! * `PatchTable` –        A representation of the refined surface topology
+//! * `PatchTable` -- A representation of the refined surface topology
 //!   that can be used for efficient evaluation of primvar data at arbitrary
 //!   locations.
-//! * [`StencilTable`] –    A representation of refinement weights suitable for
+//! * [`StencilTable`] -- A representation of refinement weights suitable for
 //!   efficient parallel processing of primvar refinement.
-//! * `LimitStencilTable` – A representation of refinement weights suitable for
+//! * `LimitStencilTable` -- A representation of refinement weights suitable for
 //!   efficient parallel processing of primvar refinement at arbitrary limit
 //!   surface locations.
 pub mod topology_descriptor;

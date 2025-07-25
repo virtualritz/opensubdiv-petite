@@ -44,7 +44,7 @@ pub struct PrimvarRefiner<'a> {
 
 impl<'a> PrimvarRefiner<'a> {
     /// Create a new primvar refiner.
-    pub fn new(topology_refiner: &TopologyRefiner) -> PrimvarRefiner {
+    pub fn new(topology_refiner: &TopologyRefiner) -> PrimvarRefiner<'_> {
         unsafe {
             let ptr = sys::far::PrimvarRefiner_create(topology_refiner.0);
             if ptr.is_null() {
@@ -72,7 +72,7 @@ impl<'a> PrimvarRefiner<'a> {
     ) -> Option<Vec<f32>> {
         match self.topology_refiner.level(refinement_level) {
             Some(refiner_level) => {
-                let dest_len = tuple_len * refiner_level.vertices_len();
+                let dest_len = tuple_len * refiner_level.vertex_count();
                 let mut dest = Vec::<f32>::with_capacity(dest_len);
                 unsafe {
                     sys::far::PrimvarRefiner_Interpolate(
@@ -110,7 +110,7 @@ impl<'a> PrimvarRefiner<'a> {
     ) -> Option<Vec<f32>> {
         match self.topology_refiner.level(refinement_level) {
             Some(refiner_level) => {
-                let dest_len = tuple_len * refiner_level.vertices_len();
+                let dest_len = tuple_len * refiner_level.vertex_count();
                 let mut dest = Vec::<f32>::with_capacity(dest_len);
                 unsafe {
                     sys::far::PrimvarRefiner_InterpolateFaceVarying(
@@ -147,7 +147,7 @@ impl<'a> PrimvarRefiner<'a> {
     ) -> Option<Vec<f32>> {
         match self.topology_refiner.level(refinement_level) {
             Some(refiner_level) => {
-                let dest_len = tuple_len * refiner_level.vertices_len();
+                let dest_len = tuple_len * refiner_level.vertex_count();
                 let mut dest = Vec::<f32>::with_capacity(dest_len);
                 unsafe {
                     sys::far::PrimvarRefiner_InterpolateFaceUniform(
@@ -183,7 +183,7 @@ impl<'a> PrimvarRefiner<'a> {
     ) -> Option<Vec<f32>> {
         match self.topology_refiner.level(refinement_level) {
             Some(refiner_level) => {
-                let dest_len = tuple_len * refiner_level.vertices_len();
+                let dest_len = tuple_len * refiner_level.vertex_count();
                 let mut dest = Vec::<f32>::with_capacity(dest_len);
                 unsafe {
                     sys::far::PrimvarRefiner_InterpolateVarying(

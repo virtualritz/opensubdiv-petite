@@ -3,7 +3,7 @@ use crate::vtr::types::*;
 // FIXME: figure out why bindgen doesn't generate this struct
 #[repr(C)]
 #[derive(Clone, Copy, Debug)]
-pub struct Options {
+pub struct StencilTableOptions {
     pub interpolation_mode: u32,
     pub generate_offsets: u32,
     pub generate_control_vertices: u32,
@@ -21,7 +21,7 @@ pub type StencilTablePtr = *mut StencilTable;
 extern "C" {
     pub fn StencilTableFactory_Create(
         refiner: *mut crate::OpenSubdiv_v3_6_1_Far_TopologyRefiner,
-        options: Options,
+        options: StencilTableOptions,
     ) -> StencilTablePtr;
 
     pub fn StencilTable_destroy(st: StencilTablePtr);
