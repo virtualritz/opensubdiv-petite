@@ -255,6 +255,10 @@ impl TopologyRefiner {
             (*self.0).Unrefine();
         }
     }
+
+    pub(crate) fn as_ptr(&self) -> sys::topology_refiner::TopologyRefinerPtr {
+        self.0
+    }
 }
 
 impl Drop for TopologyRefiner {
