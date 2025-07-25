@@ -1,2 +1,6 @@
-/target/
-/Cargo.lock
+# Rust build artifacts
+target/
+Cargo.lock
+
+# Test output files (but not expected results)
+**/target/**/*.step
