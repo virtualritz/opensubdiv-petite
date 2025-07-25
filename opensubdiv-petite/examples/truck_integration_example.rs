@@ -6,9 +6,9 @@ use opensubdiv_petite::far::{
 };
 
 #[cfg(feature = "truck_integration")]
-use opensubdiv_petite::truck_integration::{
-    patches_to_shell, patches_to_surfaces, regular_patch_to_bspline_surface,
-};
+use opensubdiv_petite::truck_integration::PatchTableExt;
+#[cfg(feature = "truck_integration")]
+use std::convert::TryInto;
 
 fn main() {
     #[cfg(not(feature = "truck_integration"))]
@@ -87,8 +87,15 @@ fn main() {
         println!("  {} patch arrays", patch_table.patch_arrays_len());
         println!("  {} total patches", patch_table.patches_len());
 
-        // Convert patches to truck surfaces
-        match patches_to_surfaces(&patch_table, &refined_positions) {
+        // Convert patches to truck surfaces using the trait-based API
+        use truck_geometry::prelude::*;
+        use truck_modeling::*;
+        
+        // Convert all patches to B-spline surfaces
+        let surfaces_result: Result<Vec<BSplineSurface<Point3>>, _> = 
+            patch_table.with_control_points(&refined_positions).try_into();
+            
+        match surfaces_result {
             Ok(surfaces) => {
                 println!("\nSuccessfully converted {} patches to B-spline surfaces", surfaces.len());
                 
@@ -104,6 +111,19 @@ fn main() {
                         v_range.end
                     );
                 }
+                
+                // Example: Convert a single patch
+                if patch_table.patches_len() > 0 {
+                    let single_surface: Result<BSplineSurface<Point3>, _> = 
+                        patch_table.patch(0, &refined_positions).try_into();
+                    
+                    if let Ok(surface) = single_surface {
+                        println!("\nSuccessfully converted single patch to B-spline surface");
+                        let point = surface.subs(0.5, 0.5);
+                        println!("  Point at (0.5, 0.5): ({:.3}, {:.3}, {:.3})", 
+                            point.x, point.y, point.z);
+                    }
+                }
             }
             Err(e) => {
                 println!("Error converting patches: {}", e);
@@ -111,7 +131,10 @@ fn main() {
         }
 
         // Try to create a shell (collection of connected surfaces)
-        match patches_to_shell(&patch_table, &refined_positions) {
+        let shell_result: Result<Shell<Point3, Curve, Surface>, _> = 
+            patch_table.with_control_points(&refined_positions).try_into();
+            
+        match shell_result {
             Ok(shell) => {
                 println!("\nSuccessfully created a shell with {} faces", shell.face_iter().count());
                 
