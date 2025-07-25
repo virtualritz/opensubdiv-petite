@@ -52,5 +52,9 @@ path = "examples/bevy.rs"
 name = "bevy"
 required-features = [ "tri_mesh_buffers" ]
 
+[[example]]
+path = "examples/patch_table_example.rs"
+name = "patch_table_example"
+
 [package.metadata.docs.rs]
 features = ["tri_mesh_buffers", "topology_validation"]

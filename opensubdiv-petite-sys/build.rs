@@ -85,6 +85,7 @@ pub fn main() {
         .file("c-api/far/stencil_table_factory.cpp")
         .file("c-api/far/topology_refiner.cpp")
         .file("c-api/far/topology_level.cpp")
+        .file("c-api/far/patch_table.cpp")
         .file("c-api/osd/cpu_evaluator.cpp")
         .file("c-api/osd/cpu_vertex_buffer.cpp");
 
@@ -123,15 +124,25 @@ pub fn main() {
         .header("wrapper.hpp")
         .clang_arg("-IOpenSubdiv")
         .parse_callbacks(Box::new(bindgen::CargoCallbacks))
+        // Only allow the specific functions we wrap
+        .allowlist_function("PatchTableFactory_.*")
+        .allowlist_function("PatchTable_.*")
+        .allowlist_function("PatchDescriptor_.*")
+        .allowlist_function("PatchParam_.*")
+        // Keep existing allowlist for other types
         .allowlist_type("OpenSubdiv.*")
+        // Block problematic union type
+        .blocklist_type("std::.*_Storage_Impl")
         .derive_partialeq(true)
         .derive_eq(true)
         .derive_hash(true)
         .derive_debug(true)
         .layout_tests(false);
 
-    #[cfg(target_os = "linux")]
-    let bindings = bindings.clang_arg("-stdlib=libc++");
+    // Use standard library headers
+    let bindings = bindings
+        .clang_arg("-xc++")
+        .clang_arg("-std=c++14");
 
     let out_path = PathBuf::from(env::var_os("OUT_DIR").unwrap());
     let bindings = bindings
