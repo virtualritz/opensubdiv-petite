@@ -14,7 +14,6 @@ use std::marker::PhantomData;
 use std::pin::Pin;
 
 /// Options for creating a patch table
-#[derive(Debug)]
 pub struct PatchTableOptions {
     inner: Pin<Box<sys::far::PatchTableFactoryOptions>>,
 }
@@ -51,7 +50,9 @@ impl PatchTableOptions {
     /// Get the end cap type
     pub fn get_end_cap_type(&self) -> EndCapType {
         unsafe {
-            let end_cap = sys::far::PatchTableFactory_Options_GetEndCapType(self.inner.as_ref());
+            let end_cap = sys::far::PatchTableFactory_Options_GetEndCapType(
+                self.inner.as_ref().get_ref() as *const _,
+            );
             match end_cap {
                 0 => EndCapType::None,
                 1 => EndCapType::BSplineBasis,
@@ -96,7 +97,7 @@ impl PatchTableOptions {
     }
 
     pub(crate) fn as_ptr(&self) -> *const sys::far::PatchTableFactoryOptions {
-        self.inner.as_ref()
+        self.inner.as_ref().get_ref() as *const _
     }
 }
 
@@ -121,14 +122,8 @@ pub enum EndCapType {
     LegacyGregory,
 }
 
-/// Triangle subdivision types
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum TriangleSubdivision {
-    /// Catmull-Clark subdivision
-    Catmark,
-    /// Smooth subdivision
-    Smooth,
-}
+// Re-export TriangleSubdivision from topology_refiner
+pub use crate::far::topology_refiner::TriangleSubdivision;
 
 /// A patch table containing refined surface patches
 pub struct PatchTable {
@@ -147,9 +142,9 @@ impl PatchTable {
                 .as_ref()
                 .map(|o| o.as_ptr())
                 .unwrap_or(std::ptr::null());
-            
+
             let ptr = sys::far::PatchTableFactory_Create(refiner.as_ptr(), options_ptr);
-            
+
             if ptr.is_null() {
                 Err(Error::CreateTopologyRefinerFailed)
             } else {
@@ -216,12 +211,9 @@ impl PatchTable {
                 let desc = self.patch_array_descriptor(array_index)?;
                 let num_cvs = desc.control_vertices_len();
                 let total_len = len * num_cvs;
-                
+
                 // Cast from i32 to Index (u32)
-                Some(std::slice::from_raw_parts(
-                    ptr as *const Index,
-                    total_len,
-                ))
+                Some(std::slice::from_raw_parts(ptr as *const Index, total_len))
             }
         }
     }
@@ -279,7 +271,7 @@ unsafe impl Send for PatchTable {}
 unsafe impl Sync for PatchTable {}
 
 /// Describes a patch type and its control point arrangement
-#[derive(Debug, Clone, Copy)]
+#[derive(Clone, Copy)]
 pub struct PatchDescriptor {
     inner: sys::far::PatchDescriptor,
 }
@@ -366,7 +358,7 @@ pub enum PatchType {
 }
 
 /// Parameters for a patch
-#[derive(Debug, Clone, Copy)]
+#[derive(Clone, Copy)]
 pub struct PatchParam {
     inner: sys::far::PatchParam,
 }
@@ -404,7 +396,7 @@ impl PatchParam {
 }
 
 /// Result of patch evaluation containing point and derivatives
-#[derive(Debug, Clone, Copy)]
+#[derive(Clone, Copy)]
 pub struct PatchEvalResult {
     /// Evaluated point position
     pub point: [f32; 3],
@@ -433,6 +425,9 @@ impl From<sys::far::PatchEvalResult> for PatchEvalResult {
     }
 }
 
+/// Result of basis evaluation containing weights for position and derivatives
+pub type BasisWeights = (Vec<f32>, Vec<f32>, Vec<f32>, Vec<f32>, Vec<f32>, Vec<f32>);
+
 impl PatchTable {
     /// Evaluate basis functions for a patch at given parametric coordinates
     pub fn evaluate_basis(
@@ -440,7 +435,7 @@ impl PatchTable {
         patch_index: usize,
         u: f32,
         v: f32,
-    ) -> Option<(Vec<f32>, Vec<f32>, Vec<f32>, Vec<f32>, Vec<f32>, Vec<f32>)> {
+    ) -> Option<BasisWeights> {
         if patch_index >= self.patches_len() {
             return None;
         }
@@ -448,7 +443,7 @@ impl PatchTable {
         // Find which patch array this patch belongs to
         let mut array_index = 0;
         let mut local_patch_index = patch_index;
-        
+
         for i in 0..self.patch_arrays_len() {
             let num_patches = self.patch_array_patches_len(i);
             if local_patch_index < num_patches {
@@ -506,7 +501,7 @@ impl PatchTable {
 
         unsafe {
             let mut result = std::mem::zeroed::<sys::far::PatchEvalResult>();
-            
+
             let success = sys::far::PatchTable_EvaluatePoint(
                 self.ptr,
                 patch_index as i32,
