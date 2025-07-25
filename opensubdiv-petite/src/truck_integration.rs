@@ -13,6 +13,9 @@ use truck_modeling::{
     Edge, Face, Shell, Vertex, Wire, Curve, Surface, Invertible,
 };
 
+/// Type alias for results in this module
+pub type Result<T> = std::result::Result<T, TruckIntegrationError>;
+
 /// Error type for truck integration
 #[derive(Debug, Clone)]
 pub enum TruckIntegrationError {
@@ -283,6 +286,12 @@ pub trait PatchTableExt {
 
     /// Get a specific patch for conversion
     fn patch<'a>(&'a self, index: usize, control_points: &'a [[f32; 3]]) -> Patch<'a>;
+    
+    /// Convert patches to a truck shell with the given control points
+    fn to_truck_shell(&self, control_points: &[[f32; 3]]) -> Result<Shell>;
+    
+    /// Convert patches to truck surfaces with the given control points
+    fn to_truck_surfaces(&self, control_points: &[[f32; 3]]) -> Result<Vec<BSplineSurface<Point3<f64>>>>;
 }
 
 impl PatchTableExt for PatchTable {
@@ -298,6 +307,16 @@ impl PatchTableExt for PatchTable {
 
     fn patch<'a>(&'a self, index: usize, control_points: &'a [[f32; 3]]) -> Patch<'a> {
         Patch::new(self, index, control_points)
+    }
+    
+    fn to_truck_shell(&self, control_points: &[[f32; 3]]) -> Result<Shell> {
+        let wrapper = self.with_control_points(control_points);
+        Shell::try_from(wrapper)
+    }
+    
+    fn to_truck_surfaces(&self, control_points: &[[f32; 3]]) -> Result<Vec<BSplineSurface<Point3<f64>>>> {
+        let wrapper = self.with_control_points(control_points);
+        Vec::<BSplineSurface<Point3<f64>>>::try_from(wrapper)
     }
 }
 

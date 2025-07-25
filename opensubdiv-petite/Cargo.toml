@@ -24,7 +24,7 @@ openmp = ["opensubdiv-petite-sys/openmp"]
 ptex = ["opensubdiv-petite-sys/ptex"]
 tri_mesh_buffers = ["itertools", "ultraviolet", "slice-of-array"]
 topology_validation = []
-truck_integration = ["truck-geometry", "truck-modeling"]
+truck = ["truck-geometry", "truck-modeling"]
 bevy_examples = ["bevy", "smooth-bevy-cameras"]
 
 [dependencies]
@@ -61,7 +61,7 @@ name = "patch_table_example"
 [[example]]
 path = "examples/truck_integration_example.rs"
 name = "truck_integration_example"
-required-features = ["truck_integration"]
+required-features = ["truck"]
 
 [package.metadata.docs.rs]
 features = ["tri_mesh_buffers", "topology_validation"]
