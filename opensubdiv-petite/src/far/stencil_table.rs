@@ -102,8 +102,14 @@ impl StencilTable {
             unsafe {
                 let stencil = sys::far::stencil_table::StencilTable_GetStencil(self.0, i.into());
                 Some(Stencil {
-                    indices: std::slice::from_raw_parts(stencil._indices as _, stencil._size as _),
-                    weights: std::slice::from_raw_parts(stencil._weights, stencil._size as _),
+                    indices: std::slice::from_raw_parts(
+                        stencil._base._indices as _,
+                        *stencil._base._size as _,
+                    ),
+                    weights: std::slice::from_raw_parts(
+                        stencil._base._weights,
+                        *stencil._base._size as _,
+                    ),
                 })
             }
         }

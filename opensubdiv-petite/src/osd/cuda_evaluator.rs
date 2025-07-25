@@ -13,10 +13,10 @@ type Result<T, E = Error> = std::result::Result<T, E>;
 /// can be called in the same way from OsdMesh template interface.
 ///
 /// * `srcBuffer` - Input primvar buffer. Must have BindCudaBuffer() method
-/// returning a const float pointer for read
+///   returning a const float pointer for read
 /// * `srcDesc` - vertex buffer descriptor for the input buffer
 /// * `dstBuffer` -  Output primvar buffer must have BindCudaBuffer() method
-/// returning a float pointer for write
+///   returning a float pointer for write
 /// * `dstDesc` - vertex buffer descriptor for the output buffer
 /// * `stencilTable` - [StencilTable] or equivalent
 pub fn evaluate_stencils(

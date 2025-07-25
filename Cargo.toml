@@ -3,6 +3,9 @@ members = [
     'opensubdiv-petite-sys',
     'opensubdiv-petite'
 ]
+exclude = [
+    'opensubdiv-petite/examples/creased_cube_to_step'
+]
 resolver = "2"
 
 [profile.dev]
