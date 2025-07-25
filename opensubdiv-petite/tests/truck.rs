@@ -138,6 +138,26 @@ fn test_creased_cube_to_step() {
     // Convert patches to truck shell
     use opensubdiv_petite::truck_integration::PatchTableExt;
     
+    // Debug: First convert to surfaces to understand the issue
+    println!("\n=== DEBUG: Truck Conversion ===");
+    match patch_table.to_truck_surfaces(&all_vertices) {
+        Ok(surfaces) => {
+            println!("Successfully converted {} surfaces", surfaces.len());
+            // Print first surface details
+            if let Some(first_surface) = surfaces.first() {
+                use truck_geometry::prelude::ParametricSurface;
+                println!("First surface corners:");
+                println!("  (0,0): {:?}", first_surface.subs(0.0, 0.0));
+                println!("  (1,0): {:?}", first_surface.subs(1.0, 0.0));
+                println!("  (0,1): {:?}", first_surface.subs(0.0, 1.0));
+                println!("  (1,1): {:?}", first_surface.subs(1.0, 1.0));
+            }
+        }
+        Err(e) => {
+            println!("Surface conversion failed: {:?}", e);
+        }
+    }
+    
     // Convert patches to truck shell
     let shell = patch_table.to_truck_shell(&all_vertices)
         .expect("Failed to convert to truck shell");
@@ -372,4 +392,252 @@ fn test_creased_cube_direct_nurbs_export() {
     test_utils::assert_file_matches(&output_path, "creased_cube_direct_nurbs.step");
     
     println!("Generated {} B-spline surfaces", surface_ids.len());
+}
+
+#[cfg(feature = "truck")]
+#[test]
+fn test_single_quad_patch_generation() {
+    use opensubdiv_petite::far::{
+        PatchTable, TopologyDescriptor, TopologyRefiner, TopologyRefinerOptions,
+        PatchTableOptions, EndCapType, UniformRefinementOptions,
+        AdaptiveRefinementOptions,
+    };
+    
+    // Non-planar quad - a saddle shape
+    let vertex_positions = vec![
+        [0.0, 0.0, 0.0],
+        [1.0, 0.0, 0.5],
+        [0.0, 1.0, 0.5],
+        [1.0, 1.0, 0.0],
+    ];
+
+    let face_vertex_counts = vec![4];
+    let face_vertex_indices = vec![0, 1, 3, 2];
+
+    println!("\n=== Testing patch generation at different refinement levels ===");
+    
+    // Test different refinement levels
+    for level in 0..=3 {
+        println!("\n--- Refinement level {} ---", level);
+        
+        // Create fresh refiner for each test
+        let descriptor = TopologyDescriptor::new(
+            vertex_positions.len(),
+            &face_vertex_counts,
+            &face_vertex_indices,
+        );
+        
+        let refiner_options = TopologyRefinerOptions::default();
+        let mut test_refiner = TopologyRefiner::new(descriptor, refiner_options)
+            .expect("Failed to create topology refiner");
+        
+        if level > 0 {
+            let mut uniform_options = UniformRefinementOptions::default();
+            uniform_options.refinement_level = level;
+            test_refiner.refine_uniform(uniform_options);
+        }
+        
+        // Try to create patch table with different end cap types
+        println!("  Testing different end cap types:");
+        
+        // Also test with generate_all_levels option
+        println!("  With default options (no patches at base):");
+        for end_cap_type in [EndCapType::None, EndCapType::BSplineBasis, EndCapType::GregoryBasis, EndCapType::LegacyGregory] {
+            print!("    {:?}: ", end_cap_type);
+            let patch_options = PatchTableOptions::new()
+                .end_cap_type(end_cap_type);
+                
+            match PatchTable::new(&test_refiner, Some(patch_options)) {
+                Ok(patch_table) => {
+                    println!("{} patch arrays", patch_table.patch_arrays_len());
+                    
+                    for i in 0..patch_table.patch_arrays_len() {
+                        if let Some(desc) = patch_table.patch_array_descriptor(i) {
+                            println!("      Array {}: type={:?}, patches={}, cvs_per_patch={}", 
+                                i, desc.patch_type(), 
+                                patch_table.patch_array_patches_len(i), 
+                                desc.control_vertices_len());
+                        }
+                    }
+                }
+                Err(e) => {
+                    println!("Failed: {:?}", e);
+                }
+            }
+        }
+    }
+    
+    // Now test with adaptive refinement
+    println!("\n--- Adaptive refinement ---");
+    let descriptor = TopologyDescriptor::new(
+        vertex_positions.len(),
+        &face_vertex_counts,
+        &face_vertex_indices,
+    );
+    
+    let refiner_options = TopologyRefinerOptions::default();
+    let mut adaptive_refiner = TopologyRefiner::new(descriptor, refiner_options)
+        .expect("Failed to create topology refiner");
+    
+    let mut adaptive_options = AdaptiveRefinementOptions::default();
+    adaptive_options.isolation_level = 3;
+    adaptive_refiner.refine_adaptive(adaptive_options, &[]);
+    
+    let patch_options = PatchTableOptions::new()
+        .end_cap_type(EndCapType::BSplineBasis);
+        
+    match PatchTable::new(&adaptive_refiner, Some(patch_options)) {
+        Ok(patch_table) => {
+            println!("  Patch table created successfully");
+            println!("  Number of patch arrays: {}", patch_table.patch_arrays_len());
+            
+            for i in 0..patch_table.patch_arrays_len() {
+                if let Some(desc) = patch_table.patch_array_descriptor(i) {
+                    println!("  Array {}: type={:?}, patches={}, cvs_per_patch={}", 
+                        i, desc.patch_type(), 
+                        patch_table.patch_array_patches_len(i), 
+                        desc.control_vertices_len());
+                }
+            }
+        }
+        Err(e) => {
+            println!("  Failed to create patch table: {:?}", e);
+        }
+    }
+}
+
+#[cfg(feature = "truck")]
+#[test]
+fn test_debug_truck_conversion() {
+    use opensubdiv_petite::far::{
+        PatchTable, TopologyDescriptor, TopologyRefiner, TopologyRefinerOptions,
+        AdaptiveRefinementOptions, PatchTableOptions, EndCapType, PrimvarRefiner,
+    };
+    use opensubdiv_petite::truck_integration::PatchTableExt;
+    use truck_geometry::prelude::ParametricSurface;
+    
+    // Simple single quad for debugging
+    let vertex_positions = vec![
+        [0.0, 0.0, 0.0],
+        [1.0, 0.0, 0.0],
+        [0.0, 1.0, 0.0],
+        [1.0, 1.0, 0.0],
+    ];
+
+    let face_vertex_counts = vec![4];
+    let face_vertex_indices = vec![0, 1, 3, 2];
+
+    let descriptor = TopologyDescriptor::new(
+        vertex_positions.len(),
+        &face_vertex_counts,
+        &face_vertex_indices,
+    );
+
+    let refiner_options = TopologyRefinerOptions::default();
+    let mut refiner = TopologyRefiner::new(descriptor, refiner_options)
+        .expect("Failed to create topology refiner");
+
+    // Use adaptive refinement like creased cube test
+    let mut adaptive_options = AdaptiveRefinementOptions::default();
+    adaptive_options.isolation_level = 3; // Higher level for simpler geometry
+    refiner.refine_adaptive(adaptive_options, &[]);
+
+    // Create patch table
+    let patch_options = PatchTableOptions::new()
+        .end_cap_type(EndCapType::BSplineBasis);
+    let patch_table = PatchTable::new(&refiner, Some(patch_options))
+        .expect("Failed to create patch table");
+
+    // Build vertex buffer
+    let primvar_refiner = PrimvarRefiner::new(&refiner);
+    let total_vertices = refiner.vertex_total_count();
+    let flat_positions: Vec<f32> = vertex_positions
+        .iter()
+        .flat_map(|v| v.iter().copied())
+        .collect();
+    
+    let mut all_vertices = Vec::with_capacity(total_vertices);
+    
+    // Add base level vertices
+    for v in &vertex_positions {
+        all_vertices.push(*v);
+    }
+    
+    // Add refined vertices
+    let num_levels = refiner.refinement_levels();
+    for level in 1..num_levels {
+        if let Some(refined) = primvar_refiner.interpolate(level, 3, &flat_positions) {
+            let level_vertices: Vec<[f32; 3]> = refined
+                .chunks_exact(3)
+                .map(|chunk| [chunk[0], chunk[1], chunk[2]])
+                .collect();
+            all_vertices.extend_from_slice(&level_vertices);
+        }
+    }
+    
+    println!("\n=== DEBUG: Patch Table Info ===");
+    println!("Total vertices: {}", all_vertices.len());
+    println!("Number of patch arrays: {}", patch_table.patch_arrays_len());
+    
+    // Debug patch arrays
+    for array_idx in 0..patch_table.patch_arrays_len() {
+        if let Some(desc) = patch_table.patch_array_descriptor(array_idx) {
+            println!("\nPatch array {}:", array_idx);
+            println!("  Type: {:?}", desc.patch_type());
+            println!("  Num patches: {}", patch_table.patch_array_patches_len(array_idx));
+            println!("  Control verts per patch: {}", desc.control_vertices_len());
+            
+            if let Some(patch_vertices) = patch_table.patch_array_vertices(array_idx) {
+                let num_patches = patch_table.patch_array_patches_len(array_idx);
+                for patch_idx in 0..num_patches.min(2) { // Print first 2 patches
+                    println!("\n  Patch {}:", patch_idx);
+                    let start = patch_idx * desc.control_vertices_len();
+                    let end = start + desc.control_vertices_len();
+                    
+                    println!("    Control vertex indices:");
+                    for (i, &idx) in patch_vertices[start..end].iter().enumerate() {
+                        if i % 4 == 0 {
+                            print!("      ");
+                        }
+                        print!("{:3} ", idx.0);
+                        if (i + 1) % 4 == 0 {
+                            println!();
+                        }
+                    }
+                    
+                    println!("    Control point positions:");
+                    for (i, &idx) in patch_vertices[start..end].iter().enumerate() {
+                        let vert_idx = idx.0 as usize;
+                        if vert_idx < all_vertices.len() {
+                            let v = &all_vertices[vert_idx];
+                            println!("      {}: [{:.3}, {:.3}, {:.3}]", i, v[0], v[1], v[2]);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    // Try truck conversion
+    println!("\n=== Attempting truck conversion ===");
+    match patch_table.to_truck_surfaces(&all_vertices) {
+        Ok(surfaces) => {
+            println!("Successfully converted {} surfaces", surfaces.len());
+            for (i, surface) in surfaces.iter().enumerate().take(2) {
+                println!("\nSurface {}:", i);
+                let (u_range, v_range) = surface.parameter_range();
+                println!("  Parameter range: u={:?}, v={:?}", u_range, v_range);
+                
+                // Sample corners
+                println!("  Corner points:");
+                println!("    (0,0): {:?}", surface.subs(0.0, 0.0));
+                println!("    (1,0): {:?}", surface.subs(1.0, 0.0));
+                println!("    (0,1): {:?}", surface.subs(0.0, 1.0));
+                println!("    (1,1): {:?}", surface.subs(1.0, 1.0));
+            }
+        }
+        Err(e) => {
+            println!("Conversion failed: {:?}", e);
+        }
+    }
 }
