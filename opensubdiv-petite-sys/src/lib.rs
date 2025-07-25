@@ -1,5 +1,7 @@
 #![allow(clippy::missing_safety_doc)]
 #![allow(clippy::too_many_arguments)]
+#![allow(clippy::ptr_offset_with_cast)]
+#![allow(clippy::useless_transmute)]
 #![allow(non_upper_case_globals)]
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
@@ -7,6 +9,9 @@
 //! You probably want the high level wrapper – [`opensubdiv-petite`](https://crates.io/crates/opensubdiv-petite).
 
 include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
+
+// Manual type definitions for blocked types
+pub type OpenSubdiv_v3_6_1_Far_PatchTable_StencilTablePtr = *mut std::ffi::c_void;
 
 pub mod far;
 pub use far::*;
