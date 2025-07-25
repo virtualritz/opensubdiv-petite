@@ -39,6 +39,9 @@ truck-modeling = { version = "0.6", optional = true }
 [dev-dependencies]
 bevy = { version = "0.16", default-features = false, features = ["bevy_core_pipeline", "bevy_asset", "bevy_render", "bevy_pbr", "bevy_winit"] }
 smooth-bevy-cameras = "0.14"
+truck-stepio = "0.3"
+anyhow = "1.0"
+glam = "0.29"
 
 [target.'cfg(target_os = "linux")'.dev-dependencies.bevy]
 version = "0.16"
@@ -62,6 +65,11 @@ name = "patch_table_example"
 [[example]]
 path = "examples/truck_integration_example.rs"
 name = "truck_integration_example"
+required-features = ["truck_integration"]
+
+[[example]]
+path = "examples/creased_cube_to_step/src/main.rs"
+name = "creased_cube_to_step"
 required-features = ["truck_integration"]
 
 [package.metadata.docs.rs]
