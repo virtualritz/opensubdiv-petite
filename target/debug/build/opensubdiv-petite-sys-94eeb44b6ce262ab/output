@@ -15,100 +15,167 @@ CMAKE_x86_64_unknown_linux_gnu = None
 HOST_CMAKE = None
 CMAKE = None
 running: cd "/root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/build" && CMAKE_PREFIX_PATH="" LC_ALL="C" "cmake" "/root/repo/opensubdiv-petite-sys/OpenSubdiv" "-DNO_EXAMPLES=1" "-DNO_TUTORIALS=1" "-DNO_REGRESSION=1" "-DNO_PTEX=1" "-DNO_DOC=1" "-DNO_OPENCL=1" "-DNO_CLEW=1" "-DNO_TBB=1" "-DNO_GLFW=1" "-DNO_OPENGL=1" "-DNO_DX=1" "-DCMAKE_CXX_STANDARD=14" "-DNO_CUDA=1" "-DNO_OMP=1" "-DNO_METAL=1" "-DCMAKE_INSTALL_PREFIX=/root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out" "-DCMAKE_C_FLAGS= -ffunction-sections -fdata-sections -fPIC -m64" "-DCMAKE_C_COMPILER=/usr/bin/cc" "-DCMAKE_CXX_FLAGS= -ffunction-sections -fdata-sections -fPIC -m64" "-DCMAKE_CXX_COMPILER=/usr/bin/c++" "-DCMAKE_ASM_FLAGS= -ffunction-sections -fdata-sections -fPIC -m64" "-DCMAKE_ASM_COMPILER=/usr/bin/cc" "-DCMAKE_BUILD_TYPE=Debug"
+-- The C compiler identification is GNU 13.3.0
+-- The CXX compiler identification is GNU 13.3.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /usr/bin/cc - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
 -- Compiling OpenSubdiv version v3_6_1
 -- Using cmake version 3.28.3
--- Configuring done (0.2s)
+-- Found Python: /usr/bin/python3 (found version "3.12.3") found components: Interpreter 
+-- Configuring done (0.9s)
 -- Generating done (0.0s)
 -- Build files have been written to: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/build
 running: cd "/root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/build" && LC_ALL="C" MAKEFLAGS="-j --jobserver-fds=8,9 --jobserver-auth=8,9" "cmake" "--build" "/root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/build" "--target" "install" "--config" "Debug"
-[  3%] Built target sdc_obj
-[ 11%] Built target osd_cpu_obj
-[ 24%] Built target vtr_obj
-[ 56%] Built target far_obj
-[ 86%] Built target bfr_obj
-[ 90%] Built target regression_common_obj
-[ 92%] Built target regression_far_utils_obj
+[  3%] Building CXX object opensubdiv/osd/CMakeFiles/osd_cpu_obj.dir/cpuEvaluator.cpp.o
+[  3%] Building CXX object opensubdiv/sdc/CMakeFiles/sdc_obj.dir/crease.cpp.o
+[  5%] Building CXX object opensubdiv/sdc/CMakeFiles/sdc_obj.dir/typeTraits.cpp.o
+[  5%] Built target sdc_obj
+[  7%] Building CXX object opensubdiv/vtr/CMakeFiles/vtr_obj.dir/fvarLevel.cpp.o
+[  9%] Building CXX object opensubdiv/osd/CMakeFiles/osd_cpu_obj.dir/cpuKernel.cpp.o
+[ 11%] Building CXX object opensubdiv/osd/CMakeFiles/osd_cpu_obj.dir/cpuPatchTable.cpp.o
+[ 13%] Building CXX object opensubdiv/vtr/CMakeFiles/vtr_obj.dir/fvarRefinement.cpp.o
+[ 15%] Building CXX object opensubdiv/osd/CMakeFiles/osd_cpu_obj.dir/cpuVertexBuffer.cpp.o
+[ 15%] Built target osd_cpu_obj
+[ 16%] Building CXX object opensubdiv/far/CMakeFiles/far_obj.dir/bilinearPatchBuilder.cpp.o
+[ 18%] Building CXX object opensubdiv/vtr/CMakeFiles/vtr_obj.dir/level.cpp.o
+[ 20%] Building CXX object opensubdiv/far/CMakeFiles/far_obj.dir/catmarkPatchBuilder.cpp.o
+[ 22%] Building CXX object opensubdiv/vtr/CMakeFiles/vtr_obj.dir/quadRefinement.cpp.o
+[ 24%] Building CXX object opensubdiv/far/CMakeFiles/far_obj.dir/error.cpp.o
+[ 26%] Building CXX object opensubdiv/far/CMakeFiles/far_obj.dir/loopPatchBuilder.cpp.o
+[ 28%] Building CXX object opensubdiv/vtr/CMakeFiles/vtr_obj.dir/refinement.cpp.o
+[ 30%] Building CXX object opensubdiv/far/CMakeFiles/far_obj.dir/patchBasis.cpp.o
+[ 32%] Building CXX object opensubdiv/vtr/CMakeFiles/vtr_obj.dir/sparseSelector.cpp.o
+[ 33%] Building CXX object opensubdiv/far/CMakeFiles/far_obj.dir/patchBuilder.cpp.o
+[ 35%] Building CXX object opensubdiv/vtr/CMakeFiles/vtr_obj.dir/triRefinement.cpp.o
+[ 37%] Building CXX object opensubdiv/far/CMakeFiles/far_obj.dir/patchDescriptor.cpp.o
+[ 37%] Built target vtr_obj
+[ 39%] Building CXX object opensubdiv/bfr/CMakeFiles/bfr_obj.dir/faceSurface.cpp.o
+[ 41%] Building CXX object opensubdiv/far/CMakeFiles/far_obj.dir/patchMap.cpp.o
+[ 43%] Building CXX object opensubdiv/bfr/CMakeFiles/bfr_obj.dir/faceTopology.cpp.o
+[ 45%] Building CXX object opensubdiv/far/CMakeFiles/far_obj.dir/patchTable.cpp.o
+[ 47%] Building CXX object opensubdiv/bfr/CMakeFiles/bfr_obj.dir/faceVertex.cpp.o
+[ 49%] Building CXX object opensubdiv/bfr/CMakeFiles/bfr_obj.dir/hash.cpp.o
+[ 50%] Building CXX object opensubdiv/bfr/CMakeFiles/bfr_obj.dir/irregularPatchBuilder.cpp.o
+[ 52%] Building CXX object opensubdiv/far/CMakeFiles/far_obj.dir/patchTableFactory.cpp.o
+[ 54%] Building CXX object opensubdiv/bfr/CMakeFiles/bfr_obj.dir/parameterization.cpp.o
+[ 56%] Building CXX object opensubdiv/bfr/CMakeFiles/bfr_obj.dir/patchTree.cpp.o
+[ 58%] Building CXX object opensubdiv/bfr/CMakeFiles/bfr_obj.dir/patchTreeBuilder.cpp.o
+[ 60%] Building CXX object opensubdiv/far/CMakeFiles/far_obj.dir/ptexIndices.cpp.o
+[ 62%] Building CXX object opensubdiv/far/CMakeFiles/far_obj.dir/stencilTable.cpp.o
+[ 64%] Building CXX object opensubdiv/bfr/CMakeFiles/bfr_obj.dir/refinerSurfaceFactory.cpp.o
+[ 66%] Building CXX object opensubdiv/far/CMakeFiles/far_obj.dir/stencilTableFactory.cpp.o
+[ 67%] Building CXX object opensubdiv/bfr/CMakeFiles/bfr_obj.dir/regularPatchBuilder.cpp.o
+[ 69%] Building CXX object opensubdiv/bfr/CMakeFiles/bfr_obj.dir/surface.cpp.o
+[ 71%] Building CXX object opensubdiv/bfr/CMakeFiles/bfr_obj.dir/surfaceData.cpp.o
+[ 73%] Building CXX object opensubdiv/bfr/CMakeFiles/bfr_obj.dir/surfaceFactory.cpp.o
+[ 75%] Building CXX object opensubdiv/far/CMakeFiles/far_obj.dir/stencilBuilder.cpp.o
+[ 77%] Building CXX object opensubdiv/bfr/CMakeFiles/bfr_obj.dir/surfaceFactoryCache.cpp.o
+[ 79%] Building CXX object opensubdiv/bfr/CMakeFiles/bfr_obj.dir/tessellation.cpp.o
+[ 81%] Building CXX object opensubdiv/far/CMakeFiles/far_obj.dir/topologyDescriptor.cpp.o
+[ 83%] Building CXX object opensubdiv/bfr/CMakeFiles/bfr_obj.dir/vertexDescriptor.cpp.o
+[ 83%] Built target bfr_obj
+[ 84%] Building CXX object regression/common/CMakeFiles/regression_common_obj.dir/arg_utils.cpp.o
+[ 86%] Building CXX object opensubdiv/far/CMakeFiles/far_obj.dir/topologyRefiner.cpp.o
+[ 88%] Building CXX object regression/common/CMakeFiles/regression_common_obj.dir/shape_utils.cpp.o
+[ 90%] Building CXX object opensubdiv/far/CMakeFiles/far_obj.dir/topologyRefinerFactory.cpp.o
+[ 90%] Built target far_obj
+[ 92%] Building CXX object regression/common/CMakeFiles/regression_far_utils_obj.dir/far_utils.cpp.o
+[ 92%] Built target regression_common_obj
+[ 94%] Building CXX object opensubdiv/CMakeFiles/osd_static_cpu.dir/version.cpp.o
+[ 96%] Linking CXX static library ../lib/libosdCPU.a
 [ 96%] Built target osd_static_cpu
+[ 98%] Building CXX object opensubdiv/CMakeFiles/osd_dynamic_cpu.dir/version.cpp.o
+[ 98%] Built target regression_far_utils_obj
+[100%] Linking CXX shared library ../lib/libosdCPU.so
 [100%] Built target osd_dynamic_cpu
 Install the project...
 -- Install configuration: "Debug"
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/hbr/allocator.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/hbr/bilinear.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/hbr/catmark.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/hbr/cornerEdit.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/hbr/creaseEdit.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/hbr/faceEdit.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/hbr/face.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/hbr/fvarData.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/hbr/fvarEdit.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/hbr/halfedge.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/hbr/hierarchicalEdit.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/hbr/holeEdit.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/hbr/loop.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/hbr/mesh.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/hbr/subdivision.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/hbr/vertexEdit.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/hbr/vertex.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/sdc/bilinearScheme.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/sdc/catmarkScheme.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/sdc/crease.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/sdc/loopScheme.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/sdc/options.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/sdc/scheme.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/sdc/types.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/vtr/array.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/vtr/componentInterfaces.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/vtr/fvarLevel.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/vtr/fvarRefinement.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/vtr/level.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/vtr/refinement.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/vtr/sparseSelector.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/vtr/stackBuffer.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/vtr/types.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/far/error.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/far/patchDescriptor.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/far/patchParam.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/far/patchMap.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/far/patchTable.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/far/patchTableFactory.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/far/primvarRefiner.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/far/ptexIndices.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/far/stencilTable.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/far/stencilTableFactory.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/far/topologyDescriptor.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/far/topologyLevel.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/far/topologyRefiner.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/far/topologyRefinerFactory.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/far/types.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/bfr/irregularPatchType.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/bfr/limits.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/bfr/parameterization.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/bfr/refinerSurfaceFactory.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/bfr/surface.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/bfr/surfaceData.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/bfr/surfaceFactory.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/bfr/surfaceFactoryMeshAdapter.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/bfr/surfaceFactoryCache.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/bfr/tessellation.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/bfr/vertexDescriptor.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/osd/bufferDescriptor.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/osd/cpuEvaluator.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/osd/cpuPatchTable.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/osd/cpuVertexBuffer.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/osd/mesh.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/osd/nonCopyable.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/osd/opengl.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/osd/types.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/osd/patchBasisTypes.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/osd/patchBasis.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/version.h
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/lib/libosdCPU.a
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/lib/libosdCPU.so.3.6.1
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/lib/libosdCPU.so
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/lib/cmake/OpenSubdiv/OpenSubdivTargets.cmake
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/lib/cmake/OpenSubdiv/OpenSubdivTargets-debug.cmake
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/lib/cmake/OpenSubdiv/OpenSubdivConfig.cmake
--- Up-to-date: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/lib/cmake/OpenSubdiv/OpenSubdivConfigVersion.cmake
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/hbr/allocator.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/hbr/bilinear.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/hbr/catmark.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/hbr/cornerEdit.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/hbr/creaseEdit.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/hbr/faceEdit.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/hbr/face.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/hbr/fvarData.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/hbr/fvarEdit.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/hbr/halfedge.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/hbr/hierarchicalEdit.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/hbr/holeEdit.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/hbr/loop.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/hbr/mesh.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/hbr/subdivision.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/hbr/vertexEdit.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/hbr/vertex.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/sdc/bilinearScheme.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/sdc/catmarkScheme.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/sdc/crease.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/sdc/loopScheme.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/sdc/options.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/sdc/scheme.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/sdc/types.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/vtr/array.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/vtr/componentInterfaces.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/vtr/fvarLevel.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/vtr/fvarRefinement.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/vtr/level.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/vtr/refinement.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/vtr/sparseSelector.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/vtr/stackBuffer.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/vtr/types.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/far/error.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/far/patchDescriptor.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/far/patchParam.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/far/patchMap.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/far/patchTable.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/far/patchTableFactory.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/far/primvarRefiner.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/far/ptexIndices.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/far/stencilTable.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/far/stencilTableFactory.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/far/topologyDescriptor.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/far/topologyLevel.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/far/topologyRefiner.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/far/topologyRefinerFactory.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/far/types.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/bfr/irregularPatchType.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/bfr/limits.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/bfr/parameterization.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/bfr/refinerSurfaceFactory.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/bfr/surface.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/bfr/surfaceData.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/bfr/surfaceFactory.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/bfr/surfaceFactoryMeshAdapter.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/bfr/surfaceFactoryCache.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/bfr/tessellation.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/bfr/vertexDescriptor.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/osd/bufferDescriptor.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/osd/cpuEvaluator.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/osd/cpuPatchTable.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/osd/cpuVertexBuffer.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/osd/mesh.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/osd/nonCopyable.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/osd/opengl.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/osd/types.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/osd/patchBasisTypes.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/osd/patchBasis.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/include/opensubdiv/version.h
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/lib/libosdCPU.a
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/lib/libosdCPU.so.3.6.1
+-- Set non-toolchain portion of runtime path of "/root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/lib/libosdCPU.so.3.6.1" to "/root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/lib"
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/lib/libosdCPU.so
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/lib/cmake/OpenSubdiv/OpenSubdivTargets.cmake
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/lib/cmake/OpenSubdiv/OpenSubdivTargets-debug.cmake
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/lib/cmake/OpenSubdiv/OpenSubdivConfig.cmake
+-- Installing: /root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out/lib/cmake/OpenSubdiv/OpenSubdivConfigVersion.cmake
 cargo:root=/root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out
 OUT_DIR = Some(/root/repo/target/debug/build/opensubdiv-petite-sys-94eeb44b6ce262ab/out)
 OPT_LEVEL = Some(0)

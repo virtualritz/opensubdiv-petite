@@ -424,7 +424,7 @@ pub type OpenSubdiv_v3_6_1_Vtr_Array_reference<TYPE> = *mut TYPE;
 pub type OpenSubdiv_v3_6_1_Vtr_Array_iterator<TYPE> = *mut TYPE;
 pub type OpenSubdiv_v3_6_1_Vtr_Index = ::std::os::raw::c_int;
 pub type OpenSubdiv_v3_6_1_Vtr_LocalIndex = ::std::os::raw::c_ushort;
-pub type OpenSubdiv_v3_6_1_Vtr_IndexVector = std_vector;
+pub type OpenSubdiv_v3_6_1_Vtr_IndexVector = [u64; 3usize];
 pub type OpenSubdiv_v3_6_1_Vtr_IndexArray =
     OpenSubdiv_v3_6_1_Vtr_Array<OpenSubdiv_v3_6_1_Vtr_Index>;
 pub type OpenSubdiv_v3_6_1_Vtr_ConstIndexArray =
@@ -451,25 +451,25 @@ pub struct OpenSubdiv_v3_6_1_Vtr_internal_Level {
     pub _depth: ::std::os::raw::c_int,
     pub _maxEdgeFaces: ::std::os::raw::c_int,
     pub _maxValence: ::std::os::raw::c_int,
-    pub _faceVertCountsAndOffsets: std_vector,
-    pub _faceVertIndices: std_vector,
-    pub _faceEdgeIndices: std_vector,
-    pub _faceTags: std_vector,
-    pub _edgeVertIndices: std_vector,
-    pub _edgeFaceCountsAndOffsets: std_vector,
-    pub _edgeFaceIndices: std_vector,
-    pub _edgeFaceLocalIndices: std_vector,
-    pub _edgeSharpness: std_vector,
-    pub _edgeTags: std_vector,
-    pub _vertFaceCountsAndOffsets: std_vector,
-    pub _vertFaceIndices: std_vector,
-    pub _vertFaceLocalIndices: std_vector,
-    pub _vertEdgeCountsAndOffsets: std_vector,
-    pub _vertEdgeIndices: std_vector,
-    pub _vertEdgeLocalIndices: std_vector,
-    pub _vertSharpness: std_vector,
-    pub _vertTags: std_vector,
-    pub _fvarChannels: std_vector,
+    pub _faceVertCountsAndOffsets: [u64; 3usize],
+    pub _faceVertIndices: [u64; 3usize],
+    pub _faceEdgeIndices: [u64; 3usize],
+    pub _faceTags: [u64; 3usize],
+    pub _edgeVertIndices: [u64; 3usize],
+    pub _edgeFaceCountsAndOffsets: [u64; 3usize],
+    pub _edgeFaceIndices: [u64; 3usize],
+    pub _edgeFaceLocalIndices: [u64; 3usize],
+    pub _edgeSharpness: [u64; 3usize],
+    pub _edgeTags: [u64; 3usize],
+    pub _vertFaceCountsAndOffsets: [u64; 3usize],
+    pub _vertFaceIndices: [u64; 3usize],
+    pub _vertFaceLocalIndices: [u64; 3usize],
+    pub _vertEdgeCountsAndOffsets: [u64; 3usize],
+    pub _vertEdgeIndices: [u64; 3usize],
+    pub _vertEdgeLocalIndices: [u64; 3usize],
+    pub _vertSharpness: [u64; 3usize],
+    pub _vertTags: [u64; 3usize],
+    pub _fvarChannels: [u64; 3usize],
 }
 #[repr(C)]
 #[repr(align(2))]
@@ -1617,14 +1617,14 @@ pub struct OpenSubdiv_v3_6_1_Vtr_internal_FVarLevel {
     pub _hasLinearBoundaries: bool,
     pub _hasDependentSharpness: bool,
     pub _valueCount: ::std::os::raw::c_int,
-    pub _faceVertValues: std_vector,
-    pub _edgeTags: std_vector,
-    pub _vertSiblingCounts: std_vector,
-    pub _vertSiblingOffsets: std_vector,
-    pub _vertFaceSiblings: std_vector,
-    pub _vertValueIndices: std_vector,
-    pub _vertValueTags: std_vector,
-    pub _vertValueCreaseEnds: std_vector,
+    pub _faceVertValues: [u64; 3usize],
+    pub _edgeTags: [u64; 3usize],
+    pub _vertSiblingCounts: [u64; 3usize],
+    pub _vertSiblingOffsets: [u64; 3usize],
+    pub _vertFaceSiblings: [u64; 3usize],
+    pub _vertValueIndices: [u64; 3usize],
+    pub _vertValueTags: [u64; 3usize],
+    pub _vertValueCreaseEnds: [u64; 3usize],
 }
 #[repr(C, packed)]
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
@@ -2007,7 +2007,7 @@ extern "C" {
     #[link_name = "\u{1}_ZNK10OpenSubdiv6v3_6_13Vtr8internal9FVarLevel45buildFaceVertexSiblingsFromVertexFaceSiblingsERSt6vectorItSaItEE"]
     pub fn OpenSubdiv_v3_6_1_Vtr_internal_FVarLevel_buildFaceVertexSiblingsFromVertexFaceSiblings(
         this: *const OpenSubdiv_v3_6_1_Vtr_internal_FVarLevel,
-        fvSiblings: *mut std_vector,
+        fvSiblings: *mut [u64; 3usize],
     );
 }
 extern "C" {
@@ -2125,7 +2125,7 @@ impl OpenSubdiv_v3_6_1_Vtr_internal_FVarLevel {
     #[inline]
     pub unsafe fn buildFaceVertexSiblingsFromVertexFaceSiblings(
         &self,
-        fvSiblings: *mut std_vector,
+        fvSiblings: *mut [u64; 3usize],
     ) {
         OpenSubdiv_v3_6_1_Vtr_internal_FVarLevel_buildFaceVertexSiblingsFromVertexFaceSiblings(
             self, fvSiblings,
@@ -2177,13 +2177,13 @@ pub struct OpenSubdiv_v3_6_1_Vtr_internal_Refinement {
     pub _childFaceParentIndex: OpenSubdiv_v3_6_1_Vtr_IndexVector,
     pub _childEdgeParentIndex: OpenSubdiv_v3_6_1_Vtr_IndexVector,
     pub _childVertexParentIndex: OpenSubdiv_v3_6_1_Vtr_IndexVector,
-    pub _childFaceTag: std_vector,
-    pub _childEdgeTag: std_vector,
-    pub _childVertexTag: std_vector,
-    pub _parentFaceTag: std_vector,
-    pub _parentEdgeTag: std_vector,
-    pub _parentVertexTag: std_vector,
-    pub _fvarChannels: std_vector,
+    pub _childFaceTag: [u64; 3usize],
+    pub _childEdgeTag: [u64; 3usize],
+    pub _childVertexTag: [u64; 3usize],
+    pub _parentFaceTag: [u64; 3usize],
+    pub _parentEdgeTag: [u64; 3usize],
+    pub _parentVertexTag: [u64; 3usize],
+    pub _fvarChannels: [u64; 3usize],
 }
 #[repr(C)]
 #[repr(align(4))]
@@ -2920,7 +2920,7 @@ pub struct OpenSubdiv_v3_6_1_Vtr_internal_FVarRefinement {
     pub _parentFVar: *const OpenSubdiv_v3_6_1_Vtr_internal_FVarLevel,
     pub _childLevel: *const OpenSubdiv_v3_6_1_Vtr_internal_Level,
     pub _childFVar: *mut OpenSubdiv_v3_6_1_Vtr_internal_FVarLevel,
-    pub _childValueParentSource: std_vector,
+    pub _childValueParentSource: [u64; 3usize],
 }
 extern "C" {
     #[link_name = "\u{1}_ZNK10OpenSubdiv6v3_6_13Vtr8internal14FVarRefinement19getFractionalWeightEitit"]
@@ -3209,9 +3209,9 @@ pub struct OpenSubdiv_v3_6_1_Far_TopologyRefiner {
     pub _totalFaceVertices: ::std::os::raw::c_int,
     pub _maxValence: ::std::os::raw::c_int,
     pub _baseLevelOwned: bool,
-    pub _levels: std_vector,
-    pub _refinements: std_vector,
-    pub _farLevels: std_vector,
+    pub _levels: [u64; 3usize],
+    pub _refinements: [u64; 3usize],
+    pub _farLevels: [u64; 3usize],
 }
 #[doc = " \\brief Uniform refinement options\n\n Options for uniform refinement, including the number of levels, vertex\n ordering and generation of topology information.\n\n Note the impact of the option to generate fullTopologyInLastLevel.  Given\n subsequent levels of uniform refinement typically reguire 4x the data\n of the previous level, only the minimum amount of data is generated in the\n last level by default, i.e. a vertex and face-vertex list.  If requiring\n topology traversal of the last level, e.g. inspecting edges or incident\n faces of vertices, the option to generate full topology in the last\n level should be enabled.\n"]
 #[repr(C)]
@@ -3650,10 +3650,10 @@ pub struct OpenSubdiv_v3_6_1_Far_StencilTableReal__bindgen_vtable(::std::os::raw
 pub struct OpenSubdiv_v3_6_1_Far_StencilTableReal {
     pub vtable_: *const OpenSubdiv_v3_6_1_Far_StencilTableReal__bindgen_vtable,
     pub _numControlVertices: ::std::os::raw::c_int,
-    pub _sizes: std_vector,
-    pub _offsets: std_vector,
-    pub _indices: std_vector,
-    pub _weights: std_vector,
+    pub _sizes: [u64; 3usize],
+    pub _offsets: [u64; 3usize],
+    pub _indices: [u64; 3usize],
+    pub _weights: u8<_Tp, _Alloc>,
 }
 #[doc = " \\brief Stencil table class wrapping the template for compatibility.\n"]
 #[repr(C)]
@@ -3687,11 +3687,11 @@ pub type OpenSubdiv_v3_6_1_Far_LimitStencil_BaseStencil =
 #[repr(C)]
 pub struct OpenSubdiv_v3_6_1_Far_LimitStencilTableReal {
     pub _base: OpenSubdiv_v3_6_1_Far_StencilTableReal,
-    pub _duWeights: std_vector,
-    pub _dvWeights: std_vector,
-    pub _duuWeights: std_vector,
-    pub _duvWeights: std_vector,
-    pub _dvvWeights: std_vector,
+    pub _duWeights: u8<_Tp, _Alloc>,
+    pub _dvWeights: u8<_Tp, _Alloc>,
+    pub _duuWeights: u8<_Tp, _Alloc>,
+    pub _duvWeights: u8<_Tp, _Alloc>,
+    pub _dvvWeights: u8<_Tp, _Alloc>,
 }
 #[doc = " \\brief Limit stencil table class wrapping the template for compatibility.\n"]
 #[repr(C)]
@@ -3963,7 +3963,7 @@ impl OpenSubdiv_v3_6_1_Far_PatchParam {
         __bindgen_bitfield_unit
     }
 }
-pub type OpenSubdiv_v3_6_1_Far_PatchParamTable = std_vector;
+pub type OpenSubdiv_v3_6_1_Far_PatchParamTable = [u64; 3usize];
 pub type OpenSubdiv_v3_6_1_Far_PatchParamArray =
     OpenSubdiv_v3_6_1_Vtr_Array<OpenSubdiv_v3_6_1_Far_PatchParam>;
 pub type OpenSubdiv_v3_6_1_Far_ConstPatchParamArray =
@@ -3974,18 +3974,18 @@ pub struct OpenSubdiv_v3_6_1_Far_PatchTable {
     pub _maxValence: ::std::os::raw::c_int,
     pub _numPtexFaces: ::std::os::raw::c_int,
     pub _patchArrays: OpenSubdiv_v3_6_1_Far_PatchTable_PatchArrayVector,
-    pub _patchVerts: std_vector,
+    pub _patchVerts: [u64; 3usize],
     pub _paramTable: OpenSubdiv_v3_6_1_Far_PatchParamTable,
     pub _quadOffsetsTable: OpenSubdiv_v3_6_1_Far_PatchTable_QuadOffsetsTable,
     pub _vertexValenceTable: OpenSubdiv_v3_6_1_Far_PatchTable_VertexValenceTable,
     pub _localPointStencils: OpenSubdiv_v3_6_1_Far_PatchTable_StencilTablePtr,
     pub _localPointVaryingStencils: OpenSubdiv_v3_6_1_Far_PatchTable_StencilTablePtr,
     pub _varyingDesc: OpenSubdiv_v3_6_1_Far_PatchDescriptor,
-    pub _varyingVerts: std_vector,
+    pub _varyingVerts: [u64; 3usize],
     pub _fvarChannels: OpenSubdiv_v3_6_1_Far_PatchTable_FVarPatchChannelVector,
-    pub _localPointFaceVaryingStencils: std_vector,
-    pub _sharpnessIndices: std_vector,
-    pub _sharpnessValues: std_vector,
+    pub _localPointFaceVaryingStencils: [u64; 3usize],
+    pub _sharpnessIndices: [u64; 3usize],
+    pub _sharpnessValues: [u64; 3usize],
     pub _bitfield_align_1: [u8; 0],
     pub _bitfield_1: __BindgenBitfieldUnit<[u8; 1usize]>,
     pub __bindgen_padding_0: [u8; 7usize],
@@ -4001,10 +4001,10 @@ pub struct OpenSubdiv_v3_6_1_Far_PatchTable_PatchHandle {
 #[doc = " \\brief Accessors for the gregory patch evaluation buffers.\n        These methods will be deprecated.\n"]
 pub type OpenSubdiv_v3_6_1_Far_PatchTable_ConstQuadOffsetsArray =
     OpenSubdiv_v3_6_1_Vtr_ConstArray<::std::os::raw::c_uint>;
-pub type OpenSubdiv_v3_6_1_Far_PatchTable_VertexValenceTable = std_vector;
+pub type OpenSubdiv_v3_6_1_Far_PatchTable_VertexValenceTable = [u64; 3usize];
 #[doc = "  @name Direct accessors\n\n \\warning These direct accessors are left for convenience, but they are\n          likely going to be deprecated in future releases\n"]
-pub type OpenSubdiv_v3_6_1_Far_PatchTable_PatchVertsTable = std_vector;
-pub type OpenSubdiv_v3_6_1_Far_PatchTable_QuadOffsetsTable = std_vector;
+pub type OpenSubdiv_v3_6_1_Far_PatchTable_PatchVertsTable = [u64; 3usize];
+pub type OpenSubdiv_v3_6_1_Far_PatchTable_QuadOffsetsTable = [u64; 3usize];
 #[repr(C)]
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
 pub struct OpenSubdiv_v3_6_1_Far_PatchTable_PatchArray {
@@ -4026,17 +4026,17 @@ impl OpenSubdiv_v3_6_1_Far_PatchTable_PatchArray {
         OpenSubdiv_v3_6_1_Far_PatchTable_PatchArray_print(self)
     }
 }
-pub type OpenSubdiv_v3_6_1_Far_PatchTable_PatchArrayVector = std_vector;
+pub type OpenSubdiv_v3_6_1_Far_PatchTable_PatchArrayVector = [u64; 3usize];
 #[repr(C)]
 pub struct OpenSubdiv_v3_6_1_Far_PatchTable_FVarPatchChannel {
     pub interpolation: OpenSubdiv_v3_6_1_Sdc_Options_FVarLinearInterpolation,
     pub regDesc: OpenSubdiv_v3_6_1_Far_PatchDescriptor,
     pub irregDesc: OpenSubdiv_v3_6_1_Far_PatchDescriptor,
     pub stride: ::std::os::raw::c_int,
-    pub patchValues: std_vector,
-    pub patchParam: std_vector,
+    pub patchValues: [u64; 3usize],
+    pub patchParam: [u64; 3usize],
 }
-pub type OpenSubdiv_v3_6_1_Far_PatchTable_FVarPatchChannelVector = std_vector;
+pub type OpenSubdiv_v3_6_1_Far_PatchTable_FVarPatchChannelVector = [u64; 3usize];
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub struct OpenSubdiv_v3_6_1_Far_PatchTable_StencilTablePtr {
@@ -5304,7 +5304,7 @@ impl OpenSubdiv_v3_6_1_Far_PatchTableFactory_PatchFaceTag {
         )
     }
 }
-pub type OpenSubdiv_v3_6_1_Far_PatchTableFactory_PatchTagVector = std_vector;
+pub type OpenSubdiv_v3_6_1_Far_PatchTableFactory_PatchTagVector = u8;
 extern "C" {
     #[doc = " \\brief Instantiates a PatchTable from a client-provided TopologyRefiner.\n\n  A PatchTable can be constructed from a TopologyRefiner that has been\n  either adaptively or uniformly refined.  In both cases, the resulting\n  patches reference vertices in the various refined levels by index,\n  and those indices accumulate with the levels in different ways.\n\n  For adaptively refined patches, patches are defined at different levels,\n  including the base level, so the indices of patch vertices include\n  vertices from all levels.  A sparse set of patches can be created by\n  restricting the patches generated to those descending from a given set\n  of faces at the base level.  This sparse set of base faces is expected\n  to be a subset of the faces that were adaptively refined in the given\n  TopologyRefiner, otherwise results are undefined.\n\n  For uniformly refined patches, all patches are completely defined within\n  the last level.  There is often no use for intermediate levels and they\n  can usually be ignored.  Indices of patch vertices might therefore be\n  expected to be defined solely within the last level.  While this is true\n  for face-varying patches, for historical reasons it is not the case for\n  vertex and varying patches.  Indices for vertex and varying patches include\n  the base level in addition to the last level while indices for face-varying\n  patches include only the last level.\n\n @param refiner        TopologyRefiner from which to generate patches\n\n @param options        Options controlling the creation of the table\n\n @param selectedFaces  Only create patches for the given set of base faces.\n\n @return               A new instance of PatchTable\n"]
     #[link_name = "\u{1}_ZN10OpenSubdiv6v3_6_13Far17PatchTableFactory6CreateERKNS1_15TopologyRefinerENS2_7OptionsENS0_3Vtr10ConstArrayIiEE"]
@@ -5323,295 +5323,4 @@ impl OpenSubdiv_v3_6_1_Far_PatchTableFactory {
     ) -> *mut OpenSubdiv_v3_6_1_Far_PatchTable {
         OpenSubdiv_v3_6_1_Far_PatchTableFactory_Create(refiner, options, selectedFaces)
     }
-}
-pub type std_integral_constant_value_type<_Tp> = _Tp;
-pub type std_integral_constant_type = u8;
-pub type std_true_type = u8;
-pub type std_false_type = u8;
-pub type std___enable_if_t = u8;
-#[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
-pub struct std___type_identity {
-    pub _address: u8,
-}
-pub type std___type_identity_type<_Type> = _Type;
-#[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
-pub struct std___and_ {
-    pub _address: u8,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
-pub struct std_make_unsigned {
-    pub _address: u8,
-}
-pub type std_make_unsigned_type = u8;
-#[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
-pub struct std___detector {
-    pub _address: u8,
-}
-pub type std___detector_type<_Default> = _Default;
-pub type std___detector___is_detected = std_false_type;
-pub type std___detected_or = std___detector;
-pub type std___detected_or_t = std___detected_or;
-#[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
-pub struct std_iterator {
-    pub _address: u8,
-}
-pub type std_iterator_iterator_category<_Category> = _Category;
-pub type std_iterator_value_type<_Tp> = _Tp;
-pub type std_iterator_difference_type<_Distance> = _Distance;
-pub type std_iterator_pointer<_Pointer> = _Pointer;
-pub type std_iterator_reference<_Reference> = _Reference;
-#[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
-pub struct std___iterator_traits {
-    pub _address: u8,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
-pub struct std_iterator_traits {
-    pub _address: u8,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct std___undefined {
-    _unused: [u8; 0],
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
-pub struct std___get_first_arg {
-    pub _address: u8,
-}
-pub type std___get_first_arg_type = std___undefined;
-#[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
-pub struct std___replace_first_arg {
-    pub _address: u8,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
-pub struct std___ptr_traits_elem {
-    pub _address: u8,
-}
-pub type std___ptr_traits_elem_t = std___ptr_traits_elem;
-pub type std___ptr_traits_ptr_to_pointer<_Ptr> = _Ptr;
-pub type std___ptr_traits_ptr_to_element_type<_Elt> = _Elt;
-#[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
-pub struct std___ptr_traits_impl {
-    pub _address: u8,
-}
-pub type std___ptr_traits_impl___diff_t = [u8; 0usize];
-pub type std___ptr_traits_impl___rebind = std___type_identity;
-pub type std___ptr_traits_impl_pointer<_Ptr> = _Ptr;
-pub type std___ptr_traits_impl_element_type<_Elt> = _Elt;
-pub type std___ptr_traits_impl_difference_type = std___detected_or_t;
-pub type std___ptr_traits_impl_rebind = std___detected_or_t;
-#[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
-pub struct std_pointer_traits {
-    pub _address: u8,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
-pub struct std_reverse_iterator<_Iterator> {
-    pub current: _Iterator,
-    pub _phantom_0: ::std::marker::PhantomData<::std::cell::UnsafeCell<_Iterator>>,
-}
-pub type std_reverse_iterator___traits_type = std_iterator_traits;
-pub type std_reverse_iterator_iterator_type<_Iterator> = _Iterator;
-pub type std_reverse_iterator_pointer = std_reverse_iterator___traits_type;
-pub type std_reverse_iterator_difference_type = std_reverse_iterator___traits_type;
-pub type std_reverse_iterator_reference = std_reverse_iterator___traits_type;
-#[repr(C)]
-#[derive(Debug, Hash, PartialEq, Eq)]
-pub struct std___new_allocator {
-    pub _address: u8,
-}
-pub type std___new_allocator_value_type<_Tp> = _Tp;
-pub type std___new_allocator_size_type = usize;
-pub type std___new_allocator_difference_type = isize;
-pub type std___new_allocator_pointer<_Tp> = *mut _Tp;
-pub type std___new_allocator_const_pointer<_Tp> = *const _Tp;
-pub type std___new_allocator_reference<_Tp> = *mut _Tp;
-pub type std___new_allocator_const_reference<_Tp> = *const _Tp;
-#[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
-pub struct std___new_allocator_rebind {
-    pub _address: u8,
-}
-pub type std___new_allocator_propagate_on_container_move_assignment = std_true_type;
-pub type std___allocator_base = std___new_allocator;
-#[repr(C)]
-#[derive(Debug, Hash, PartialEq, Eq)]
-pub struct std_allocator {
-    pub _address: u8,
-}
-pub type std_allocator_value_type<_Tp> = _Tp;
-pub type std_allocator_size_type = usize;
-pub type std_allocator_difference_type = isize;
-pub type std_allocator_pointer<_Tp> = *mut _Tp;
-pub type std_allocator_const_pointer<_Tp> = *const _Tp;
-pub type std_allocator_reference<_Tp> = *mut _Tp;
-pub type std_allocator_const_reference<_Tp> = *const _Tp;
-#[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
-pub struct std_allocator_rebind {
-    pub _address: u8,
-}
-pub type std_allocator_rebind_other = std_allocator;
-pub type std_allocator_propagate_on_container_move_assignment = std_true_type;
-pub type std_allocator_is_always_equal = std_true_type;
-#[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
-pub struct std___allocator_traits_base {
-    pub _address: u8,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
-pub struct std___allocator_traits_base___rebind {
-    pub _address: u8,
-}
-pub type std___allocator_traits_base___pointer = [u8; 0usize];
-pub type std___allocator_traits_base___c_pointer = [u8; 0usize];
-pub type std___allocator_traits_base___v_pointer = [u8; 0usize];
-pub type std___allocator_traits_base___cv_pointer = [u8; 0usize];
-pub type std___allocator_traits_base___pocca = [u8; 0usize];
-pub type std___allocator_traits_base___pocma = [u8; 0usize];
-pub type std___allocator_traits_base___pocs = [u8; 0usize];
-pub type std___allocator_traits_base___equal = std___type_identity;
-pub type std___alloc_rebind = std___allocator_traits_base;
-#[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
-pub struct std_allocator_traits {
-    pub _address: u8,
-}
-pub type std_allocator_traits_allocator_type<_Alloc> = _Alloc;
-pub type std_allocator_traits_value_type = [u8; 0usize];
-pub type std_allocator_traits_pointer = std___detected_or_t;
-#[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
-pub struct std_allocator_traits__Ptr {
-    pub _address: u8,
-}
-pub type std_allocator_traits__Ptr_type = [u8; 0usize];
-#[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
-pub struct std_allocator_traits__Diff {
-    pub _address: u8,
-}
-pub type std_allocator_traits__Diff_type = std_pointer_traits;
-#[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
-pub struct std_allocator_traits__Size {
-    pub _address: u8,
-}
-pub type std_allocator_traits_const_pointer = [u8; 0usize];
-pub type std_allocator_traits_void_pointer = std_allocator_traits__Ptr;
-pub type std_allocator_traits_const_void_pointer = std_allocator_traits__Ptr;
-pub type std_allocator_traits_difference_type = [u8; 0usize];
-pub type std_allocator_traits_size_type = [u8; 0usize];
-pub type std_allocator_traits_propagate_on_container_copy_assignment = std___detected_or_t;
-pub type std_allocator_traits_propagate_on_container_move_assignment = std___detected_or_t;
-pub type std_allocator_traits_propagate_on_container_swap = std___detected_or_t;
-pub type std_allocator_traits_is_always_equal = std___detected_or_t;
-pub type std_allocator_traits_rebind_alloc = std___alloc_rebind;
-pub type std_allocator_traits_rebind_traits = std_allocator_traits;
-#[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
-pub struct std_allocator_traits___construct_helper {
-    pub _address: u8,
-}
-pub type std_allocator_traits___construct_helper_type<_Alloc> = _Alloc;
-pub type std_allocator_traits___has_construct = std_allocator_traits___construct_helper;
-#[repr(C)]
-pub struct std__Vector_base {
-    pub _M_impl: std__Vector_base__Vector_impl,
-}
-pub type std__Vector_base__Tp_alloc_type = [u8; 0usize];
-pub type std__Vector_base_pointer = [u8; 0usize];
-#[repr(C)]
-pub struct std__Vector_base__Vector_impl_data {
-    pub _M_start: std__Vector_base_pointer,
-    pub _M_finish: std__Vector_base_pointer,
-    pub _M_end_of_storage: std__Vector_base_pointer,
-}
-#[repr(C)]
-pub struct std__Vector_base__Vector_impl {
-    pub _base_1: std__Vector_base__Vector_impl_data,
-}
-pub type std__Vector_base_allocator_type<_Alloc> = _Alloc;
-#[repr(C)]
-pub struct std_vector {
-    pub _base: std__Vector_base,
-}
-pub type std_vector__Base = std__Vector_base;
-pub type std_vector__Tp_alloc_type = std_vector__Base;
-pub type std_vector__Alloc_traits = __gnu_cxx___alloc_traits;
-pub type std_vector_value_type<_Tp> = _Tp;
-pub type std_vector_pointer = std_vector__Base;
-pub type std_vector_const_pointer = std_vector__Alloc_traits;
-pub type std_vector_reference = std_vector__Alloc_traits;
-pub type std_vector_const_reference = std_vector__Alloc_traits;
-pub type std_vector_iterator = __gnu_cxx___normal_iterator<std_vector_pointer>;
-pub type std_vector_const_iterator = __gnu_cxx___normal_iterator<std_vector_const_pointer>;
-pub type std_vector_const_reverse_iterator = std_reverse_iterator<std_vector_const_iterator>;
-pub type std_vector_reverse_iterator = std_reverse_iterator<std_vector_iterator>;
-pub type std_vector_size_type = usize;
-pub type std_vector_difference_type = isize;
-pub type std_vector_allocator_type<_Alloc> = _Alloc;
-#[repr(C)]
-pub struct std_vector__Temporary_value<_Tp> {
-    pub _M_this: *mut std_vector,
-    pub _M_storage: std_vector__Temporary_value__Storage<_Tp>,
-    pub _phantom_0: ::std::marker::PhantomData<::std::cell::UnsafeCell<_Tp>>,
-}
-#[repr(C)]
-pub union std_vector__Temporary_value__Storage<_Tp> {
-    pub _M_byte: ::std::os::raw::c_uchar,
-    pub _M_val: _Tp,
-    pub _phantom_0: ::std::marker::PhantomData<::std::cell::UnsafeCell<_Tp>>,
-}
-#[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
-pub struct __gnu_cxx___normal_iterator<_Iterator> {
-    pub _M_current: _Iterator,
-    pub _phantom_0: ::std::marker::PhantomData<::std::cell::UnsafeCell<_Iterator>>,
-}
-pub type __gnu_cxx___normal_iterator___traits_type = std_iterator_traits;
-pub type __gnu_cxx___normal_iterator___convertible_from = std___enable_if_t;
-pub type __gnu_cxx___normal_iterator_iterator_type<_Iterator> = _Iterator;
-pub type __gnu_cxx___normal_iterator_iterator_category = __gnu_cxx___normal_iterator___traits_type;
-pub type __gnu_cxx___normal_iterator_value_type = __gnu_cxx___normal_iterator___traits_type;
-pub type __gnu_cxx___normal_iterator_difference_type = __gnu_cxx___normal_iterator___traits_type;
-pub type __gnu_cxx___normal_iterator_reference = __gnu_cxx___normal_iterator___traits_type;
-pub type __gnu_cxx___normal_iterator_pointer = __gnu_cxx___normal_iterator___traits_type;
-#[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
-pub struct __gnu_cxx___alloc_traits {
-    pub _address: u8,
-}
-pub type __gnu_cxx___alloc_traits_allocator_type<_Alloc> = _Alloc;
-pub type __gnu_cxx___alloc_traits__Base_type = std_allocator_traits;
-pub type __gnu_cxx___alloc_traits_value_type = __gnu_cxx___alloc_traits__Base_type;
-pub type __gnu_cxx___alloc_traits_pointer = __gnu_cxx___alloc_traits__Base_type;
-pub type __gnu_cxx___alloc_traits_const_pointer = __gnu_cxx___alloc_traits__Base_type;
-pub type __gnu_cxx___alloc_traits_size_type = __gnu_cxx___alloc_traits__Base_type;
-pub type __gnu_cxx___alloc_traits_difference_type = __gnu_cxx___alloc_traits__Base_type;
-pub type __gnu_cxx___alloc_traits_reference = *mut __gnu_cxx___alloc_traits_value_type;
-pub type __gnu_cxx___alloc_traits_const_reference = *const __gnu_cxx___alloc_traits_value_type;
-pub type __gnu_cxx___alloc_traits___is_custom_pointer = std___and_;
-#[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
-pub struct __gnu_cxx___alloc_traits_rebind {
-    pub _address: u8,
-}
-pub type __gnu_cxx___alloc_traits_rebind_other = __gnu_cxx___alloc_traits__Base_type;
-#[repr(C)]
-#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
-pub struct _bindgen_ty_2 {
-    pub _address: u8,
 }

@@ -86,6 +86,7 @@ pub fn main() {
         .file("c-api/far/topology_refiner.cpp")
         .file("c-api/far/topology_level.cpp")
         .file("c-api/far/patch_table.cpp")
+        .file("c-api/far/patch_evaluator.cpp")
         .file("c-api/osd/cpu_evaluator.cpp")
         .file("c-api/osd/cpu_vertex_buffer.cpp");
 
@@ -131,8 +132,10 @@ pub fn main() {
         .allowlist_function("PatchParam_.*")
         // Keep existing allowlist for other types
         .allowlist_type("OpenSubdiv.*")
-        // Block problematic union type
-        .blocklist_type("std::.*_Storage_Impl")
+        // Block all std types to avoid union issues
+        .blocklist_type("std::.*")
+        // Make std types opaque
+        .opaque_type("std::.*")
         .derive_partialeq(true)
         .derive_eq(true)
         .derive_hash(true)
