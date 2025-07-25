@@ -18,7 +18,7 @@ fn main() {
         far::TopologyDescriptor::new(num_vertices as _, &verts_per_face, &vert_indices),
         far::TopologyRefinerOptions {
             scheme: far::Scheme::CatmullClark,
-            boundary_interpolation: far::BoundaryInterpolation::EdgeOnly,
+            boundary_interpolation: Some(far::BoundaryInterpolation::EdgeOnly),
             ..Default::default()
         },
     )
@@ -38,7 +38,7 @@ fn main() {
         },
     );
 
-    let n_coarse_verts = refiner.level(0).unwrap().vertices_len();
+    let n_coarse_verts = refiner.level(0).unwrap().vertex_count();
     let n_refined_verts = stencil_table.len();
 
     // set up a buffer for primvar data

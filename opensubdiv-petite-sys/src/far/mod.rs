@@ -3,15 +3,15 @@ pub use topology_level::*;
 
 pub mod topology_refiner;
 pub use topology_refiner::{
-    AdaptiveRefinementOptions, BoundaryInterpolation, CreasingMethod, FaceVaryingLinearInterpolation,
-    Scheme, TopologyRefiner, TopologyRefinerPtr, TriangleSubdivision, UniformRefinementOptions,
-    ConstIndexArray,
+    AdaptiveRefinementOptions, BoundaryInterpolation, ConstIndexArray, CreasingMethod,
+    FaceVaryingLinearInterpolation, Scheme, TopologyRefiner, TopologyRefinerPtr,
+    TriangleSubdivision, UniformRefinementOptions,
 };
 // Re-export Options with a more specific name to avoid conflicts
 pub use topology_refiner::TopologyRefinerFactoryOptions;
 
 pub mod stencil_table;
-pub use stencil_table::{Stencil, StencilTable, StencilTablePtr, StencilTableOptions};
+pub use stencil_table::{Stencil, StencilTable, StencilTableOptions, StencilTablePtr};
 
 pub mod topology_descriptor;
 pub use topology_descriptor::*;

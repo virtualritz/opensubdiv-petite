@@ -47,19 +47,19 @@ impl Drop for StencilTable {
 impl StencilTable {
     /// Create a new stencil table.
     pub fn new(refiner: &TopologyRefiner, options: StencilTableOptions) -> StencilTable {
+        let mut sys_options = sys::far::stencil_table::StencilTableOptions::new();
+        
+        // Set the bitfield values
+        sys_options.set_interpolation_mode(options.interpolation_mode as u32);
+        sys_options.set_generate_offsets(options.generate_offsets);
+        sys_options.set_generate_control_vertices(options.generate_control_vertices);
+        sys_options.set_generate_intermediate_levels(options.generate_intermediate_levels);
+        sys_options.set_factorize_intermediate_levels(options.factorize_intermediate_levels);
+        sys_options.set_max_level(options.max_level.try_into().unwrap());
+        sys_options.fvar_channel = options.face_varying_channel.try_into().unwrap();
+        
         let ptr = unsafe {
-            sys::far::stencil_table::StencilTableFactory_Create(
-                refiner.0,
-                sys::far::stencil_table::StencilTableOptions {
-                    interpolation_mode: options.interpolation_mode as _,
-                    generate_offsets: options.generate_offsets as _,
-                    generate_control_vertices: options.generate_control_vertices as _,
-                    generate_intermediate_levels: options.generate_intermediate_levels as _,
-                    factorize_intermediate_levels: options.factorize_intermediate_levels as _,
-                    max_level: options.max_level.try_into().unwrap(),
-                    face_varying_channel: options.face_varying_channel.try_into().unwrap(),
-                },
-            )
+            sys::far::stencil_table::StencilTableFactory_Create(refiner.0, sys_options)
         };
 
         if ptr.is_null() {
