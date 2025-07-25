@@ -1,7 +1,7 @@
 ISO-10303-21;
 HEADER;
 FILE_DESCRIPTION(('Shape Data from Truck'), '2;1');
-FILE_NAME('creased_cube.step', '2025-07-25 17:44:24.887919589', (('')), (('')), 'truck', '', '');
+FILE_NAME('creased_cube.step', '2025-07-25 23:47:51.236901277', (('')), (('')), 'truck', '', '');
 FILE_SCHEMA(('ISO-10303-042'));
 ENDSEC;
 DATA;
