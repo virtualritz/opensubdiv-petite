@@ -27,8 +27,8 @@ pub fn main() {
         .define("NO_CLEW", "1")
         .define("NO_TBB", "1")
         .define("NO_GLFW", "1")
-        .define("NO_OPENGL", "1")  // Disable OpenGL to avoid GPU-related build issues
-        .define("NO_DX", "1")      // Disable DirectX
+        .define("NO_OPENGL", "1") // Disable OpenGL to avoid GPU-related build issues
+        .define("NO_DX", "1") // Disable DirectX
         .define("CMAKE_CXX_STANDARD", "14");
 
     // Always disable CUDA unless explicitly enabled
@@ -86,7 +86,7 @@ pub fn main() {
         .file("c-api/far/topology_refiner.cpp")
         .file("c-api/far/topology_level.cpp")
         .file("c-api/far/patch_table.cpp")
-        .file("c-api/far/patch_evaluator.cpp")
+        // .file("c-api/far/patch_evaluator.cpp") // TODO: Fix header includes
         .file("c-api/osd/cpu_evaluator.cpp")
         .file("c-api/osd/cpu_vertex_buffer.cpp");
 
@@ -124,18 +124,31 @@ pub fn main() {
     let bindings = bindgen::Builder::default()
         .header("wrapper.hpp")
         .clang_arg("-IOpenSubdiv")
-        .parse_callbacks(Box::new(bindgen::CargoCallbacks))
+        .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
         // Only allow the specific functions we wrap
         .allowlist_function("PatchTableFactory_.*")
         .allowlist_function("PatchTable_.*")
         .allowlist_function("PatchDescriptor_.*")
         .allowlist_function("PatchParam_.*")
-        // Keep existing allowlist for other types
+        // Keep existing allowlist for types we need
         .allowlist_type("OpenSubdiv.*")
         // Block all std types to avoid union issues
         .blocklist_type("std::.*")
+        // Block problematic OpenSubdiv types that use templates
+        .blocklist_type(".*StencilTableReal.*")
+        .blocklist_type(".*LimitStencilTableReal.*")
+        // Block type aliases that reference the blocked types
+        .blocklist_type(".*_BaseTable")
+        .blocklist_type(".*StencilTableFactory.*")
+        .blocklist_type(".*StencilTableF")
+        .blocklist_type(".*StencilTableD")
+        .blocklist_type(".*StencilTablePtr.*")
+        .blocklist_type(".*PatchTable_StencilTablePtr.*")
+        .blocklist_type(".*PatchTableBuilder.*")
         // Make std types opaque
         .opaque_type("std::.*")
+        // Make PatchTable opaque since it uses blocked types
+        .opaque_type("OpenSubdiv_v3_6_1_Far_PatchTable")
         .derive_partialeq(true)
         .derive_eq(true)
         .derive_hash(true)
@@ -143,9 +156,7 @@ pub fn main() {
         .layout_tests(false);
 
     // Use standard library headers
-    let bindings = bindings
-        .clang_arg("-xc++")
-        .clang_arg("-std=c++14");
+    let bindings = bindings.clang_arg("-xc++").clang_arg("-std=c++14");
 
     let out_path = PathBuf::from(env::var_os("OUT_DIR").unwrap());
     let bindings = bindings

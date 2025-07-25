@@ -116,7 +116,10 @@ impl<'a> TopologyLevel<'a> {
             if 0 == arr.size() || arr.begin().is_null() || self.face_count() <= face.into() {
                 None
             } else {
-                Some(std::slice::from_raw_parts(arr.begin() as *const Index, arr.size() as _))
+                Some(std::slice::from_raw_parts(
+                    arr.begin() as *const Index,
+                    arr.size() as _,
+                ))
             }
         }
     }
@@ -128,7 +131,10 @@ impl<'a> TopologyLevel<'a> {
             if arr.size() == 0 || arr.begin().is_null() {
                 None
             } else {
-                Some(std::slice::from_raw_parts(arr.begin() as *const Index, arr.size() as _))
+                Some(std::slice::from_raw_parts(
+                    arr.begin() as *const Index,
+                    arr.size() as _,
+                ))
             }
         }
     }
@@ -140,7 +146,10 @@ impl<'a> TopologyLevel<'a> {
             if arr.size() == 0 || arr.begin().is_null() {
                 None
             } else {
-                Some(std::slice::from_raw_parts(arr.begin() as *const Index, arr.size() as _))
+                Some(std::slice::from_raw_parts(
+                    arr.begin() as *const Index,
+                    arr.size() as _,
+                ))
             }
         }
     }
@@ -152,7 +161,10 @@ impl<'a> TopologyLevel<'a> {
             if arr.size() == 0 || arr.begin().is_null() {
                 None
             } else {
-                Some(std::slice::from_raw_parts(arr.begin() as *const Index, arr.size() as _))
+                Some(std::slice::from_raw_parts(
+                    arr.begin() as *const Index,
+                    arr.size() as _,
+                ))
             }
         }
     }
@@ -164,7 +176,10 @@ impl<'a> TopologyLevel<'a> {
             if arr.size() == 0 || arr.begin().is_null() {
                 None
             } else {
-                Some(std::slice::from_raw_parts(arr.begin() as *const Index, arr.size() as _))
+                Some(std::slice::from_raw_parts(
+                    arr.begin() as *const Index,
+                    arr.size() as _,
+                ))
             }
         }
     }
@@ -176,7 +191,10 @@ impl<'a> TopologyLevel<'a> {
             if arr.size() == 0 || arr.begin().is_null() {
                 None
             } else {
-                Some(std::slice::from_raw_parts(arr.begin() as *const Index, arr.size() as _))
+                Some(std::slice::from_raw_parts(
+                    arr.begin() as *const Index,
+                    arr.size() as _,
+                ))
             }
         }
     }
@@ -220,7 +238,8 @@ impl<'a> TopologyLevel<'a> {
     /// Identify the edge matching the given vertex pair.
     #[inline]
     pub fn find_edge(&self, vertex0: Index, vertex1: Index) -> Option<Index> {
-        let i = unsafe { sys::far::TopologyLevel_FindEdge(self.ptr, vertex0.into(), vertex1.into()) };
+        let i =
+            unsafe { sys::far::TopologyLevel_FindEdge(self.ptr, vertex0.into(), vertex1.into()) };
         if INVALID_INDEX == i {
             None
         } else {
@@ -345,11 +364,15 @@ impl<'a> TopologyLevel<'a> {
     #[inline]
     pub fn face_varying_values_on_face(&self, face: Index, channel: usize) -> Option<&[Index]> {
         unsafe {
-            let arr = sys::far::TopologyLevel_GetFaceFVarValues(self.ptr, face.into(), channel as _);
+            let arr =
+                sys::far::TopologyLevel_GetFaceFVarValues(self.ptr, face.into(), channel as _);
             if 0 == arr.size() || arr.begin().is_null() {
                 None
             } else {
-                Some(std::slice::from_raw_parts(arr.begin() as *const Index, arr.size() as usize))
+                Some(std::slice::from_raw_parts(
+                    arr.begin() as *const Index,
+                    arr.size() as usize,
+                ))
             }
         }
     }
@@ -402,7 +425,10 @@ impl<'a> TopologyLevel<'a> {
             if 0 == arr.size() || arr.begin().is_null() {
                 None
             } else {
-                Some(std::slice::from_raw_parts(arr.begin() as *const Index, arr.size() as usize))
+                Some(std::slice::from_raw_parts(
+                    arr.begin() as *const Index,
+                    arr.size() as usize,
+                ))
             }
         }
     }
@@ -415,7 +441,10 @@ impl<'a> TopologyLevel<'a> {
             if 0 == arr.size() || arr.begin().is_null() {
                 None
             } else {
-                Some(std::slice::from_raw_parts(arr.begin() as *const Index, arr.size() as usize))
+                Some(std::slice::from_raw_parts(
+                    arr.begin() as *const Index,
+                    arr.size() as usize,
+                ))
             }
         }
     }
@@ -428,7 +457,10 @@ impl<'a> TopologyLevel<'a> {
             if 0 == arr.size() || arr.begin().is_null() {
                 None
             } else {
-                Some(std::slice::from_raw_parts(arr.begin() as *const Index, arr.size() as usize))
+                Some(std::slice::from_raw_parts(
+                    arr.begin() as *const Index,
+                    arr.size() as usize,
+                ))
             }
         }
     }
