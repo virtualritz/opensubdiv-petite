@@ -82,7 +82,7 @@ pub mod osd;
 #[cfg(feature = "tri_mesh_buffers")]
 pub mod tri_mesh_buffers;
 
-#[cfg(feature = "truck_integration")]
+#[cfg(feature = "truck")]
 pub mod truck_integration;
 
 /// A vertex, edge, or face index in the topology.

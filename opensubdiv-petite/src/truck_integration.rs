@@ -5,8 +5,16 @@
 
 use crate::far::{PatchEvalResult, PatchTable, PatchType};
 use std::convert::TryFrom;
-use truck_geometry::prelude::*;
-use truck_modeling::*;
+use truck_geometry::prelude::{
+    BSplineSurface, KnotVec, ParametricSurface,
+};
+use truck_modeling::{
+    cgmath::{EuclideanSpace, Point3, Vector3}, 
+    Edge, Face, Shell, Vertex, Wire, Curve, Surface, Invertible,
+};
+
+/// Type alias for results in this module
+pub type Result<T> = std::result::Result<T, TruckIntegrationError>;
 
 /// Error type for truck integration
 #[derive(Debug, Clone)]
@@ -62,7 +70,7 @@ impl<'a> Patch<'a> {
     }
 
     /// Get patch array information
-    fn get_patch_info(&self) -> Result<(usize, usize, PatchType), TruckIntegrationError> {
+    fn get_patch_info(&self) -> std::result::Result<(usize, usize, PatchType), TruckIntegrationError> {
         let mut current_index = self.patch_index;
 
         for array_idx in 0..self.patch_table.patch_arrays_len() {
@@ -81,7 +89,7 @@ impl<'a> Patch<'a> {
     }
 
     /// Extract control points for this patch
-    fn get_control_points(&self) -> Result<Vec<Vec<Point3>>, TruckIntegrationError> {
+    fn get_control_points(&self) -> std::result::Result<Vec<Vec<Point3<f64>>>, TruckIntegrationError> {
         let (array_index, local_index, patch_type) = self.get_patch_info()?;
 
         if patch_type != PatchType::Regular {
@@ -127,10 +135,10 @@ impl<'a> Patch<'a> {
 }
 
 /// Convert a regular B-spline patch to a truck BSplineSurface
-impl<'a> TryFrom<Patch<'a>> for BSplineSurface<Point3> {
+impl<'a> TryFrom<Patch<'a>> for BSplineSurface<Point3<f64>> {
     type Error = TruckIntegrationError;
 
-    fn try_from(patch: Patch<'a>) -> Result<Self, Self::Error> {
+    fn try_from(patch: Patch<'a>) -> std::result::Result<Self, Self::Error> {
         let control_matrix = patch.get_control_points()?;
 
         // Create uniform cubic B-spline knot vectors
@@ -143,10 +151,10 @@ impl<'a> TryFrom<Patch<'a>> for BSplineSurface<Point3> {
 }
 
 /// Convert all regular patches to B-spline surfaces
-impl<'a> TryFrom<PatchTableWithControlPoints<'a>> for Vec<BSplineSurface<Point3>> {
+impl<'a> TryFrom<PatchTableWithControlPoints<'a>> for Vec<BSplineSurface<Point3<f64>>> {
     type Error = TruckIntegrationError;
 
-    fn try_from(patches: PatchTableWithControlPoints<'a>) -> Result<Self, Self::Error> {
+    fn try_from(patches: PatchTableWithControlPoints<'a>) -> std::result::Result<Self, Self::Error> {
         let mut surfaces = Vec::new();
         let mut patch_index = 0;
 
@@ -176,26 +184,57 @@ impl<'a> TryFrom<PatchTableWithControlPoints<'a>> for Vec<BSplineSurface<Point3>
 }
 
 /// Convert patches to a complete Shell
-impl<'a> TryFrom<PatchTableWithControlPoints<'a>> for Shell<Point3, Curve, Surface> {
+impl<'a> TryFrom<PatchTableWithControlPoints<'a>> for Shell {
     type Error = TruckIntegrationError;
 
-    fn try_from(patches: PatchTableWithControlPoints<'a>) -> Result<Self, Self::Error> {
-        let surfaces: Vec<BSplineSurface<Point3>> = patches.try_into()?;
+    fn try_from(patches: PatchTableWithControlPoints<'a>) -> std::result::Result<Self, Self::Error> {
+        let surfaces: Vec<BSplineSurface<Point3<f64>>> = patches.try_into()?;
         let mut faces = Vec::new();
 
         for surface in surfaces {
             // Get parameter ranges
             let (u_range, v_range) = surface.parameter_range();
-            let u_min = u_range.start;
-            let u_max = u_range.end;
-            let v_min = v_range.start;
-            let v_max = v_range.end;
+            use std::ops::Bound;
+            let u_min = match u_range.0 {
+                Bound::Included(v) => v,
+                Bound::Excluded(v) => v,
+                Bound::Unbounded => 0.0,
+            };
+            let u_max = match u_range.1 {
+                Bound::Included(v) => v,
+                Bound::Excluded(v) => v,
+                Bound::Unbounded => 1.0,
+            };
+            let v_min = match v_range.0 {
+                Bound::Included(v) => v,
+                Bound::Excluded(v) => v,
+                Bound::Unbounded => 0.0,
+            };
+            let v_max = match v_range.1 {
+                Bound::Included(v) => v,
+                Bound::Excluded(v) => v,
+                Bound::Unbounded => 1.0,
+            };
 
-            // Create boundary curves
-            let bottom_curve = surface.sectional_curve(u_min, 0);
-            let right_curve = surface.sectional_curve(u_max, 1);
-            let top_curve = surface.sectional_curve(u_max, 0);
-            let left_curve = surface.sectional_curve(u_min, 1);
+            // For now, create simple linear curves for the edges
+            // In a full implementation, we would extract the actual boundary curves
+            use truck_geometry::prelude::BSplineCurve;
+            let bottom_curve = BSplineCurve::new(
+                KnotVec::bezier_knot(1),
+                vec![surface.subs(u_min, v_min), surface.subs(u_max, v_min)],
+            );
+            let right_curve = BSplineCurve::new(
+                KnotVec::bezier_knot(1),
+                vec![surface.subs(u_max, v_min), surface.subs(u_max, v_max)],
+            );
+            let top_curve = BSplineCurve::new(
+                KnotVec::bezier_knot(1),
+                vec![surface.subs(u_max, v_max), surface.subs(u_min, v_max)],
+            );
+            let left_curve = BSplineCurve::new(
+                KnotVec::bezier_knot(1),
+                vec![surface.subs(u_min, v_max), surface.subs(u_min, v_min)],
+            );
 
             // Create vertices
             let v00 = Vertex::new(surface.subs(u_min, v_min));
@@ -204,16 +243,16 @@ impl<'a> TryFrom<PatchTableWithControlPoints<'a>> for Shell<Point3, Curve, Surfa
             let v01 = Vertex::new(surface.subs(u_min, v_max));
 
             // Create edges
-            let e0 = Edge::new(&v00, &v10, bottom_curve);
-            let e1 = Edge::new(&v10, &v11, right_curve);
-            let e2 = Edge::new(&v11, &v01, top_curve.inverse());
-            let e3 = Edge::new(&v01, &v00, left_curve.inverse());
+            let e0 = Edge::new(&v00, &v10, Curve::BSplineCurve(bottom_curve));
+            let e1 = Edge::new(&v10, &v11, Curve::BSplineCurve(right_curve));
+            let e2 = Edge::new(&v11, &v01, Curve::BSplineCurve(top_curve.inverse()));
+            let e3 = Edge::new(&v01, &v00, Curve::BSplineCurve(left_curve.inverse()));
 
             // Create wire boundary
             let wire = Wire::from(vec![e0, e1, e2, e3]);
 
             // Create face
-            let face = Face::new(vec![wire], surface);
+            let face = Face::new(vec![wire], Surface::BSplineSurface(surface));
             faces.push(face);
         }
 
@@ -222,7 +261,7 @@ impl<'a> TryFrom<PatchTableWithControlPoints<'a>> for Shell<Point3, Curve, Surfa
 }
 
 /// Convert patch evaluation result to Point3
-impl From<PatchEvalResult> for Point3 {
+impl From<PatchEvalResult> for Point3<f64> {
     fn from(result: PatchEvalResult) -> Self {
         Point3::new(
             result.point[0] as f64,
@@ -232,11 +271,9 @@ impl From<PatchEvalResult> for Point3 {
     }
 }
 
-/// Convert patch evaluation result to Vector3 (for derivatives)
-impl From<&[f32; 3]> for Vector3 {
-    fn from(v: &[f32; 3]) -> Self {
-        Vector3::new(v[0] as f64, v[1] as f64, v[2] as f64)
-    }
+/// Helper function to convert array to Vector3
+pub fn array_to_vector3(v: &[f32; 3]) -> Vector3<f64> {
+    Vector3::new(v[0] as f64, v[1] as f64, v[2] as f64)
 }
 
 /// Extension trait for PatchTable to provide conversion methods
@@ -249,6 +286,12 @@ pub trait PatchTableExt {
 
     /// Get a specific patch for conversion
     fn patch<'a>(&'a self, index: usize, control_points: &'a [[f32; 3]]) -> Patch<'a>;
+    
+    /// Convert patches to a truck shell with the given control points
+    fn to_truck_shell(&self, control_points: &[[f32; 3]]) -> Result<Shell>;
+    
+    /// Convert patches to truck surfaces with the given control points
+    fn to_truck_surfaces(&self, control_points: &[[f32; 3]]) -> Result<Vec<BSplineSurface<Point3<f64>>>>;
 }
 
 impl PatchTableExt for PatchTable {
@@ -265,12 +308,20 @@ impl PatchTableExt for PatchTable {
     fn patch<'a>(&'a self, index: usize, control_points: &'a [[f32; 3]]) -> Patch<'a> {
         Patch::new(self, index, control_points)
     }
+    
+    fn to_truck_shell(&self, control_points: &[[f32; 3]]) -> Result<Shell> {
+        let wrapper = self.with_control_points(control_points);
+        Shell::try_from(wrapper)
+    }
+    
+    fn to_truck_surfaces(&self, control_points: &[[f32; 3]]) -> Result<Vec<BSplineSurface<Point3<f64>>>> {
+        let wrapper = self.with_control_points(control_points);
+        Vec::<BSplineSurface<Point3<f64>>>::try_from(wrapper)
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
     #[test]
     fn test_from_traits() {
         // This would require a proper patch table setup
@@ -279,12 +330,12 @@ mod tests {
         // let control_points: Vec<[f32; 3]> = ...;
         //
         // // Convert a single patch
-        // let surface: BSplineSurface<Point3> = patch_table.patch(0, &control_points).try_into()?;
+        // let surface: BSplineSurface<Point3<f64>> = patch_table.patch(0, &control_points).try_into()?;
         //
         // // Convert all patches to surfaces
-        // let surfaces: Vec<BSplineSurface<Point3>> = patch_table.with_control_points(&control_points).try_into()?;
+        // let surfaces: Vec<BSplineSurface<Point3<f64>>> = patch_table.with_control_points(&control_points).try_into()?;
         //
         // // Convert to shell
-        // let shell: Shell<Point3, Curve, Surface> = patch_table.with_control_points(&control_points).try_into()?;
+        // let shell: Shell = patch_table.with_control_points(&control_points).try_into()?;
     }
 }
