@@ -54,9 +54,60 @@ pub fn assert_file_matches(actual_path: &Path, expected_filename: &str) {
         let expected_content = fs::read_to_string(&expected_path)
             .expect(&format!("Failed to read expected file: {}", expected_path.display()));
         
+        // For STEP files, normalize the timestamp line before comparison
+        let normalize_step = |content: &str| -> String {
+            if expected_filename.ends_with(".step") {
+                content.lines()
+                    .map(|line| {
+                        if line.starts_with("FILE_NAME(") {
+                            // Replace timestamp with placeholder
+                            // Format: FILE_NAME('filename', 'timestamp', ...)
+                            let mut in_quotes = false;
+                            let mut quote_count = 0;
+                            let mut result = String::new();
+                            let mut chars = line.chars();
+                            
+                            while let Some(ch) = chars.next() {
+                                if ch == '\'' {
+                                    in_quotes = !in_quotes;
+                                    if !in_quotes {
+                                        quote_count += 1;
+                                    }
+                                }
+                                
+                                result.push(ch);
+                                
+                                // After the second closing quote (end of timestamp), replace content
+                                if quote_count == 2 && !in_quotes {
+                                    // Find the previous quote and replace the timestamp
+                                    let timestamp_end = result.len() - 1;
+                                    if let Some(timestamp_start) = result[..timestamp_end].rfind('\'') {
+                                        result.replace_range((timestamp_start + 1)..timestamp_end, "TIMESTAMP_PLACEHOLDER");
+                                    }
+                                    // Add the rest of the line
+                                    result.push_str(&chars.collect::<String>());
+                                    break;
+                                }
+                            }
+                            
+                            result
+                        } else {
+                            line.to_string()
+                        }
+                    })
+                    .collect::<Vec<_>>()
+                    .join("\n")
+            } else {
+                content.to_string()
+            }
+        };
+        
+        let normalized_actual = normalize_step(&actual_content);
+        let normalized_expected = normalize_step(&expected_content);
+        
         assert_eq!(
-            actual_content,
-            expected_content,
+            normalized_actual,
+            normalized_expected,
             "File content mismatch for {}. Run with UPDATE_EXPECTED=1 or --update to update expected results.",
             expected_filename
         );
