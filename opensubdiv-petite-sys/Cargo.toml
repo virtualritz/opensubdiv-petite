@@ -34,11 +34,13 @@ openmp = []
 ptex = []
 
 [dependencies]
-bitfield = "0.14.0"
-derive_more = "0.99.17"
-num_enum = "0.5.11"
+derive_more = { version = "2", features = ["full"] }
+num_enum = "0.7"
 
 [build-dependencies]
-cc = { version = "1.0.79", features = ["parallel"] }
-cmake = "0.1.49"
-bindgen = "0.64.0"
+cc = { version = "1", features = ["parallel"] }
+cmake = "0.1"
+bindgen = "0.72"
+
+[lib]
+doctest = false

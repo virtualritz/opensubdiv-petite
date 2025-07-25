@@ -27,7 +27,7 @@ fn main() {
             .clone(),
         far::TopologyRefinerOptions {
             scheme: far::Scheme::CatmullClark,
-            boundary_interpolation: far::BoundaryInterpolation::EdgeOnly,
+            boundary_interpolation: Some(far::BoundaryInterpolation::EdgeOnly),
             ..Default::default()
         },
     )
@@ -75,9 +75,10 @@ fn main() {
     for face_vert_indices in last_level.face_vertices_iter() {
         // All refined cat-clark faces should be quads.
         assert!(4 == face_vert_indices.len());
+        print!("f");
         for fv in face_vert_indices {
-            print!("{} ", fv + 1);
+            print!(" {}", fv.0 + 1);
         }
-        print!("\n");
+        println!();
     }
 }

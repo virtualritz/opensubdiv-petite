@@ -28,9 +28,6 @@ This project uses [just](https://github.com/casey/just) for common build tasks. 
 # Build the project
 just build
 
-# Build with recommended compiler on Linux (clang-17)
-just build-linux-clang17
-
 # Run tests
 just test
 
@@ -38,7 +35,55 @@ just test
 just doc
 ```
 
-See the `justfile` for all available commands including release builds, cleaning, and running examples.
+### Linux Build Requirements
+
+On Ubuntu/Debian systems, you may encounter C++ standard library issues. We recommend using Clang 17 with libc++:
+
+```shell
+# Install required packages
+sudo apt install -y clang-17 libc++-17-dev libc++abi-17-dev cmake
+
+# Build with clang-17 and libc++
+just build-linux-clang17
+
+# Run tests with clang-17
+just test-linux-clang17
+
+# Run a specific example
+just run-example-linux-clang17 far_tutorial_0
+```
+
+### Common Tasks
+
+```shell
+# Build commands
+just build                      # Standard build
+just build-release              # Release build with optimizations
+just build-linux-clang17        # Build with clang-17 (Ubuntu/Debian)
+just build-all-features         # Build with all features enabled
+
+# Test commands
+just test                       # Run all tests
+just test-linux-clang17         # Run tests with clang-17
+just test-linux-clang17-no-default  # Run tests without topology validation (faster)
+just test-linux-clang17-specific <name>  # Run specific test with clang-17
+
+# Development commands
+just check                      # Check code without building
+just clippy                     # Run clippy linter
+just fmt                        # Format code
+just doc                        # Build and open documentation
+
+# Clean commands
+just clean                      # Clean project build artifacts
+just clean-all                  # Clean entire target directory
+
+# Example commands
+just run-example <name>         # Run an example
+just run-example-linux-clang17 <name>  # Run example with clang-17
+```
+
+See the `justfile` for all available commands and their exact implementations.
 
 ## Documentation
 

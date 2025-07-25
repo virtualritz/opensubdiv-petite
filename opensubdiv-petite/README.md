@@ -16,22 +16,26 @@ any way related to the _OpenSubdiv_ version that is wrapped.
 
 ### Ubuntu/Debian
 
-This crate requires a working C++ compiler with standard library support. If you have issues with headers not being found you may need to force the compiler and std lib. We recommend using Clang 17 (this requires forcing `libc++`):
+This crate requires a working C++ compiler with standard library support. If you encounter errors about missing headers (e.g., `'cassert' file not found`), you'll need to specify the compiler and C++ standard library explicitly.
+
+We recommend using Clang 17 with libc++:
 
 ```bash
 # Install required packages
 sudo apt install -y clang-17 libc++-17-dev libc++abi-17-dev cmake
 
-# Build with the recommended compiler
-CC=clang-17 CXX=clang++-17 CXXFLAGS="-stdlib=libc++" cargo build
+# Build with the recommended compiler and linker flags
+CC=clang-17 CXX=clang++-17 CXXFLAGS="-stdlib=libc++" \
+RUSTFLAGS="-C link-arg=-stdlib=libc++ -C link-arg=-lc++abi" \
+cargo build
 ```
 
 **Known Issues:**
 
-- The default system Clang (version 20+) may have compatibility issues
+- The default system Clang (version 20+) may have compatibility issues with CUDA
 - GNU `libstdc++` packages may have missing headers on some systems
-- If you have `CC`/`CXX` environment variables set in your shell configuration,
-  they may override the build settings. Unset them or use the explicit command above.
+- If you have `CC`/`CXX` environment variables set in your shell configuration (e.g., in `~/.bashrc` or `~/.zshrc`), they may override the build settings. Either unset them or use the explicit command above
+- Linking errors with undefined symbols from `std::` namespace indicate a mismatch between the C++ standard library used for compilation vs linking. The `RUSTFLAGS` above ensure consistent linking
 
 ### macOS
 
@@ -69,6 +73,8 @@ Almost all of them are not yet implemented.
       checks on the FFI side. _This is on by default!_
       Set `default-features = false` in `Cargo.toml` to switch this _off_ –
       suggested for `release` builds.
+- [x] `bevy` – Enables integration with the Bevy game engine. This also enables
+      the `tri_mesh_buffers` feature. See the `bevy` example for usage.
 
 ### OpenMP Support on macOS
 
