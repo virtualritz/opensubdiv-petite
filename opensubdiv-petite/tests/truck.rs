@@ -67,13 +67,15 @@ fn test_creased_cube_to_step() {
     let mut refiner = TopologyRefiner::new(descriptor, refiner_options)
         .expect("Failed to create topology refiner");
 
-    // Refine the mesh uniformly
-    use opensubdiv_petite::far::UniformRefinementOptions;
-    let mut refine_options = UniformRefinementOptions::default();
-    refine_options.refinement_level = 3;
+    // Use adaptive refinement to generate B-spline patches
+    // Based on OpenSubdiv docs, adaptive refinement isolates irregular features
+    // and generates B-spline patches for regular regions
+    use opensubdiv_petite::far::AdaptiveRefinementOptions;
+    let mut adaptive_options = AdaptiveRefinementOptions::default();
+    adaptive_options.isolation_level = 2; // Refine to isolate irregular vertices
     
     refiner
-        .refine_uniform(refine_options);
+        .refine_adaptive(adaptive_options, &[]);
 
     // Create patch table with B-spline patches for higher-order surfaces
     use opensubdiv_petite::far::{PatchTableOptions, EndCapType};
@@ -89,7 +91,7 @@ fn test_creased_cube_to_step() {
     let primvar_refiner = PrimvarRefiner::new(&refiner);
     
     // Get total number of vertices across all levels
-    let total_vertices = refiner.vertices_total_len();
+    let total_vertices = refiner.vertex_total_count();
     println!("Total vertices across all levels: {}", total_vertices);
     
     // Flatten original vertex positions for interpolation
@@ -136,40 +138,28 @@ fn test_creased_cube_to_step() {
     // Convert patches to truck shell
     use opensubdiv_petite::truck_integration::PatchTableExt;
     
-    match patch_table.to_truck_shell(&all_vertices) {
-        Ok(shell) => {
-            // For now, just write the shell as STEP
-            // (tsweep may not work directly with our shell)
-            let compressed = shell.compress();
-            
-            // Write to STEP file
-            let step_string = out::CompleteStepDisplay::new(
-                out::StepModel::from(&compressed),
-                out::StepHeaderDescriptor {
-                    file_name: "creased_cube.step".to_owned(),
-                    ..Default::default()
-                },
-            )
-            .to_string();
+    // Convert patches to truck shell
+    let shell = patch_table.to_truck_shell(&all_vertices)
+        .expect("Failed to convert to truck shell");
+    
+    // Compress and export the shell as STEP
+    let compressed = shell.compress();
+    
+    // Write to STEP file
+    let step_string = out::CompleteStepDisplay::new(
+        out::StepModel::from(&compressed),
+        out::StepHeaderDescriptor {
+            file_name: "creased_cube.step".to_owned(),
+            ..Default::default()
+        },
+    )
+    .to_string();
 
-            // Save to test output directory and compare with expected
-            let output_path = test_utils::test_output_path("creased_cube.step");
-            fs::write(&output_path, &step_string).expect("Failed to write STEP file");
-            
-            test_utils::assert_file_matches(&output_path, "creased_cube.step");
-            
-            println!("Successfully generated creased_cube.step with higher-order surfaces");
-        }
-        Err(e) => {
-            eprintln!("Failed to convert to truck shell: {:?}", e);
-            eprintln!("Note: This is expected as the current truck integration only handles Regular (B-spline) patches,");
-            eprintln!("      but uniform refinement generates Quad patches.");
-            
-            // For now, create an empty expected file to make the test pass
-            let output_path = test_utils::test_output_path("creased_cube.step");
-            fs::write(&output_path, "# Empty STEP file - truck conversion not yet implemented for Quad patches\n")
-                .expect("Failed to write STEP file");
-            test_utils::assert_file_matches(&output_path, "creased_cube.step");
-        }
-    }
+    // Save to test output directory and compare with expected
+    let output_path = test_utils::test_output_path("creased_cube.step");
+    fs::write(&output_path, &step_string).expect("Failed to write STEP file");
+    
+    test_utils::assert_file_matches(&output_path, "creased_cube.step");
+    
+    println!("Successfully generated creased_cube.step with higher-order surfaces");
 }
