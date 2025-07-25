@@ -15,6 +15,7 @@ repository = "https://github.com/virtualritz/opensubdiv-petite/"
 
 [features]
 default = ["topology_validation"]
+bevy = ["dep:bevy", "dep:smooth-bevy-cameras", "tri_mesh_buffers"]
 clew = ["opensubdiv-petite-sys/clew"]
 cuda = ["opensubdiv-petite-sys/cuda"]
 metal = ["opensubdiv-petite-sys/metal"]
@@ -32,15 +33,16 @@ num_enum = "0.7"
 itertools = { version = "0.14", optional = true }
 ultraviolet = { version = "0.10", optional = true }
 slice-of-array = { version = "0.3", optional = true }
+bevy = { version = "0.15", optional = true, default-features = false, features = ["bevy_core_pipeline", "bevy_asset", "bevy_render", "bevy_pbr", "bevy_winit"] }
+smooth-bevy-cameras = { version = "0.14", optional = true }
 
-[dev-dependencies]
-bevy = { version = "0.15", default-features = false, features = ["bevy_core_pipeline", "bevy_asset", "bevy_render", "bevy_pbr", "bevy_winit"] }
-smooth-bevy-cameras = "0.14"
-
-[target.'cfg(target_os = "linux")'.dev-dependencies.bevy]
+[target.'cfg(target_os = "linux")'.dependencies.bevy]
 version = "0.15"
+optional = true
 features = ["x11", "wayland"]
 default-features = false
+
+[dev-dependencies]
 
 [[example]]
 path = "examples/osd_tutorial_0_cuda.rs"
@@ -50,7 +52,7 @@ required-features = [ "cuda" ]
 [[example]]
 path = "examples/bevy.rs"
 name = "bevy"
-required-features = [ "tri_mesh_buffers" ]
+required-features = [ "bevy" ]
 
 [package.metadata.docs.rs]
 features = ["tri_mesh_buffers", "topology_validation"]

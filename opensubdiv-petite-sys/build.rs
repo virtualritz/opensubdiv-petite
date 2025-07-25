@@ -27,8 +27,8 @@ pub fn main() {
         .define("NO_CLEW", "1")
         .define("NO_TBB", "1")
         .define("NO_GLFW", "1")
-        .define("NO_OPENGL", "1")  // Disable OpenGL to avoid GPU-related build issues
-        .define("NO_DX", "1")      // Disable DirectX
+        .define("NO_OPENGL", "1") // Disable OpenGL to avoid GPU-related build issues
+        .define("NO_DX", "1") // Disable DirectX
         .define("CMAKE_CXX_STANDARD", "14");
 
     // Always disable CUDA unless explicitly enabled
@@ -74,6 +74,13 @@ pub fn main() {
 
     let mut osd_capi = cc::Build::new();
 
+    // Check if CXXFLAGS contains stdlib setting and apply it
+    if let Ok(cxxflags) = env::var("CXXFLAGS") {
+        if cxxflags.contains("-stdlib=libc++") {
+            osd_capi.flag("-stdlib=libc++");
+        }
+    }
+
     osd_capi
         .include(&osd_inlude_path)
         .cpp(true)
@@ -112,8 +119,22 @@ pub fn main() {
     #[cfg(feature = "cuda")]
     println!("cargo:rustc-link-lib=static=osdGPU");
 
+    // Link appropriate C++ standard library
     #[cfg(target_os = "linux")]
-    println!("cargo:rustc-link-lib=dylib=stdc++");
+    {
+        // Check if we're using libc++
+        if let Ok(cxxflags) = env::var("CXXFLAGS") {
+            if cxxflags.contains("-stdlib=libc++") {
+                println!("cargo:rustc-link-lib=dylib=c++");
+                println!("cargo:rustc-link-lib=dylib=c++abi");
+            } else {
+                println!("cargo:rustc-link-lib=dylib=stdc++");
+            }
+        } else {
+            // Default to libstdc++
+            println!("cargo:rustc-link-lib=dylib=stdc++");
+        }
+    }
     #[cfg(target_os = "macos")]
     println!("cargo:rustc-link-lib=dylib=c++");
 
@@ -122,7 +143,7 @@ pub fn main() {
     let bindings = bindgen::Builder::default()
         .header("wrapper.hpp")
         .clang_arg("-IOpenSubdiv")
-        .parse_callbacks(Box::new(bindgen::CargoCallbacks))
+        .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
         .allowlist_type("OpenSubdiv.*")
         .derive_partialeq(true)
         .derive_eq(true)

@@ -20,32 +20,32 @@ fn main() {
         far::TopologyDescriptor::new(num_vertices as _, &verts_per_face, &vert_indices);
 
     // instantiate a TopologyRefiner from the descriptor
-    // instantiate a TopologyRefiner from a descriptor
     let mut refiner = far::TopologyRefiner::new(
-        far::TopologyDescriptor::new(num_vertices as _, &verts_per_face, &vert_indices),
-        far::topology_refiner::Options::new()
-            .scheme(far::Scheme::CatmullClark)
-            .boundary_interpolation(far::BoundaryInterpolation::EdgeOnly)
-            .clone(),
+        descriptor,
+        far::TopologyRefinerOptions {
+            scheme: far::Scheme::CatmullClark,
+            boundary_interpolation: Some(far::BoundaryInterpolation::EdgeOnly),
+            ..Default::default()
+        },
     )
     .expect("Could not create TopologyRefiner");
 
-    refiner.refine_uniform(
-        far::topology_refiner::UniformRefinementOptions::default()
-            .refinement_level(2)
-            .clone(),
-    );
+    refiner.refine_uniform(far::topology_refiner::UniformRefinementOptions {
+        refinement_level: 2,
+        ..Default::default()
+    });
 
-    let stencil_table = far::stencil_table_factory::create(
+    let stencil_table = far::StencilTable::new(
         &refiner,
-        far::stencil_table_factory::options()
-            .generate_offsets(true)
-            .generate_intermediate_levels(false)
-            .build(),
+        far::StencilTableOptions {
+            generate_offsets: true,
+            generate_intermediate_levels: false,
+            ..Default::default()
+        },
     );
 
-    let n_coarse_verts = refiner.level(0).unwrap().vertices_len();
-    let n_refined_verts = stencil_table.stencils_len();
+    let n_coarse_verts = refiner.level(0).unwrap().vertex_count();
+    let n_refined_verts = stencil_table.len();
 
     // set up a buffer for primvar data
     let mut src_buffer = osd::CudaVertexBuffer::new(3, n_coarse_verts);
