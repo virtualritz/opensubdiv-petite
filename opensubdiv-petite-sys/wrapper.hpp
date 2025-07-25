@@ -5,3 +5,7 @@
 // StencilTableFactory::Options.
 //#include <opensubdiv/far/stencilTableFactory.h>
 #include <opensubdiv/far/topologyDescriptor.h>
+#include <opensubdiv/far/patchTable.h>
+#include <opensubdiv/far/patchTableFactory.h>
+#include <opensubdiv/far/patchDescriptor.h>
+#include <opensubdiv/far/patchParam.h>

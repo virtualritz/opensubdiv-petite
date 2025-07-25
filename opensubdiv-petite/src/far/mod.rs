@@ -62,3 +62,6 @@ pub use stencil_table::*;
 
 pub mod primvar_refiner;
 pub use primvar_refiner::*;
+
+pub mod patch_table;
+pub use patch_table::*;
