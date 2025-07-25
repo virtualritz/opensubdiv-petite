@@ -1,0 +1,12 @@
+/root/repo/opensubdiv-petite/examples/creased_cube_to_step/target/release/deps/ruststep_derive-bb75e4c80325faa0.d: /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ruststep-derive-0.4.0/src/lib.rs /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ruststep-derive-0.4.0/src/common.rs /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ruststep-derive-0.4.0/src/entity.rs /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ruststep-derive-0.4.0/src/field_type.rs /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ruststep-derive-0.4.0/src/holder_attr.rs /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ruststep-derive-0.4.0/src/select.rs /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ruststep-derive-0.4.0/src/table_init.rs /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ruststep-derive-0.4.0/src/type_decl.rs
+
+/root/repo/opensubdiv-petite/examples/creased_cube_to_step/target/release/deps/libruststep_derive-bb75e4c80325faa0.so: /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ruststep-derive-0.4.0/src/lib.rs /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ruststep-derive-0.4.0/src/common.rs /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ruststep-derive-0.4.0/src/entity.rs /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ruststep-derive-0.4.0/src/field_type.rs /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ruststep-derive-0.4.0/src/holder_attr.rs /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ruststep-derive-0.4.0/src/select.rs /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ruststep-derive-0.4.0/src/table_init.rs /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ruststep-derive-0.4.0/src/type_decl.rs
+
+/root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ruststep-derive-0.4.0/src/lib.rs:
+/root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ruststep-derive-0.4.0/src/common.rs:
+/root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ruststep-derive-0.4.0/src/entity.rs:
+/root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ruststep-derive-0.4.0/src/field_type.rs:
+/root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ruststep-derive-0.4.0/src/holder_attr.rs:
+/root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ruststep-derive-0.4.0/src/select.rs:
+/root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ruststep-derive-0.4.0/src/table_init.rs:
+/root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ruststep-derive-0.4.0/src/type_decl.rs:
