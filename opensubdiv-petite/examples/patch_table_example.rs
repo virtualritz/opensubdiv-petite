@@ -2,7 +2,7 @@
 
 use opensubdiv_petite::far::{
     EndCapType, PatchTable, PatchTableOptions, PatchType, TopologyDescriptor, TopologyRefiner,
-    TopologyRefinerOptions,
+    TopologyRefinerOptions, PatchEvalResult,
 };
 
 fn main() {
@@ -112,6 +112,39 @@ fn main() {
     if let Some(cv_table) = patch_table.control_vertices_table() {
         println!("\nControl vertex table has {} entries", cv_table.len());
         println!("First 16 control vertex indices: {:?}", &cv_table[..16.min(cv_table.len())]);
+    }
+
+    // Demonstrate patch evaluation
+    println!("\nPatch Evaluation Demo:");
+    
+    // Convert vertex positions to the format needed for evaluation
+    let control_points: Vec<[f32; 3]> = (0..vertex_positions.len() / 3)
+        .map(|i| {
+            let base = i * 3;
+            [
+                vertex_positions[base],
+                vertex_positions[base + 1],
+                vertex_positions[base + 2],
+            ]
+        })
+        .collect();
+    
+    // Evaluate the first regular patch at several parametric coordinates
+    for array_idx in 0..patch_table.patch_arrays_len().min(1) {
+        if let Some(desc) = patch_table.patch_array_descriptor(array_idx) {
+            if desc.patch_type() == PatchType::Regular {
+                println!("  Evaluating first regular patch:");
+                
+                for (u, v) in &[(0.0, 0.0), (0.5, 0.5), (1.0, 1.0)] {
+                    if let Some(result) = patch_table.evaluate_point(0, *u, *v, &control_points) {
+                        println!(
+                            "    At (u={:.1}, v={:.1}): point=[{:.3}, {:.3}, {:.3}]",
+                            u, v, result.point[0], result.point[1], result.point[2]
+                        );
+                    }
+                }
+            }
+        }
     }
 
     println!("\nPatch table example completed successfully!");

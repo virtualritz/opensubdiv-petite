@@ -402,3 +402,185 @@ impl PatchParam {
         unsafe { sys::far::PatchParam_GetTransition(&self.inner) }
     }
 }
+
+/// Result of patch evaluation containing point and derivatives
+#[derive(Debug, Clone, Copy)]
+pub struct PatchEvalResult {
+    /// Evaluated point position
+    pub point: [f32; 3],
+    /// First derivative with respect to u
+    pub du: [f32; 3],
+    /// First derivative with respect to v
+    pub dv: [f32; 3],
+    /// Second derivative with respect to u
+    pub duu: [f32; 3],
+    /// Mixed second derivative
+    pub duv: [f32; 3],
+    /// Second derivative with respect to v
+    pub dvv: [f32; 3],
+}
+
+impl From<sys::far::PatchEvalResult> for PatchEvalResult {
+    fn from(result: sys::far::PatchEvalResult) -> Self {
+        Self {
+            point: result.point,
+            du: result.du,
+            dv: result.dv,
+            duu: result.duu,
+            duv: result.duv,
+            dvv: result.dvv,
+        }
+    }
+}
+
+impl PatchTable {
+    /// Evaluate basis functions for a patch at given parametric coordinates
+    pub fn evaluate_basis(
+        &self,
+        patch_index: usize,
+        u: f32,
+        v: f32,
+    ) -> Option<(Vec<f32>, Vec<f32>, Vec<f32>, Vec<f32>, Vec<f32>, Vec<f32>)> {
+        if patch_index >= self.patches_len() {
+            return None;
+        }
+
+        // Find which patch array this patch belongs to
+        let mut array_index = 0;
+        let mut local_patch_index = patch_index;
+        
+        for i in 0..self.patch_arrays_len() {
+            let num_patches = self.patch_array_patches_len(i);
+            if local_patch_index < num_patches {
+                array_index = i;
+                break;
+            }
+            local_patch_index -= num_patches;
+        }
+
+        // Get the number of control vertices for this patch
+        let desc = self.patch_array_descriptor(array_index)?;
+        let num_cvs = desc.control_vertices_len();
+
+        // Allocate vectors for weights
+        let mut w_p = vec![0.0f32; num_cvs];
+        let mut w_du = vec![0.0f32; num_cvs];
+        let mut w_dv = vec![0.0f32; num_cvs];
+        let mut w_duu = vec![0.0f32; num_cvs];
+        let mut w_duv = vec![0.0f32; num_cvs];
+        let mut w_dvv = vec![0.0f32; num_cvs];
+
+        unsafe {
+            let success = sys::far::PatchTable_EvaluateBasis(
+                self.ptr,
+                patch_index as i32,
+                u,
+                v,
+                w_p.as_mut_ptr(),
+                w_du.as_mut_ptr(),
+                w_dv.as_mut_ptr(),
+                w_duu.as_mut_ptr(),
+                w_duv.as_mut_ptr(),
+                w_dvv.as_mut_ptr(),
+            );
+
+            if success {
+                Some((w_p, w_du, w_dv, w_duu, w_duv, w_dvv))
+            } else {
+                None
+            }
+        }
+    }
+
+    /// Evaluate a patch at given parametric coordinates using control points
+    pub fn evaluate_point(
+        &self,
+        patch_index: usize,
+        u: f32,
+        v: f32,
+        control_points: &[[f32; 3]],
+    ) -> Option<PatchEvalResult> {
+        if patch_index >= self.patches_len() {
+            return None;
+        }
+
+        unsafe {
+            let mut result = std::mem::zeroed::<sys::far::PatchEvalResult>();
+            
+            let success = sys::far::PatchTable_EvaluatePoint(
+                self.ptr,
+                patch_index as i32,
+                u,
+                v,
+                control_points.as_ptr() as *const f32,
+                control_points.len() as i32,
+                &mut result,
+            );
+
+            if success {
+                Some(result.into())
+            } else {
+                None
+            }
+        }
+    }
+}
+
+/// Map for efficient patch location from face coordinates
+pub struct PatchMap {
+    ptr: *mut sys::far::PatchMap,
+    _phantom: PhantomData<sys::far::PatchMap>,
+}
+
+impl PatchMap {
+    /// Create a new patch map from a patch table
+    pub fn new(patch_table: &PatchTable) -> Option<Self> {
+        unsafe {
+            let ptr = sys::far::PatchMap_Create(patch_table.as_ptr());
+            if ptr.is_null() {
+                None
+            } else {
+                Some(Self {
+                    ptr,
+                    _phantom: PhantomData,
+                })
+            }
+        }
+    }
+
+    /// Find the patch containing a given face at parametric coordinates
+    pub fn find_patch(&self, face_index: usize, u: f32, v: f32) -> Option<(usize, f32, f32)> {
+        unsafe {
+            let mut patch_index = 0i32;
+            let mut patch_u = 0.0f32;
+            let mut patch_v = 0.0f32;
+
+            let found = sys::far::PatchMap_FindPatch(
+                self.ptr,
+                face_index as i32,
+                u,
+                v,
+                &mut patch_index,
+                &mut patch_u,
+                &mut patch_v,
+            );
+
+            if found {
+                Some((patch_index as usize, patch_u, patch_v))
+            } else {
+                None
+            }
+        }
+    }
+}
+
+impl Drop for PatchMap {
+    fn drop(&mut self) {
+        unsafe {
+            sys::far::PatchMap_delete(self.ptr);
+        }
+    }
+}
+
+unsafe impl Send for PatchMap {}
+unsafe impl Sync for PatchMap {}

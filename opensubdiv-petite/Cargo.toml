@@ -24,6 +24,7 @@ openmp = ["opensubdiv-petite-sys/openmp"]
 ptex = ["opensubdiv-petite-sys/ptex"]
 tri_mesh_buffers = ["itertools", "ultraviolet", "slice-of-array"]
 topology_validation = []
+truck_integration = ["truck-geometry", "truck-modeling"]
 
 [dependencies]
 derive_more = { version = "2", features = ["full"] }
@@ -32,6 +33,8 @@ num_enum = "0.7"
 itertools = { version = "0.14", optional = true }
 ultraviolet = { version = "0.10", optional = true }
 slice-of-array = { version = "0.3", optional = true }
+truck-geometry = { version = "0.10", optional = true }
+truck-modeling = { version = "0.6", optional = true }
 
 [dev-dependencies]
 bevy = { version = "0.15", default-features = false, features = ["bevy_core_pipeline", "bevy_asset", "bevy_render", "bevy_pbr", "bevy_winit"] }
@@ -55,6 +58,11 @@ required-features = [ "tri_mesh_buffers" ]
 [[example]]
 path = "examples/patch_table_example.rs"
 name = "patch_table_example"
+
+[[example]]
+path = "examples/truck_integration_example.rs"
+name = "truck_integration_example"
+required-features = ["truck_integration"]
 
 [package.metadata.docs.rs]
 features = ["tri_mesh_buffers", "topology_validation"]
