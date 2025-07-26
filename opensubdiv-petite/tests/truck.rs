@@ -549,9 +549,34 @@ fn test_simple_cube_direct_nurbs_export() {
         }
     }
     
-    // Create geometric representation (simplified)
-    let shape_rep_id = entity_id;
+    // Add product structure
+    let mut current_id = entity_id;
     
+    // Application protocol
+    step_content.push_str(&format!("#{} = APPLICATION_PROTOCOL_DEFINITION('international standard', 'automotive_design', 2000, #{});\n", current_id, current_id + 1));
+    current_id += 1;
+    step_content.push_str(&format!("#{} = APPLICATION_CONTEXT('core data for automotive mechanical design processes');\n", current_id));
+    let app_context_id = current_id;
+    current_id += 1;
+    
+    // Shape definition
+    step_content.push_str(&format!("#{} = SHAPE_DEFINITION_REPRESENTATION(#{}, #{});\n", current_id, current_id + 1, current_id + 7));
+    current_id += 1;
+    step_content.push_str(&format!("#{} = PRODUCT_DEFINITION_SHAPE('','', #{});\n", current_id, current_id + 1));
+    current_id += 1;
+    step_content.push_str(&format!("#{} = PRODUCT_DEFINITION('design','', #{}, #{});\n", current_id, current_id + 1, current_id + 4));
+    current_id += 1;
+    step_content.push_str(&format!("#{} = PRODUCT_DEFINITION_FORMATION('','', #{});\n", current_id, current_id + 1));
+    current_id += 1;
+    step_content.push_str(&format!("#{} = PRODUCT('Simple Cube','Simple Cube','', (#{}) );\n", current_id, current_id + 1));
+    current_id += 1;
+    step_content.push_str(&format!("#{} = PRODUCT_CONTEXT('', #{}, 'mechanical');\n", current_id, app_context_id));
+    current_id += 1;
+    step_content.push_str(&format!("#{} = PRODUCT_DEFINITION_CONTEXT('part definition', #{}, 'design');\n", current_id, app_context_id));
+    current_id += 1;
+    
+    // Shape representation
+    let shape_rep_id = current_id;
     step_content.push_str(&format!("#{} = GEOMETRICALLY_BOUNDED_SURFACE_SHAPE_REPRESENTATION('',(", shape_rep_id));
     for (i, surf_id) in surface_ids.iter().enumerate() {
         step_content.push_str(&format!("#{}", surf_id));
@@ -559,17 +584,26 @@ fn test_simple_cube_direct_nurbs_export() {
             step_content.push_str(",");
         }
     }
-    step_content.push_str("),#1000);\n");
+    step_content.push_str(&format!("),#{});\n", current_id + 1));
+    current_id += 1;
     
-    // Add geometric representation context
-    step_content.push_str("#1000 = (GEOMETRIC_REPRESENTATION_CONTEXT(3)\n");
-    step_content.push_str("GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT((#1001))\n");
-    step_content.push_str("GLOBAL_UNIT_ASSIGNED_CONTEXT((#1002,#1003,#1004))\n");
-    step_content.push_str("REPRESENTATION_CONTEXT('ID1','3D'));\n");
-    step_content.push_str("#1001 = UNCERTAINTY_MEASURE_WITH_UNIT(LENGTH_MEASURE(1.E-06),#1002,'distance accuracy','');\n");
-    step_content.push_str("#1002 = (LENGTH_UNIT() NAMED_UNIT(*) SI_UNIT(.MILLI.,.METRE.));\n");
-    step_content.push_str("#1003 = (NAMED_UNIT(*) PLANE_ANGLE_UNIT() SI_UNIT($,.RADIAN.));\n");
-    step_content.push_str("#1004 = (NAMED_UNIT(*) SI_UNIT($,.STERADIAN.) SOLID_ANGLE_UNIT());\n");
+    // Geometric representation context
+    step_content.push_str(&format!("#{} = (\n", current_id));
+    step_content.push_str("    GEOMETRIC_REPRESENTATION_CONTEXT(3)\n");
+    step_content.push_str(&format!("    GLOBAL_UNCERTAINTY_ASSIGNED_CONTEXT((#{}))\n", current_id + 1));
+    step_content.push_str(&format!("    GLOBAL_UNIT_ASSIGNED_CONTEXT((#{}, #{}, #{}))\n", current_id + 2, current_id + 3, current_id + 4));
+    step_content.push_str("    REPRESENTATION_CONTEXT('Context #1', '3D Context with UNIT and UNCERTAINTY')\n");
+    step_content.push_str(");\n");
+    current_id += 1;
+    
+    // Units
+    step_content.push_str(&format!("#{} = UNCERTAINTY_MEASURE_WITH_UNIT(1.0E-6, #{}, 'distance_accuracy_value','confusion accuracy');\n", current_id, current_id + 1));
+    current_id += 1;
+    step_content.push_str(&format!("#{} = ( LENGTH_UNIT() NAMED_UNIT(*) SI_UNIT(.MILLI.,.METRE.) );\n", current_id));
+    current_id += 1;
+    step_content.push_str(&format!("#{} = ( NAMED_UNIT(*) PLANE_ANGLE_UNIT() SI_UNIT($,.RADIAN.) );\n", current_id));
+    current_id += 1;
+    step_content.push_str(&format!("#{} = ( NAMED_UNIT(*) SI_UNIT($,.STERADIAN.) SOLID_ANGLE_UNIT() );\n", current_id));
     
     step_content.push_str("ENDSEC;\n");
     step_content.push_str("END-ISO-10303-21;\n");
@@ -725,6 +759,136 @@ fn test_simple_cube_to_step() {
     test_utils::assert_file_matches(&output_path, "simple_cube.step");
     
     println!("Successfully generated simple_cube.step");
+}
+
+#[cfg(feature = "truck")]
+#[test]
+fn test_debug_patch_positions() {
+    use opensubdiv_petite::far::{
+        PatchTable, TopologyDescriptor, TopologyRefiner, TopologyRefinerOptions,
+        AdaptiveRefinementOptions, PatchTableOptions, EndCapType, PrimvarRefiner,
+    };
+    use std::fs;
+    
+    // Define a simple cube
+    let vertex_positions = vec![
+        [-0.5, -0.5, 0.5],
+        [0.5, -0.5, 0.5],
+        [-0.5, 0.5, 0.5],
+        [0.5, 0.5, 0.5],
+        [-0.5, 0.5, -0.5],
+        [0.5, 0.5, -0.5],
+        [-0.5, -0.5, -0.5],
+        [0.5, -0.5, -0.5],
+    ];
+    
+    let face_vertex_counts = vec![4, 4, 4, 4, 4, 4];
+    let face_vertex_indices = vec![
+        0, 1, 3, 2,  // front
+        2, 3, 5, 4,  // top
+        4, 5, 7, 6,  // back
+        6, 7, 1, 0,  // bottom
+        0, 2, 4, 6,  // left
+        1, 7, 5, 3,  // right
+    ];
+    
+    let descriptor = TopologyDescriptor::new(
+        vertex_positions.len(),
+        &face_vertex_counts,
+        &face_vertex_indices,
+    );
+    
+    let refiner_options = TopologyRefinerOptions::default();
+    let mut refiner = TopologyRefiner::new(descriptor, refiner_options)
+        .expect("Failed to create topology refiner");
+    
+    let mut adaptive_options = AdaptiveRefinementOptions::default();
+    adaptive_options.isolation_level = 2;
+    refiner.refine_adaptive(adaptive_options, &[]);
+    
+    let patch_options = PatchTableOptions::new()
+        .end_cap_type(EndCapType::BSplineBasis);
+    let patch_table = PatchTable::new(&refiner, Some(patch_options))
+        .expect("Failed to create patch table");
+    
+    // Build vertex buffer
+    let primvar_refiner = PrimvarRefiner::new(&refiner);
+    let total_vertices = refiner.vertex_total_count();
+    let flat_positions: Vec<f32> = vertex_positions
+        .iter()
+        .flat_map(|v| v.iter().copied())
+        .collect();
+    
+    let mut all_vertices = Vec::with_capacity(total_vertices);
+    for v in &vertex_positions {
+        all_vertices.push(*v);
+    }
+    
+    for level in 1..refiner.refinement_levels() {
+        if let Some(refined) = primvar_refiner.interpolate(level, 3, &flat_positions) {
+            let level_vertices: Vec<[f32; 3]> = refined
+                .chunks_exact(3)
+                .map(|chunk| [chunk[0], chunk[1], chunk[2]])
+                .collect();
+            all_vertices.extend_from_slice(&level_vertices);
+        }
+    }
+    
+    // Export debug OBJ showing patch corners
+    let mut obj_content = String::new();
+    obj_content.push_str("# Debug: Patch corner positions\n");
+    obj_content.push_str("# Original cube vertices marked with 'o'\n");
+    obj_content.push_str("# Patch corners marked with 'o' in different colors\n\n");
+    
+    // Export original cube vertices
+    obj_content.push_str("# Original cube vertices\n");
+    for (i, v) in vertex_positions.iter().enumerate() {
+        obj_content.push_str(&format!("v {} {} {} # orig {}\n", v[0], v[1], v[2], i));
+    }
+    
+    // Export patch corner vertices
+    obj_content.push_str("\n# Patch corners\n");
+    let mut vertex_count = vertex_positions.len();
+    
+    for array_idx in 0..patch_table.patch_arrays_len() {
+        if let Some(desc) = patch_table.patch_array_descriptor(array_idx) {
+            let num_patches = patch_table.patch_array_patches_len(array_idx);
+            let control_verts_per_patch = desc.control_vertices_len();
+            
+            if let Some(patch_vertices) = patch_table.patch_array_vertices(array_idx) {
+                obj_content.push_str(&format!("\n# Patch array {} ({} patches)\n", array_idx, num_patches));
+                
+                for patch_idx in 0..num_patches.min(5) { // Only first 5 patches to avoid too much data
+                    let start_idx = patch_idx * control_verts_per_patch;
+                    
+                    // Get the 4 corner control points (indices 0, 3, 12, 15 for a 4x4 patch)
+                    if control_verts_per_patch == 16 {
+                        let corners = [0, 3, 12, 15];
+                        obj_content.push_str(&format!("# Patch {} corners:\n", patch_idx));
+                        
+                        for &corner in &corners {
+                            let vert_idx = patch_vertices[start_idx + corner].0 as usize;
+                            if vert_idx < all_vertices.len() {
+                                let v = &all_vertices[vert_idx];
+                                obj_content.push_str(&format!("v {} {} {} # patch {} corner {}\n", 
+                                    v[0], v[1], v[2], patch_idx, corner));
+                                vertex_count += 1;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    // Create OBJ output path
+    let output_path = test_utils::test_output_path("debug_patch_positions.obj");
+    fs::create_dir_all(output_path.parent().unwrap()).ok();
+    fs::write(&output_path, &obj_content).expect("Failed to write OBJ file");
+    
+    println!("Debug OBJ written to: {:?}", output_path);
+    println!("Total patches: {}", patch_table.patch_arrays_len());
+    println!("Vertex buffer size: {}", all_vertices.len());
 }
 
 #[cfg(feature = "truck")]
