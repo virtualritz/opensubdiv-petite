@@ -713,7 +713,7 @@ dependencies = [
  "approx 0.5.1",
  "bevy_reflect",
  "derive_more 1.0.0",
- "glam",
+ "glam 0.29.3",
  "itertools 0.14.0",
  "libm",
  "rand",
@@ -755,7 +755,7 @@ version = "0.16.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8bb60c753b968a2de0fd279b76a3d19517695e771edb4c23575c7f92156315de"
 dependencies = [
- "glam",
+ "glam 0.29.3",
 ]
 
 [[package]]
@@ -832,7 +832,7 @@ dependencies = [
  "downcast-rs 2.0.1",
  "erased-serde",
  "foldhash",
- "glam",
+ "glam 0.29.3",
  "serde",
  "smallvec",
  "smol_str",
@@ -1675,7 +1675,7 @@ checksum = "b0a05902cf601ed11d564128448097b98ebe3c6574bd7b6a653a3d56d54aa020"
 dependencies = [
  "const_panic",
  "encase_derive",
- "glam",
+ "glam 0.29.3",
  "thiserror 1.0.69",
 ]
 
@@ -1893,6 +1893,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "glam"
+version = "0.30.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "50a99dbe56b72736564cfa4b85bf9a33079f16ae8b74983ab06af3b1a3696b11"
+
+[[package]]
 name = "glob"
 version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2040,7 +2046,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d9c9e718d32b6e6b2b32354e1b0367025efdd0b11d6a740b905ddf5db1074679"
 dependencies = [
  "constgebra",
- "glam",
+ "glam 0.29.3",
  "tinyvec",
 ]
 
@@ -2736,7 +2742,7 @@ dependencies = [
  "anyhow",
  "bevy",
  "derive_more 2.0.1",
- "glam",
+ "glam 0.30.4",
  "itertools 0.14.0",
  "num_enum",
  "opensubdiv-petite-sys",
