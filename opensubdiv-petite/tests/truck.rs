@@ -396,6 +396,91 @@ fn test_creased_cube_direct_nurbs_export() {
 
 #[cfg(feature = "truck")]
 #[test]
+fn test_export_creased_cube_to_obj() {
+    use std::fs;
+    
+    // Define the creased cube vertices
+    let vertex_positions = vec![
+        [-0.5, -0.5, 0.5],
+        [0.5, -0.5, 0.5],
+        [-0.5, 0.5, 0.5],
+        [0.5, 0.5, 0.5],
+        [-0.5, 0.5, -0.5],
+        [0.5, 0.5, -0.5],
+        [-0.5, -0.5, -0.5],
+        [0.5, -0.5, -0.5],
+    ];
+
+    let face_vertex_counts = vec![4, 4, 4, 4, 4, 4];
+    let face_vertex_indices = vec![
+        0, 1, 3, 2,  // front
+        2, 3, 5, 4,  // top
+        4, 5, 7, 6,  // back
+        6, 7, 1, 0,  // bottom
+        0, 2, 4, 6,  // left
+        1, 7, 5, 3,  // right
+    ];
+
+    // Define creases
+    let crease_indices = vec![
+        0, 1,  // bottom front edge
+        1, 3,  // right front edge
+        3, 2,  // top front edge
+        2, 0,  // left front edge
+    ];
+    let crease_weights = vec![2.0, 2.0, 2.0, 2.0];
+    
+    // Create OBJ content
+    let mut obj_content = String::new();
+    
+    // Write header
+    obj_content.push_str("# Creased cube original geometry\n");
+    obj_content.push_str("# Created by opensubdiv-petite test\n\n");
+    
+    // Write vertices
+    obj_content.push_str("# Vertices\n");
+    for (i, v) in vertex_positions.iter().enumerate() {
+        obj_content.push_str(&format!("v {} {} {}  # vertex {}\n", v[0], v[1], v[2], i));
+    }
+    obj_content.push_str("\n");
+    
+    // Write faces (OBJ uses 1-based indexing)
+    obj_content.push_str("# Faces\n");
+    let face_names = ["front", "top", "back", "bottom", "left", "right"];
+    for (face_idx, face_name) in face_names.iter().enumerate() {
+        let start = face_idx * 4;
+        obj_content.push_str(&format!("# {} face\n", face_name));
+        obj_content.push_str(&format!("f {} {} {} {}\n", 
+            face_vertex_indices[start] + 1,
+            face_vertex_indices[start + 1] + 1,
+            face_vertex_indices[start + 2] + 1,
+            face_vertex_indices[start + 3] + 1
+        ));
+    }
+    obj_content.push_str("\n");
+    
+    // Write edge information as comments
+    obj_content.push_str("# Creased edges (vertex pairs with crease weight)\n");
+    for i in (0..crease_indices.len()).step_by(2) {
+        obj_content.push_str(&format!("# edge {}-{}: weight {}\n", 
+            crease_indices[i], 
+            crease_indices[i + 1], 
+            crease_weights[i / 2]
+        ));
+    }
+    
+    // Save to expected results directory
+    let output_path = std::path::Path::new("tests/expected_results/creased_cube_original.obj");
+    fs::write(&output_path, &obj_content).expect("Failed to write OBJ file");
+    
+    println!("Exported original creased cube geometry to {:?}", output_path);
+    println!("Vertices: {}", vertex_positions.len());
+    println!("Faces: {}", face_vertex_counts.len());
+    println!("Creased edges: {}", crease_weights.len());
+}
+
+#[cfg(feature = "truck")]
+#[test]
 fn test_single_quad_patch_generation() {
     use opensubdiv_petite::far::{
         PatchTable, TopologyDescriptor, TopologyRefiner, TopologyRefinerOptions,
