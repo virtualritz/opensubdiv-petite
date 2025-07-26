@@ -1174,6 +1174,24 @@ fn test_osd_patch_to_bspline_fix() {
                     );
                     println!("Approximate patch center: {:?}", center);
                     
+                    // Test evaluation with the actual OpenSubdiv control points
+                    println!("\nEvaluating patch with OSD control points:");
+                    let test_surface = BSplineSurface::new(
+                        (clamped_knots.clone(), clamped_knots.clone()),
+                        control_points.clone()
+                    );
+                    
+                    // Evaluate at several points
+                    for v in 0..5 {
+                        for u in 0..5 {
+                            let u_param = u as f64 / 4.0;
+                            let v_param = v as f64 / 4.0;
+                            let pt = test_surface.subs(u_param, v_param);
+                            println!("  ({:.2}, {:.2}): [{:.3}, {:.3}, {:.3}]", 
+                                u_param, v_param, pt.x, pt.y, pt.z);
+                        }
+                    }
+                    
                     // Export this patch as OBJ for visualization
                     use std::fs;
                     let mut obj_content = String::new();
@@ -1211,6 +1229,278 @@ fn test_osd_patch_to_bspline_fix() {
                     fs::create_dir_all(output_path.parent().unwrap()).ok();
                     fs::write(&output_path, &obj_content).expect("Failed to write OBJ file");
                     println!("Wrote control points to {:?}", output_path);
+                    
+                    // Test uniform B-spline with correct parameter mapping
+                    println!("\n=== Testing Uniform B-spline with parameter mapping ===");
+                    
+                    // For uniform B-splines, the valid parameter range is from knot[degree] to knot[n]
+                    // where n = number of control points. For cubic (degree 3) with 4 control points:
+                    // Knot vector: [0, 0, 0, 0, 0.25, 0.5, 0.75, 1, 1, 1, 1]
+                    // Valid range: from knot[3]=0 to knot[4]=0.25
+                    // But truck's uniform_knot normalizes differently
+                    
+                    let uniform_surface = BSplineSurface::new(
+                        (uniform_knots.clone(), uniform_knots.clone()),
+                        control_points.clone()
+                    );
+                    
+                    // Get the actual parameter range
+                    let (u_range, v_range) = uniform_surface.parameter_range();
+                    println!("Uniform B-spline parameter range: u={:?}, v={:?}", u_range, v_range);
+                    
+                    // Evaluate at the actual valid range
+                    use std::ops::Bound;
+                    let u_min = match u_range.0 {
+                        Bound::Included(v) => v,
+                        _ => 0.0,
+                    };
+                    let u_max = match u_range.1 {
+                        Bound::Included(v) => v,
+                        _ => 1.0,
+                    };
+                    
+                    println!("Evaluating uniform B-spline at valid range:");
+                    for v in 0..5 {
+                        for u in 0..5 {
+                            let u_param = u_min + (u as f64 / 4.0) * (u_max - u_min);
+                            let v_param = u_min + (v as f64 / 4.0) * (u_max - u_min);
+                            let pt = uniform_surface.subs(u_param, v_param);
+                            println!("  ({:.3}, {:.3}): [{:.3}, {:.3}, {:.3}]", 
+                                u_param, v_param, pt.x, pt.y, pt.z);
+                        }
+                    }
+                    
+                    // Check multiple patches to see if they connect
+                    println!("\n=== Checking patch connectivity ===");
+                    let num_patches_to_check = 3.min(patch_table.patch_array_patches_len(0));
+                    
+                    for patch_idx in 0..num_patches_to_check {
+                        println!("\nPatch {}:", patch_idx);
+                        let start_idx = patch_idx * 16;
+                        
+                        // Get corner control points
+                        let corners = [0, 3, 12, 15]; // corners of 4x4 grid
+                        let mut corner_points = Vec::new();
+                        
+                        for &corner in &corners {
+                            let vert_idx = patch_vertices[start_idx + corner].0 as usize;
+                            if vert_idx < all_vertices.len() {
+                                let v = &all_vertices[vert_idx];
+                                corner_points.push(Point3::new(v[0] as f64, v[1] as f64, v[2] as f64));
+                                println!("  Corner {}: vertex {} = [{:.3}, {:.3}, {:.3}]", 
+                                    corner, vert_idx, v[0], v[1], v[2]);
+                            }
+                        }
+                        
+                        // Create surface and evaluate corners
+                        if corner_points.len() == 4 {
+                            // Build full control point grid for this patch
+                            let mut patch_cps = vec![vec![Point3::new(0.0, 0.0, 0.0); 4]; 4];
+                            for i in 0..16 {
+                                let row = i / 4;
+                                let col = i % 4;
+                                let vert_idx = patch_vertices[start_idx + i].0 as usize;
+                                if vert_idx < all_vertices.len() {
+                                    let v = &all_vertices[vert_idx];
+                                    patch_cps[row][col] = Point3::new(v[0] as f64, v[1] as f64, v[2] as f64);
+                                }
+                            }
+                            
+                            let patch_surface = BSplineSurface::new(
+                                (clamped_knots.clone(), clamped_knots.clone()),
+                                patch_cps
+                            );
+                            
+                            println!("  Evaluated corners:");
+                            println!("    (0,0): {:?}", patch_surface.subs(0.0, 0.0));
+                            println!("    (1,0): {:?}", patch_surface.subs(1.0, 0.0));
+                            println!("    (0,1): {:?}", patch_surface.subs(0.0, 1.0));
+                            println!("    (1,1): {:?}", patch_surface.subs(1.0, 1.0));
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+#[cfg(feature = "truck")]
+#[test]
+fn test_opensubdiv_knot_vectors() {
+    use truck_geometry::prelude::{BSplineSurface, KnotVec, ParametricSurface};
+    use truck_modeling::cgmath::Point3;
+    
+    // Test control points from a simple surface
+    let control_points = vec![
+        vec![
+            Point3::new(0.0, 0.0, 0.0),
+            Point3::new(1.0, 0.0, 0.0),
+            Point3::new(2.0, 0.0, 0.0),
+            Point3::new(3.0, 0.0, 0.0),
+        ],
+        vec![
+            Point3::new(0.0, 1.0, 0.0),
+            Point3::new(1.0, 1.0, 0.5),
+            Point3::new(2.0, 1.0, 0.5),
+            Point3::new(3.0, 1.0, 0.0),
+        ],
+        vec![
+            Point3::new(0.0, 2.0, 0.0),
+            Point3::new(1.0, 2.0, 0.5),
+            Point3::new(2.0, 2.0, 0.5),
+            Point3::new(3.0, 2.0, 0.0),
+        ],
+        vec![
+            Point3::new(0.0, 3.0, 0.0),
+            Point3::new(1.0, 3.0, 0.0),
+            Point3::new(2.0, 3.0, 0.0),
+            Point3::new(3.0, 3.0, 0.0),
+        ],
+    ];
+    
+    // Test different knot vectors
+    println!("Testing different knot vectors for OpenSubdiv B-spline patches:\n");
+    
+    // 1. Bezier/Clamped knots (what we currently use)
+    let bezier_knots = KnotVec::from(vec![0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0]);
+    println!("1. Bezier/Clamped knots: {:?}", bezier_knots);
+    
+    // 2. Standard uniform B-spline knots
+    let uniform_knots = KnotVec::uniform_knot(3, 4);
+    println!("2. Uniform knots: {:?}", uniform_knots);
+    
+    // 3. Non-uniform knots that might match OpenSubdiv
+    // OpenSubdiv might use knots that give the standard B-spline basis
+    // but normalized to [0,1] parameter range
+    let osd_knots_1 = KnotVec::from(vec![0.0, 0.0, 0.0, 0.0, 1.0/3.0, 2.0/3.0, 1.0, 1.0, 1.0, 1.0]);
+    println!("3. Possible OSD knots 1: {:?}", osd_knots_1);
+    
+    // 4. Another possibility - interior knots at 0.5
+    let osd_knots_2 = KnotVec::from(vec![0.0, 0.0, 0.0, 0.0, 0.5, 1.0, 1.0, 1.0, 1.0]);
+    println!("4. Possible OSD knots 2: {:?}", osd_knots_2);
+    
+    // Create surfaces with each knot vector
+    let surfaces = vec![
+        ("Bezier", BSplineSurface::new((bezier_knots.clone(), bezier_knots.clone()), control_points.clone())),
+        ("Uniform", BSplineSurface::new((uniform_knots.clone(), uniform_knots.clone()), control_points.clone())),
+        ("OSD1", BSplineSurface::new((osd_knots_1.clone(), osd_knots_1.clone()), control_points.clone())),
+        ("OSD2", BSplineSurface::new((osd_knots_2.clone(), osd_knots_2.clone()), control_points.clone())),
+    ];
+    
+    // Evaluate at key points
+    println!("\nEvaluating at parameter values:");
+    let test_params = vec![(0.0, 0.0), (0.5, 0.0), (1.0, 0.0), (0.5, 0.5), (1.0, 1.0)];
+    
+    for (u, v) in test_params {
+        println!("\nAt ({}, {}):", u, v);
+        for (name, surface) in &surfaces {
+            match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| surface.subs(u, v))) {
+                Ok(point) => println!("  {}: {:?}", name, point),
+                Err(_) => println!("  {}: <evaluation failed>", name),
+            }
+        }
+    }
+    
+    // Check parameter ranges
+    println!("\nParameter ranges:");
+    for (name, surface) in &surfaces {
+        println!("  {}: {:?}", name, surface.parameter_range());
+    }
+}
+
+#[cfg(feature = "truck")]
+#[test]
+fn test_patch_extraction_order() {
+    use opensubdiv_petite::far::{
+        PatchTable, TopologyDescriptor, TopologyRefiner, TopologyRefinerOptions,
+        AdaptiveRefinementOptions, PatchTableOptions, EndCapType, PrimvarRefiner,
+    };
+    
+    // Create a single quad to understand patch extraction
+    let vertex_positions = vec![
+        [0.0, 0.0, 0.0],
+        [1.0, 0.0, 0.0],  
+        [0.0, 1.0, 0.0],
+        [1.0, 1.0, 0.0],
+    ];
+    
+    let face_vertex_counts = vec![4];
+    let face_vertex_indices = vec![0, 1, 3, 2]; // Counter-clockwise
+    
+    let descriptor = TopologyDescriptor::new(
+        vertex_positions.len(),
+        &face_vertex_counts,
+        &face_vertex_indices,
+    );
+    
+    let refiner_options = TopologyRefinerOptions::default();
+    let mut refiner = TopologyRefiner::new(descriptor, refiner_options).unwrap();
+    
+    // Use uniform refinement to ensure we get a patch
+    use opensubdiv_petite::far::UniformRefinementOptions;
+    let uniform_options = UniformRefinementOptions {
+        refinement_level: 3,
+        ..Default::default()
+    };
+    refiner.refine_uniform(uniform_options);
+    
+    let patch_options = PatchTableOptions::new()
+        .end_cap_type(EndCapType::BSplineBasis);
+    let patch_table = PatchTable::new(&refiner, Some(patch_options)).unwrap();
+    
+    // Build vertex buffer
+    let primvar_refiner = PrimvarRefiner::new(&refiner);
+    let flat_positions: Vec<f32> = vertex_positions
+        .iter()
+        .flat_map(|v| v.iter().copied())
+        .collect();
+    
+    let mut all_vertices = Vec::with_capacity(refiner.vertex_total_count());
+    for v in &vertex_positions {
+        all_vertices.push(*v);
+    }
+    
+    for level in 1..refiner.refinement_levels() {
+        if let Some(refined) = primvar_refiner.interpolate(level, 3, &flat_positions) {
+            let level_vertices: Vec<[f32; 3]> = refined
+                .chunks_exact(3)
+                .map(|chunk| [chunk[0], chunk[1], chunk[2]])
+                .collect();
+            all_vertices.extend_from_slice(&level_vertices);
+        }
+    }
+    
+    println!("Single quad test:");
+    println!("Total vertices: {}", all_vertices.len());
+    println!("Number of patch arrays: {}", patch_table.patch_arrays_len());
+    
+    // Print all vertices
+    println!("\nAll vertices:");
+    for (i, v) in all_vertices.iter().enumerate() {
+        println!("  Vertex {}: [{:.3}, {:.3}, {:.3}]", i, v[0], v[1], v[2]);
+        if i >= 20 { 
+            println!("  ... ({} more vertices)", all_vertices.len() - i - 1);
+            break;
+        }
+    }
+    
+    // Check if we have regular patches
+    for i in 0..patch_table.patch_arrays_len() {
+        if let Some(desc) = patch_table.patch_array_descriptor(i) {
+            let num_patches = patch_table.patch_array_patches_len(i);
+            println!("\nPatch array {}: type={:?}, num_patches={}", i, desc.patch_type(), num_patches);
+            
+            if desc.control_vertices_len() == 16 && num_patches > 0 {
+                if let Some(patch_vertices) = patch_table.patch_array_vertices(i) {
+                    // Print first patch
+                    println!("\nFirst patch control point indices:");
+                    for j in 0..16 {
+                        let idx = patch_vertices[j].0 as usize;
+                        if idx < all_vertices.len() {
+                            let v = &all_vertices[idx];
+                            println!("  CP{}: vertex {} = [{:.3}, {:.3}, {:.3}]", j, idx, v[0], v[1], v[2]);
+                        }
+                    }
                 }
             }
         }
