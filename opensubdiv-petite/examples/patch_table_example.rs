@@ -1,8 +1,8 @@
 //! Example demonstrating patch table creation and usage
 
 use opensubdiv_petite::far::{
-    EndCapType, PatchEvalResult, PatchTable, PatchTableOptions, PatchType, TopologyDescriptor,
-    TopologyRefiner, TopologyRefinerOptions,
+    EndCapType, PatchTable, PatchTableOptions, PatchType, TopologyDescriptor,
+    TopologyRefiner, TopologyRefinerOptions, UniformRefinementOptions,
 };
 
 fn main() {
@@ -32,9 +32,11 @@ fn main() {
     ];
 
     // Create topology descriptor
-    let descriptor =
-        TopologyDescriptor::new(face_vertex_counts.clone(), face_vertex_indices.clone())
-            .expect("Failed to create topology descriptor");
+    let descriptor = TopologyDescriptor::new(
+        vertex_positions.len() / 3,
+        &face_vertex_counts,
+        &face_vertex_indices,
+    );
 
     println!("Created topology descriptor for a cube:");
     println!("  {} vertices", vertex_positions.len() / 3);
@@ -48,7 +50,9 @@ fn main() {
     println!("\nCreated topology refiner");
 
     // Refine uniformly to level 2
-    refiner.refine_uniform(2);
+    let mut uniform_options = UniformRefinementOptions::default();
+    uniform_options.refinement_level = 2;
+    refiner.refine_uniform(uniform_options);
     println!("Refined uniformly to level 2");
 
     // Create patch table with B-spline end caps
@@ -135,20 +139,15 @@ fn main() {
         })
         .collect();
 
-    // Evaluate the first regular patch at several parametric coordinates
-    for array_idx in 0..patch_table.patch_arrays_len().min(1) {
-        if let Some(desc) = patch_table.patch_array_descriptor(array_idx) {
-            if desc.patch_type() == PatchType::Regular {
-                println!("  Evaluating first regular patch:");
-
-                for (u, v) in &[(0.0, 0.0), (0.5, 0.5), (1.0, 1.0)] {
-                    if let Some(result) = patch_table.evaluate_point(0, *u, *v, &control_points) {
-                        println!(
-                            "    At (u={:.1}, v={:.1}): point=[{:.3}, {:.3}, {:.3}]",
-                            u, v, result.point[0], result.point[1], result.point[2]
-                        );
-                    }
-                }
+    // Evaluate the first patch at several parametric coordinates
+    if patch_table.patches_len() > 0 {
+        println!("  Evaluating first patch at different (u,v) coordinates:");
+        for (u, v) in &[(0.0, 0.0), (0.5, 0.5), (1.0, 1.0)] {
+            if let Some(result) = patch_table.evaluate_point(0, *u, *v, &control_points) {
+                println!(
+                    "    At (u={:.1}, v={:.1}): point=[{:.3}, {:.3}, {:.3}]",
+                    u, v, result.point[0], result.point[1], result.point[2]
+                );
             }
         }
     }
