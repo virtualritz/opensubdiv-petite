@@ -19,7 +19,7 @@ fn test_topology_descriptor_creation() {
     let descriptor = TopologyDescriptor::new(8, &vertices_per_face, &face_vertices);
     
     // Clone should work.
-    let _cloned = descriptor.clone();
+    let _cloned = descriptor;
 }
 
 #[test]
@@ -40,7 +40,7 @@ fn test_topology_descriptor_with_creases() {
     let mut descriptor = TopologyDescriptor::new(8, &vertices_per_face, &face_vertices);
     descriptor.creases(&crease_vertices, &crease_weights);
     
-    let _cloned = descriptor.clone();
+    let _cloned = descriptor;
 }
 
 #[test]
@@ -304,11 +304,11 @@ fn test_stencil_table() {
     let total_verts = refiner.vertex_total_count();
     
     println!("Debug StencilTable test:");
-    println!("  Refinement levels: {}", num_levels);
-    println!("  Level 0 vertices: {}", level0_verts);
-    println!("  Level 1 vertices: {}", level1_verts);
-    println!("  Level 2 vertices: {}", level2_verts);
-    println!("  Total vertices: {}", total_verts);
+    println!("  Refinement levels: {num_levels}");
+    println!("  Level 0 vertices: {level0_verts}");
+    println!("  Level 1 vertices: {level1_verts}");
+    println!("  Level 2 vertices: {level2_verts}");
+    println!("  Total vertices: {total_verts}");
     println!("  StencilTable options:");
     println!("    generate_offsets: {}", stencil_options.generate_offsets);
     println!("    generate_intermediate_levels: {}", stencil_options.generate_intermediate_levels);
@@ -317,12 +317,12 @@ fn test_stencil_table() {
     // Stencil table should have stencils for refined vertices.
     // The exact number depends on the refinement level and topology.
     let stencil_count = stencil_table.len();
-    println!("  Stencil count: {}", stencil_count);
+    println!("  Stencil count: {stencil_count}");
     
     // Try with default options too
     let default_stencil_table = StencilTable::new(&refiner, StencilTableOptions::default());
     let default_count = default_stencil_table.len();
-    println!("  Default stencil count: {}", default_count);
+    println!("  Default stencil count: {default_count}");
     
     assert!(stencil_count > 0, "StencilTable should contain stencils after refinement");
     assert_eq!(stencil_count, 98, "StencilTable should have 98 stencils for level 2 vertices only");

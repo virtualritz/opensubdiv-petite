@@ -31,7 +31,7 @@ fn test_index_into_usize() {
 #[test]
 fn test_index_clone() {
     let idx1 = Index(42);
-    let idx2 = idx1.clone();
+    let idx2 = idx1;
     assert_eq!(idx1, idx2);
 }
 
@@ -45,7 +45,7 @@ fn test_index_copy() {
 #[test]
 fn test_index_debug() {
     let idx = Index(42);
-    let debug_str = format!("{:?}", idx);
+    let debug_str = format!("{idx:?}");
     assert_eq!(debug_str, "Index(42)");
 }
 
@@ -86,7 +86,7 @@ fn test_index_hash() {
 
 #[test]
 fn test_index_in_vec() {
-    let indices = vec![Index(0), Index(1), Index(2)];
+    let indices = [Index(0), Index(1), Index(2)];
     
     assert_eq!(indices[0].0, 0);
     assert_eq!(indices[1].0, 1);

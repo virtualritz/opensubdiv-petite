@@ -39,8 +39,8 @@ pub fn assert_file_matches(actual_path: &Path, expected_filename: &str) {
     if should_update_expected() {
         // Update mode: copy actual to expected
         fs::copy(actual_path, &expected_path)
-            .expect(&format!("Failed to update expected file: {}", expected_filename));
-        println!("Updated expected file: {}", expected_filename);
+            .unwrap_or_else(|_| panic!("Failed to update expected file: {expected_filename}"));
+        println!("Updated expected file: {expected_filename}");
     } else {
         // Compare mode
         assert!(
@@ -50,9 +50,9 @@ pub fn assert_file_matches(actual_path: &Path, expected_filename: &str) {
         );
         
         let actual_content = fs::read_to_string(actual_path)
-            .expect(&format!("Failed to read actual file: {}", actual_path.display()));
+            .unwrap_or_else(|_| panic!("Failed to read actual file: {}", actual_path.display()));
         let expected_content = fs::read_to_string(&expected_path)
-            .expect(&format!("Failed to read expected file: {}", expected_path.display()));
+            .unwrap_or_else(|_| panic!("Failed to read expected file: {}", expected_path.display()));
         
         // For STEP files, normalize the timestamp line before comparison
         let normalize_step = |content: &str| -> String {
@@ -108,8 +108,7 @@ pub fn assert_file_matches(actual_path: &Path, expected_filename: &str) {
         assert_eq!(
             normalized_actual,
             normalized_expected,
-            "File content mismatch for {}. Run with UPDATE_EXPECTED=1 or --update to update expected results.",
-            expected_filename
+            "File content mismatch for {expected_filename}. Run with UPDATE_EXPECTED=1 or --update to update expected results."
         );
     }
 }
@@ -121,8 +120,8 @@ pub fn assert_content_matches(actual_content: &str, expected_filename: &str) {
     if should_update_expected() {
         // Update mode: write content to expected file
         fs::write(&expected_path, actual_content)
-            .expect(&format!("Failed to update expected file: {}", expected_filename));
-        println!("Updated expected file: {}", expected_filename);
+            .unwrap_or_else(|_| panic!("Failed to update expected file: {expected_filename}"));
+        println!("Updated expected file: {expected_filename}");
     } else {
         // Compare mode
         assert!(
@@ -132,13 +131,12 @@ pub fn assert_content_matches(actual_content: &str, expected_filename: &str) {
         );
         
         let expected_content = fs::read_to_string(&expected_path)
-            .expect(&format!("Failed to read expected file: {}", expected_path.display()));
+            .unwrap_or_else(|_| panic!("Failed to read expected file: {}", expected_path.display()));
         
         assert_eq!(
             actual_content,
             expected_content,
-            "Content mismatch for {}. Run with UPDATE_EXPECTED=1 or --update to update expected results.",
-            expected_filename
+            "Content mismatch for {expected_filename}. Run with UPDATE_EXPECTED=1 or --update to update expected results."
         );
     }
 }

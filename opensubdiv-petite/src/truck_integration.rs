@@ -142,18 +142,21 @@ impl<'a> TryFrom<Patch<'a>> for BSplineSurface<Point3<f64>> {
         let control_matrix = patch.get_control_points()?;
 
         // AIDEV-NOTE: OpenSubdiv B-spline patch knot vectors
-        // OpenSubdiv regular patches are expressed as bicubic B-spline patches in Far::PatchTable.
-        // The control points are B-spline control points, NOT Bezier control points.
+        // OpenSubdiv regular patches are bicubic B-spline patches with phantom control points.
+        // The outer row/column of control points define the patch boundaries but are not part 
+        // of the evaluated surface (standard B-spline behavior).
         //
-        // After testing, uniform knot vectors cause issues with STEP export:
-        // 1. The degree is incorrectly calculated as 6 instead of 3
-        // 2. The surfaces don't evaluate properly at boundaries
-        // 3. This causes crashes in FreeCAD and hangs in STEP viewers
+        // While standard B-spline patches with phantom points use uniform knot vectors
+        // with a parameter range of [3,4] (for degree 3), we use clamped (Bezier) knot 
+        // vectors for STEP export compatibility:
+        // - Clamped knots [0,0,0,0,1,1,1,1] ensure surface evaluates over [0,1]
+        // - This matches STEP file expectations for parameter ranges
+        // - The degree remains 3 (cubic) as expected
+        // - Patches connect properly at boundaries
         //
-        // Using clamped/open knot vectors provides better compatibility:
-        // - Surfaces evaluate correctly over [0,1] parameter range
-        // - STEP export works properly with degree 3
-        // - Adjacent patches connect properly
+        // Alternative approaches that don't work:
+        // - Standard uniform knots: parameter range [3,4] doesn't match STEP expectations
+        // - Uniform knots over [0,1]: no basis function support at boundaries
         let u_knots = KnotVec::bezier_knot(3);  // Creates [0,0,0,0,1,1,1,1]
         let v_knots = KnotVec::bezier_knot(3);  // Creates [0,0,0,0,1,1,1,1]
 

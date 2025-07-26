@@ -22,9 +22,8 @@ fn main() {
     // Create a refiner from a descriptor.
     let mut refiner = far::TopologyRefiner::new(
         // Populate the descriptor with our raw data.
-        far::TopologyDescriptor::new(num_vertices as _, &verts_per_face, &vert_indices)
-            .creases(&creases, &crease_weights)
-            .clone(),
+        *far::TopologyDescriptor::new(num_vertices as _, &verts_per_face, &vert_indices)
+            .creases(&creases, &crease_weights),
         far::TopologyRefinerOptions {
             scheme: far::Scheme::CatmullClark,
             boundary_interpolation: Some(far::BoundaryInterpolation::EdgeOnly),
@@ -50,13 +49,13 @@ fn main() {
     refined_verts.push(vertices.to_vec());
 
     for level in 1..=max_level {
-        println!("{}", level);
+        println!("{level}");
         refined_verts.push(
             primvar_refiner
                 .interpolate(
                     level,
                     3, // Each element is a 3-tuple.
-                    refined_verts[(level - 1) as usize].as_slice(),
+                    refined_verts[{ (level - 1) }].as_slice(),
                 )
                 .unwrap(),
         );
