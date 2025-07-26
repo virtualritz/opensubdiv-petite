@@ -145,18 +145,9 @@ impl<'a> TryFrom<Patch<'a>> for BSplineSurface<Point3<f64>> {
         // OpenSubdiv regular patches are expressed as bicubic B-spline patches in Far::PatchTable.
         // The control points are B-spline control points, NOT Bezier control points.
         //
-        // For STEP export, we need to determine the correct knot vector. 
-        // Standard uniform B-spline knot vectors would be:
-        // [0, 0, 0, 0, 1/3, 2/3, 1, 1, 1, 1] for 4 control points
-        // But this limits the evaluable parameter range.
-        //
-        // Using clamped/open knot vectors [0,0,0,0,1,1,1,1] makes the B-spline
-        // behave like a Bezier patch, which may not be what we want.
-        //
-        // Let's try a knot vector that gives us the middle portion of a uniform B-spline
-        // which is what OpenSubdiv patches represent.
-        let u_knots = KnotVec::from(vec![0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0]);
-        let v_knots = KnotVec::from(vec![0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0]);
+        // Using uniform B-spline knot vectors as requested.
+        let u_knots = KnotVec::uniform_knot(3, 4);  // degree 3, 4 control points
+        let v_knots = KnotVec::uniform_knot(3, 4);  // degree 3, 4 control points
 
         Ok(BSplineSurface::new((u_knots, v_knots), control_matrix))
     }
