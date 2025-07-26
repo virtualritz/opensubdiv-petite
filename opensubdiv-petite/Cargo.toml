@@ -48,7 +48,7 @@ default-features = false
 [dev-dependencies]
 truck-stepio = "0.3"
 anyhow = "1.0"
-glam = "0.29"
+glam = "0.30"
 
 [[example]]
 path = "examples/osd_tutorial_0_cuda.rs"
@@ -58,7 +58,7 @@ required-features = [ "cuda" ]
 [[example]]
 path = "examples/bevy.rs"
 name = "bevy"
-required-features = [ "tri_mesh_buffers", "bevy_examples" ]
+required-features = [ "tri_mesh_buffers", "bevy" ]
 
 [[example]]
 path = "examples/patch_table_example.rs"

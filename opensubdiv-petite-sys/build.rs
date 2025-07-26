@@ -83,6 +83,7 @@ pub fn main() {
 
     osd_capi
         .include(&osd_inlude_path)
+        .include("OpenSubdiv")  // Add source directory for headers like patchBasis.h
         .cpp(true)
         .static_flag(true)
         .flag("-std=c++14")
@@ -93,7 +94,7 @@ pub fn main() {
         .file("c-api/far/topology_refiner.cpp")
         .file("c-api/far/topology_level.cpp")
         .file("c-api/far/patch_table.cpp")
-        // .file("c-api/far/patch_evaluator.cpp") // TODO: Fix header includes
+        .file("c-api/far/patch_evaluator.cpp")
         .file("c-api/osd/cpu_evaluator.cpp")
         .file("c-api/osd/cpu_vertex_buffer.cpp");
 
@@ -177,7 +178,14 @@ pub fn main() {
         .layout_tests(false);
 
     // Use standard library headers
-    let bindings = bindings.clang_arg("-xc++").clang_arg("-std=c++14");
+    let mut bindings = bindings.clang_arg("-xc++").clang_arg("-std=c++14");
+
+    // Add stdlib flag if CXXFLAGS contains it
+    if let Ok(cxxflags) = env::var("CXXFLAGS") {
+        if cxxflags.contains("-stdlib=libc++") {
+            bindings = bindings.clang_arg("-stdlib=libc++");
+        }
+    }
 
     let out_path = PathBuf::from(env::var_os("OUT_DIR").unwrap());
     let bindings = bindings
