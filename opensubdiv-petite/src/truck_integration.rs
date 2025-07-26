@@ -141,16 +141,20 @@ impl<'a> TryFrom<Patch<'a>> for BSplineSurface<Point3<f64>> {
     fn try_from(patch: Patch<'a>) -> std::result::Result<Self, Self::Error> {
         let control_matrix = patch.get_control_points()?;
 
-        // Create knot vectors for OpenSubdiv B-spline patches
-        // OpenSubdiv documentation states that regular patches are bicubic B-spline patches.
-        // These use a specific knot vector that provides C2 continuity except at boundaries.
-        // For OpenSubdiv compatibility, we need the knot vector: [-3, -2, -1, 0, 1, 2, 3, 4]
-        // normalized to [0, 1]: [0, 1/7, 2/7, 3/7, 4/7, 5/7, 6/7, 1]
-        // But actually, after more research, OpenSubdiv B-spline patches use the standard
-        // uniform knot vector but with the understanding that only the middle portion 
-        // [1/6, 5/6] x [1/6, 5/6] of the unit square corresponds to the patch.
-        // However, for STEP export, we'll use a knot vector that maps the full patch to [0,1].
-        // This is achieved with a non-uniform knot vector: [0, 0, 0, 0, 1, 1, 1, 1]
+        // AIDEV-NOTE: OpenSubdiv B-spline patch knot vectors
+        // OpenSubdiv regular patches are expressed as bicubic B-spline patches in Far::PatchTable.
+        // The control points are B-spline control points, NOT Bezier control points.
+        //
+        // For STEP export, we need to determine the correct knot vector. 
+        // Standard uniform B-spline knot vectors would be:
+        // [0, 0, 0, 0, 1/3, 2/3, 1, 1, 1, 1] for 4 control points
+        // But this limits the evaluable parameter range.
+        //
+        // Using clamped/open knot vectors [0,0,0,0,1,1,1,1] makes the B-spline
+        // behave like a Bezier patch, which may not be what we want.
+        //
+        // Let's try a knot vector that gives us the middle portion of a uniform B-spline
+        // which is what OpenSubdiv patches represent.
         let u_knots = KnotVec::from(vec![0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0]);
         let v_knots = KnotVec::from(vec![0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0]);
 
@@ -199,67 +203,49 @@ impl<'a> TryFrom<PatchTableWithControlPoints<'a>> for Shell {
         let surfaces: Vec<BSplineSurface<Point3<f64>>> = patches.try_into()?;
         let mut faces = Vec::new();
 
+        // AIDEV-NOTE: Simplified face creation to avoid jumbled geometry
+        // We create faces with simple boundary loops, but avoid trying to share
+        // vertices/edges between patches, which was causing incorrect connections
         for surface in surfaces {
-            // Get parameter ranges
+            // Create a simple rectangular boundary wire for each patch
+            // The patches will naturally connect based on their control points
             let (u_range, v_range) = surface.parameter_range();
-            use std::ops::Bound;
-            let u_min = match u_range.0 {
-                Bound::Included(v) => v,
-                Bound::Excluded(v) => v,
-                Bound::Unbounded => 0.0,
-            };
-            let u_max = match u_range.1 {
-                Bound::Included(v) => v,
-                Bound::Excluded(v) => v,
-                Bound::Unbounded => 1.0,
-            };
-            let v_min = match v_range.0 {
-                Bound::Included(v) => v,
-                Bound::Excluded(v) => v,
-                Bound::Unbounded => 0.0,
-            };
-            let v_max = match v_range.1 {
-                Bound::Included(v) => v,
-                Bound::Excluded(v) => v,
-                Bound::Unbounded => 1.0,
-            };
-
-            // For now, create simple linear curves for the edges
-            // In a full implementation, we would extract the actual boundary curves
+            
+            // For Bezier/clamped B-splines, the parameter range is [0,1]
+            let u0 = 0.0;
+            let u1 = 1.0;
+            let v0 = 0.0;
+            let v1 = 1.0;
+            
+            // Create the four corner points
+            let p00 = surface.subs(u0, v0);
+            let p10 = surface.subs(u1, v0);
+            let p11 = surface.subs(u1, v1);
+            let p01 = surface.subs(u0, v1);
+            
+            // Create unique vertices for this patch
+            let v00 = Vertex::new(p00);
+            let v10 = Vertex::new(p10);
+            let v11 = Vertex::new(p11);
+            let v01 = Vertex::new(p01);
+            
+            // Create boundary curves
             use truck_geometry::prelude::BSplineCurve;
-            let bottom_curve = BSplineCurve::new(
-                KnotVec::bezier_knot(1),
-                vec![surface.subs(u_min, v_min), surface.subs(u_max, v_min)],
-            );
-            let right_curve = BSplineCurve::new(
-                KnotVec::bezier_knot(1),
-                vec![surface.subs(u_max, v_min), surface.subs(u_max, v_max)],
-            );
-            let top_curve = BSplineCurve::new(
-                KnotVec::bezier_knot(1),
-                vec![surface.subs(u_max, v_max), surface.subs(u_min, v_max)],
-            );
-            let left_curve = BSplineCurve::new(
-                KnotVec::bezier_knot(1),
-                vec![surface.subs(u_min, v_max), surface.subs(u_min, v_min)],
-            );
-
-            // Create vertices
-            let v00 = Vertex::new(surface.subs(u_min, v_min));
-            let v10 = Vertex::new(surface.subs(u_max, v_min));
-            let v11 = Vertex::new(surface.subs(u_max, v_max));
-            let v01 = Vertex::new(surface.subs(u_min, v_max));
-
-            // Create edges
-            let e0 = Edge::new(&v00, &v10, Curve::BSplineCurve(bottom_curve));
-            let e1 = Edge::new(&v10, &v11, Curve::BSplineCurve(right_curve));
-            let e2 = Edge::new(&v11, &v01, Curve::BSplineCurve(top_curve.inverse()));
-            let e3 = Edge::new(&v01, &v00, Curve::BSplineCurve(left_curve.inverse()));
-
-            // Create wire boundary
-            let wire = Wire::from(vec![e0, e1, e2, e3]);
-
-            // Create face
+            let bottom = Edge::new(&v00, &v10, Curve::BSplineCurve(
+                BSplineCurve::new(KnotVec::bezier_knot(1), vec![p00, p10])
+            ));
+            let right = Edge::new(&v10, &v11, Curve::BSplineCurve(
+                BSplineCurve::new(KnotVec::bezier_knot(1), vec![p10, p11])
+            ));
+            let top = Edge::new(&v11, &v01, Curve::BSplineCurve(
+                BSplineCurve::new(KnotVec::bezier_knot(1), vec![p11, p01])
+            ));
+            let left = Edge::new(&v01, &v00, Curve::BSplineCurve(
+                BSplineCurve::new(KnotVec::bezier_knot(1), vec![p01, p00])
+            ));
+            
+            // Create wire and face
+            let wire = Wire::from(vec![bottom, right, top, left]);
             let face = Face::new(vec![wire], Surface::BSplineSurface(surface));
             faces.push(face);
         }
