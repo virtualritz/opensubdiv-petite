@@ -141,10 +141,18 @@ impl<'a> TryFrom<Patch<'a>> for BSplineSurface<Point3<f64>> {
     fn try_from(patch: Patch<'a>) -> std::result::Result<Self, Self::Error> {
         let control_matrix = patch.get_control_points()?;
 
-        // Create uniform cubic B-spline knot vectors
-        // For a cubic B-spline with 4 control points, we need 8 knots: [0,0,0,0,1,1,1,1]
-        let u_knots = KnotVec::bezier_knot(3); // degree 3
-        let v_knots = KnotVec::bezier_knot(3);
+        // Create knot vectors for OpenSubdiv B-spline patches
+        // OpenSubdiv documentation states that regular patches are bicubic B-spline patches.
+        // These use a specific knot vector that provides C2 continuity except at boundaries.
+        // For OpenSubdiv compatibility, we need the knot vector: [-3, -2, -1, 0, 1, 2, 3, 4]
+        // normalized to [0, 1]: [0, 1/7, 2/7, 3/7, 4/7, 5/7, 6/7, 1]
+        // But actually, after more research, OpenSubdiv B-spline patches use the standard
+        // uniform knot vector but with the understanding that only the middle portion 
+        // [1/6, 5/6] x [1/6, 5/6] of the unit square corresponds to the patch.
+        // However, for STEP export, we'll use a knot vector that maps the full patch to [0,1].
+        // This is achieved with a non-uniform knot vector: [0, 0, 0, 0, 1, 1, 1, 1]
+        let u_knots = KnotVec::from(vec![0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0]);
+        let v_knots = KnotVec::from(vec![0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0]);
 
         Ok(BSplineSurface::new((u_knots, v_knots), control_matrix))
     }
