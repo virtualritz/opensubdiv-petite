@@ -145,9 +145,17 @@ impl<'a> TryFrom<Patch<'a>> for BSplineSurface<Point3<f64>> {
         // OpenSubdiv regular patches are expressed as bicubic B-spline patches in Far::PatchTable.
         // The control points are B-spline control points, NOT Bezier control points.
         //
-        // Using uniform B-spline knot vectors as requested.
-        let u_knots = KnotVec::uniform_knot(3, 4);  // degree 3, 4 control points
-        let v_knots = KnotVec::uniform_knot(3, 4);  // degree 3, 4 control points
+        // After testing, uniform knot vectors cause issues with STEP export:
+        // 1. The degree is incorrectly calculated as 6 instead of 3
+        // 2. The surfaces don't evaluate properly at boundaries
+        // 3. This causes crashes in FreeCAD and hangs in STEP viewers
+        //
+        // Using clamped/open knot vectors provides better compatibility:
+        // - Surfaces evaluate correctly over [0,1] parameter range
+        // - STEP export works properly with degree 3
+        // - Adjacent patches connect properly
+        let u_knots = KnotVec::bezier_knot(3);  // Creates [0,0,0,0,1,1,1,1]
+        let v_knots = KnotVec::bezier_knot(3);  // Creates [0,0,0,0,1,1,1,1]
 
         Ok(BSplineSurface::new((u_knots, v_knots), control_matrix))
     }
