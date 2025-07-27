@@ -83,7 +83,7 @@ pub fn main() {
 
     osd_capi
         .include(&osd_inlude_path)
-        .include("OpenSubdiv")  // Add source directory for headers like patchBasis.h
+        .include("OpenSubdiv") // Add source directory for headers like patchBasis.h
         .cpp(true)
         .static_flag(true)
         .flag("-std=c++14")
