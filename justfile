@@ -60,6 +60,10 @@ doc:
 doc-no-open:
     cargo doc -p opensubdiv-petite --no-deps
 
+# Build documentation with clang-17
+docs-linux-clang17 *args='':
+    CC=clang-17 CXX=clang++-17 CXXFLAGS="-stdlib=libc++" RUSTFLAGS="-C link-arg=-stdlib=libc++ -C link-arg=-lc++abi" cargo doc -p opensubdiv-petite --no-deps --open {{args}}
+
 # Format code
 fmt:
     cargo fmt

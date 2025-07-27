@@ -1,6 +1,8 @@
+mod test_utils;
+
 use opensubdiv_petite::far::{
     PatchTable, TopologyDescriptor, TopologyRefiner, TopologyRefinerOptions,
-    AdaptiveRefinementOptions, PatchTableOptions, EndCapType, PrimvarRefiner,
+    AdaptiveRefinementOptions, PatchTableOptions, PrimvarRefiner,
 };
 use std::fs::File;
 use std::io::Write;
@@ -119,8 +121,6 @@ fn export_patch_cages_to_obj(
     Ok(())
 }
 
-mod test_utils;
-
 #[test]
 fn test_export_simple_plane_patches() {
     // Create a 3x3 quad mesh (4x4 vertices)
@@ -163,7 +163,7 @@ fn test_export_simple_plane_patches() {
     
     // Create patch table
     let patch_options = PatchTableOptions::new()
-        .end_cap_type(EndCapType::BSplineBasis);
+        .end_cap_type(opensubdiv_petite::far::EndCapType::BSplineBasis);
     let patch_table = PatchTable::new(&refiner, Some(patch_options))
         .expect("Failed to create patch table");
     
@@ -221,7 +221,7 @@ fn test_export_simple_cube_patches() {
     
     // Create patch table
     let patch_options = PatchTableOptions::new()
-        .end_cap_type(EndCapType::BSplineBasis);
+        .end_cap_type(opensubdiv_petite::far::EndCapType::BSplineBasis);
     let patch_table = PatchTable::new(&refiner, Some(patch_options))
         .expect("Failed to create patch table");
     
@@ -289,7 +289,7 @@ fn test_export_creased_cube_patches() {
     
     // Create patch table
     let patch_options = PatchTableOptions::new()
-        .end_cap_type(EndCapType::BSplineBasis);
+        .end_cap_type(opensubdiv_petite::far::EndCapType::BSplineBasis);
     let patch_table = PatchTable::new(&refiner, Some(patch_options))
         .expect("Failed to create patch table");
     

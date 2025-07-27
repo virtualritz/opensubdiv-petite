@@ -9,6 +9,7 @@
 //! that provides additional information about the patch's parameterization.
 
 use crate::{Error, Index};
+use super::StencilTableRef;
 use opensubdiv_petite_sys as sys;
 use std::marker::PhantomData;
 use std::pin::Pin;
@@ -174,6 +175,26 @@ impl PatchTable {
     /// Get the maximum valence
     pub fn max_valence(&self) -> usize {
         unsafe { sys::far::PatchTable_GetMaxValence(self.ptr) as usize }
+    }
+    
+    /// Get the number of local points
+    pub fn local_point_count(&self) -> usize {
+        unsafe { sys::far::PatchTable_GetNumLocalPoints(self.ptr) as usize }
+    }
+    
+    /// Get the stencil table for local points
+    pub fn local_point_stencil_table(&self) -> Option<StencilTableRef<'_>> {
+        unsafe {
+            let stencil_ptr = sys::far::PatchTable_GetLocalPointStencilTable(self.ptr);
+            if stencil_ptr.is_null() {
+                None
+            } else {
+                Some(StencilTableRef {
+                    ptr: stencil_ptr as *mut _,
+                    _marker: std::marker::PhantomData,
+                })
+            }
+        }
     }
 
     /// Get the number of patches in a specific patch array

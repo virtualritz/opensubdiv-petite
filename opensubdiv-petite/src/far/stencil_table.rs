@@ -37,6 +37,12 @@ impl<'a> Stencil<'a> {
 /// Container for stencil data.
 pub struct StencilTable(pub(crate) sys::far::StencilTablePtr);
 
+/// Borrowed reference to a stencil table.
+pub struct StencilTableRef<'a> {
+    pub(crate) ptr: sys::far::StencilTablePtr,
+    pub(crate) _marker: std::marker::PhantomData<&'a ()>,
+}
+
 impl Drop for StencilTable {
     #[inline]
     fn drop(&mut self) {
@@ -150,6 +156,55 @@ impl StencilTable {
             std::slice::from_raw_parts(vr.data(), vr.size())
         }
     }
+    
+    /// Update values by applying the stencil table
+    /// 
+    /// # Arguments
+    /// * `src` - Source values to interpolate from
+    /// * `start` - Optional index of first destination value to update
+    /// * `end` - Optional index of last destination value to update
+    /// 
+    /// # Returns
+    /// A vector containing the interpolated values
+    pub fn update_values(&self, src: &[f32], start: Option<usize>, end: Option<usize>) -> Vec<f32> {
+        self.update_values_impl(self.0, src, start, end)
+    }
+    
+    fn update_values_impl(&self, ptr: sys::far::StencilTablePtr, src: &[f32], start: Option<usize>, end: Option<usize>) -> Vec<f32> {
+        // Determine the output size based on the number of stencils
+        let num_stencils = unsafe { sys::far::stencil_table::StencilTable_GetNumStencils(ptr) as usize };
+        let actual_start = start.unwrap_or(0);
+        let actual_end = end.unwrap_or(num_stencils);
+        let output_size = actual_end - actual_start;
+        
+        // Assuming each stencil produces the same number of values as in src per vertex
+        // We need to determine the stride from the source data
+        let num_control_verts = unsafe { sys::far::stencil_table::StencilTable_GetNumControlVertices(ptr) as usize };
+        let stride = if num_control_verts > 0 {
+            src.len() / num_control_verts
+        } else {
+            3 // Default to 3D points
+        };
+        
+        // Create output buffer with capacity but uninitialized
+        let total_size = output_size * stride;
+        let mut dst = Vec::with_capacity(total_size);
+        
+        unsafe {
+            sys::far::stencil_table::StencilTable_UpdateValues(
+                ptr,
+                src.as_ptr(),
+                dst.as_mut_ptr(),
+                start.map(|s| s as i32).unwrap_or(-1),
+                end.map(|e| e as i32).unwrap_or(-1)
+            );
+            
+            // Set length after successful update
+            dst.set_len(total_size);
+        }
+        
+        dst
+    }
 }
 
 //
@@ -171,6 +226,31 @@ pub struct StencilTableOptions {
     pub factorize_intermediate_levels: bool,
     pub max_level: usize,
     pub face_varying_channel: usize,
+}
+
+impl<'a> StencilTableRef<'a> {
+    /// Returns the number of stencils in the table.
+    #[inline]
+    pub fn len(&self) -> usize {
+        unsafe { sys::far::stencil_table::StencilTable_GetNumStencils(self.ptr) as _ }
+    }
+
+    #[inline]
+    pub fn is_empty(&self) -> bool {
+        0 == self.len()
+    }
+
+    /// Returns the number of control vertices indexed in the table.
+    #[inline]
+    pub fn control_vertex_count(&self) -> usize {
+        unsafe { sys::far::stencil_table::StencilTable_GetNumControlVertices(self.ptr) as _ }
+    }
+    
+    /// Update values by applying the stencil table
+    pub fn update_values(&self, src: &[f32], start: Option<usize>, end: Option<usize>) -> Vec<f32> {
+        // Use the same implementation as StencilTable
+        StencilTable(std::ptr::null_mut()).update_values_impl(self.ptr, src, start, end)
+    }
 }
 
 impl Default for StencilTableOptions {
