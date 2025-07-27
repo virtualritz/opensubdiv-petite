@@ -177,18 +177,12 @@ impl StencilTable {
         let actual_end = end.unwrap_or(num_stencils);
         let output_size = actual_end - actual_start;
         
-        // Assuming each stencil produces the same number of values as in src per vertex
-        // We need to determine the stride from the source data
-        let num_control_verts = unsafe { sys::far::stencil_table::StencilTable_GetNumControlVertices(ptr) as usize };
-        let stride = if num_control_verts > 0 {
-            src.len() / num_control_verts
-        } else {
-            3 // Default to 3D points
-        };
+        // AIDEV-NOTE: Local point stencil tables may report 0 control vertices
+        // In this case, we assume the source array size matches what's expected
+        // The output will have one value per stencil
         
-        // Create output buffer with capacity but uninitialized
-        let total_size = output_size * stride;
-        let mut dst = Vec::with_capacity(total_size);
+        // Create output buffer with the size matching number of stencils
+        let mut dst = Vec::with_capacity(output_size);
         
         unsafe {
             sys::far::stencil_table::StencilTable_UpdateValues(
@@ -200,7 +194,7 @@ impl StencilTable {
             );
             
             // Set length after successful update
-            dst.set_len(total_size);
+            dst.set_len(output_size);
         }
         
         dst
