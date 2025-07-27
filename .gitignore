@@ -4,3 +4,33 @@ Cargo.lock
 
 # Test output files (but not expected results)
 **/target/**/*.step
+
+# Build tools and downloaded binaries
+tools/
+cmake-*/
+*.tar.gz
+*.tar.bz2
+*.tar.xz
+
+# Build directories
+build/
+out/
+*.build/
+
+# CMake artifacts
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# IDE directories
+.idea/
+.vscode/
+*.code-workspace
