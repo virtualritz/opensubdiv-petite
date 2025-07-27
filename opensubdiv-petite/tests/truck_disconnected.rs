@@ -1,7 +1,10 @@
 //! Tests for exporting patches as disconnected surfaces to STEP format
 
+mod test_utils;
+
 #[cfg(feature = "truck")]
 mod tests {
+    use crate::test_utils::default_end_cap_type;
     use opensubdiv_petite::far::{
         PatchTable, TopologyDescriptor, TopologyRefiner, TopologyRefinerOptions,
         UniformRefinementOptions, PatchTableOptions, EndCapType, PrimvarRefiner,
@@ -141,8 +144,8 @@ mod tests {
         let all_vertices = build_vertex_buffer(&refiner, &vertex_positions);
         
         // Create patch table
-        let mut patch_options = PatchTableOptions::new();
-        patch_options.end_cap_type = EndCapType::BSplineBasis;
+        let patch_options = PatchTableOptions::new()
+            .end_cap_type(default_end_cap_type());
         
         let patch_table = PatchTable::new(&refiner, Some(patch_options))
             .expect("Failed to create patch table");

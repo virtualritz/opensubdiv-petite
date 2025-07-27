@@ -59,12 +59,12 @@ fn test_simple_plane_to_step() {
     
     // Use adaptive refinement
     let mut adaptive_options = AdaptiveRefinementOptions::default();
-    adaptive_options.isolation_level = 2;
+    adaptive_options.isolation_level = 3;
     refiner.refine_adaptive(adaptive_options, &[]);
     
     // Create patch table
     let patch_options = PatchTableOptions::new()
-        .end_cap_type(EndCapType::BSplineBasis);
+        .end_cap_type(default_end_cap_type());
     let patch_table = PatchTable::new(&refiner, Some(patch_options))
         .expect("Failed to create patch table");
     
@@ -174,12 +174,12 @@ fn test_simple_cube_to_step() {
     
     // Use adaptive refinement
     let mut adaptive_options = AdaptiveRefinementOptions::default();
-    adaptive_options.isolation_level = 2;
+    adaptive_options.isolation_level = 3;
     refiner.refine_adaptive(adaptive_options, &[]);
     
     // Create patch table
     let patch_options = PatchTableOptions::new()
-        .end_cap_type(EndCapType::BSplineBasis);
+        .end_cap_type(default_end_cap_type());
     let patch_table = PatchTable::new(&refiner, Some(patch_options))
         .expect("Failed to create patch table");
     
@@ -311,7 +311,7 @@ fn test_creased_cube_to_step() {
     // Create patch table with B-spline patches for higher-order surfaces
     use opensubdiv_petite::far::{PatchTableOptions, EndCapType};
     let patch_options = PatchTableOptions::new()
-        .end_cap_type(EndCapType::BSplineBasis);
+        .end_cap_type(default_end_cap_type());
     let patch_table = PatchTable::new(&refiner, Some(patch_options))
         .expect("Failed to create patch table");
 

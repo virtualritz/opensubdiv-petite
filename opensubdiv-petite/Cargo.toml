@@ -26,6 +26,9 @@ ptex = ["opensubdiv-petite-sys/ptex"]
 tri_mesh_buffers = ["itertools", "ultraviolet", "slice-of-array"]
 topology_validation = []
 truck = ["truck-geometry", "truck-modeling"]
+truck_export_boundary = ["truck"]
+# Use B-spline basis end caps instead of Gregory patches (legacy behavior)
+b_spline_end_caps = []
 
 [dependencies]
 derive_more = { version = "2", features = ["full"] }

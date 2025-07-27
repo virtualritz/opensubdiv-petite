@@ -5,37 +5,35 @@ use test_utils::*;
 
 #[cfg(feature = "truck")]
 #[test]
-fn test_simple_plane_surfaces_only() {
+fn test_two_patches_surfaces_only() {
     use opensubdiv_petite::far::{
         PatchTable, TopologyDescriptor, TopologyRefiner, TopologyRefinerOptions,
         AdaptiveRefinementOptions, PatchTableOptions, EndCapType, PrimvarRefiner,
     };
     use opensubdiv_petite::truck_integration::PatchTableExt;
-    use truck_stepio::out;
     use truck_modeling::*;
     
-    // Create a 3x3 quad mesh (4x4 vertices)
-    let mut vertex_positions = Vec::new();
-    for y in 0..4 {
-        for x in 0..4 {
-            vertex_positions.push([x as f32, y as f32, 0.0]);
-        }
-    }
+    // Simple cube - same as in truck.rs test
+    let vertex_positions = vec![
+        [-1.0, -1.0, -1.0],
+        [1.0, -1.0, -1.0],
+        [-1.0, 1.0, -1.0],
+        [1.0, 1.0, -1.0],
+        [-1.0, -1.0, 1.0],
+        [1.0, -1.0, 1.0],
+        [-1.0, 1.0, 1.0],
+        [1.0, 1.0, 1.0],
+    ];
     
-    // Create 3x3 quads
-    let mut face_vertex_counts = Vec::new();
-    let mut face_vertex_indices = Vec::new();
-    
-    for y in 0..3 {
-        for x in 0..3 {
-            face_vertex_counts.push(4);
-            let base = y * 4 + x;
-            face_vertex_indices.push(base);
-            face_vertex_indices.push(base + 1);
-            face_vertex_indices.push(base + 5);
-            face_vertex_indices.push(base + 4);
-        }
-    }
+    let face_vertex_counts = vec![4, 4, 4, 4, 4, 4];
+    let face_vertex_indices = vec![
+        0, 2, 3, 1, // front face (-z)
+        2, 6, 7, 3, // top face (+y)
+        6, 4, 5, 7, // back face (+z)
+        4, 0, 1, 5, // bottom face (-y)
+        4, 6, 2, 0, // left face (-x)
+        1, 3, 7, 5, // right face (+x)
+    ];
     
     let descriptor = TopologyDescriptor::new(
         vertex_positions.len(),
@@ -47,7 +45,7 @@ fn test_simple_plane_surfaces_only() {
     let mut refiner = TopologyRefiner::new(descriptor, refiner_options)
         .expect("Failed to create topology refiner");
     
-    // Use adaptive refinement
+    // Use adaptive refinement with isolation level 3 to get regular patches
     let mut adaptive_options = AdaptiveRefinementOptions::default();
     adaptive_options.isolation_level = 3;
     refiner.refine_adaptive(adaptive_options, &[]);
@@ -91,52 +89,47 @@ fn test_simple_plane_surfaces_only() {
         level_start += prev_level_count;
     }
     
-    // Convert patches to B-spline surfaces directly
-    let surfaces = patch_table.to_truck_surfaces(&all_vertices)
-        .expect("Failed to convert to truck surfaces");
-    
-    println!("Generated {} B-spline surfaces", surfaces.len());
-    
-    // Create a simple shell containing just the surfaces as trimmed surfaces
-    // Each surface will be a face with its natural boundary
-    let mut faces = Vec::new();
-    for (i, surface) in surfaces.into_iter().enumerate() {
-        if i < 3 {
-            // Debug: print control points of first few surfaces
-            println!("Surface {} control points:", i);
-            use truck_geometry::prelude::ParametricSurface;
-            for row in 0..4 {
-                for col in 0..4 {
-                    let cp = surface.control_point(row, col);
-                    println!("  [{},{}] = ({:.3}, {:.3}, {:.3})", 
-                        row, col, cp.x, cp.y, cp.z);
-                }
-            }
+    // Debug: check patch table contents
+    println!("Patch table has {} arrays", patch_table.patch_arrays_len());
+    println!("Total patches: {}", patch_table.patches_len());
+    for i in 0..patch_table.patch_arrays_len() {
+        if let Some(desc) = patch_table.patch_array_descriptor(i) {
+            println!("  Array {}: type={:?}, {} patches", 
+                i, desc.patch_type(), patch_table.patch_array_patches_len(i));
         }
-        
-        // Create a trimmed surface with the natural boundary of the B-spline
-        // This uses the parameter domain [0,1] x [0,1]
-        let face = Face::try_new(vec![], Surface::BSplineSurface(surface)).expect("Failed to create face");
-        faces.push(face);
     }
     
-    let shell = Shell::from(faces);
+    // If no Regular patches, try to get Quads patches
+    if patch_table.patches_len() == 0 {
+        println!("No patches generated! Check refinement settings.");
+        return;
+    }
+    
+    // Convert patches to truck shell - same approach as simple_plane test
+    let shell = patch_table.to_truck_shell(&all_vertices)
+        .expect("Failed to convert to truck shell");
+    
+    // Compress and export the shell as STEP - same as simple plane
     let compressed = shell.compress();
     
-    // Write to STEP file
+    // Write to STEP file using truck_stepio
+    use truck_stepio::out;
     let step_string = out::CompleteStepDisplay::new(
         out::StepModel::from(&compressed),
         out::StepHeaderDescriptor {
-            file_name: "simple_plane_surfaces_only.step".to_owned(),
+            file_name: "two_patches_surfaces_only.step".to_owned(),
             ..Default::default()
         },
     )
     .to_string();
 
     // Write STEP file to test output directory
-    let step_path = test_output_path("simple_plane_surfaces_only.step");
+    let step_path = test_output_path("two_patches_surfaces_only.step");
     std::fs::write(&step_path, &step_string)
         .expect("Failed to write STEP file");
     
-    println!("Wrote STEP file to: {}", step_path.display());
+    println!("\nWrote STEP file to: {}", step_path.display());
+    
+    // Compare or update expected results
+    assert_file_matches(&step_path, "two_patches_surfaces_only.step");
 }

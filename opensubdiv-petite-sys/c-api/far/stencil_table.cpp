@@ -1,4 +1,6 @@
 #include <opensubdiv/far/stencilTable.h>
+#include <numeric>
+#include <vector>
 
 #include "../vtr/types.hpp"
 
@@ -6,6 +8,22 @@ typedef OpenSubdiv::Far::StencilTable StencilTable;
 typedef OpenSubdiv::Far::Stencil Stencil;
 
 typedef OpenSubdiv::Vtr::Index Index;
+
+// Wrapper class that provides the required interface for UpdateValues
+class FloatValue {
+public:
+    float value;
+    
+    FloatValue() : value(0.0f) {}
+    
+    void Clear() {
+        value = 0.0f;
+    }
+    
+    void AddWithWeight(const FloatValue& src, float weight) {
+        value += src.value * weight;
+    }
+};
 
 extern "C" {
 
@@ -50,5 +68,31 @@ extern "C" {
     FloatVectorRef StencilTable_GetWeights(StencilTable* st) {
         auto& v = st->GetWeights();
         return FloatVectorRef(v.data(), v.size());
+    }
+    
+    /// \brief Update values by applying the stencil table
+    void StencilTable_UpdateValues(StencilTable* st, const float* src, float* dst, int start, int end) {
+        int numControlVerts = st->GetNumControlVertices();
+        int numStencils = st->GetNumStencils();
+        
+        // Create wrapper arrays
+        std::vector<FloatValue> srcValues(numControlVerts);
+        std::vector<FloatValue> dstValues(numStencils);
+        
+        // Copy input data to wrapper
+        for (int i = 0; i < numControlVerts; ++i) {
+            srcValues[i].value = src[i];
+        }
+        
+        // Use the templated UpdateValues method with our wrapper type
+        st->UpdateValues(srcValues.data(), dstValues.data(), start, end);
+        
+        // Copy results back
+        int actualStart = (start < 0) ? 0 : start;
+        int actualEnd = (end < 0 || end > numStencils) ? numStencils : end;
+        
+        for (int i = actualStart; i < actualEnd; ++i) {
+            dst[i] = dstValues[i].value;
+        }
     }
 }

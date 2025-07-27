@@ -1,3 +1,6 @@
+mod test_utils;
+use test_utils::default_end_cap_type;
+
 #[cfg(feature = "truck")]
 #[test]
 fn test_simple_plane_cv_ordering() {
@@ -49,7 +52,7 @@ fn test_simple_plane_cv_ordering() {
     
     // Create patch table
     let patch_options = PatchTableOptions::new()
-        .end_cap_type(EndCapType::BSplineBasis);
+        .end_cap_type(default_end_cap_type());
     let patch_table = PatchTable::new(&refiner, Some(patch_options))
         .expect("Failed to create patch table");
     

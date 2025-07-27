@@ -45,6 +45,15 @@ int PatchTable_GetMaxValence(const PatchTable* table) {
     return table->GetMaxValence();
 }
 
+// Local point functions
+int PatchTable_GetNumLocalPoints(const PatchTable* table) {
+    return table->GetNumLocalPoints();
+}
+
+const OpenSubdiv::Far::StencilTable* PatchTable_GetLocalPointStencilTable(const PatchTable* table) {
+    return table->GetLocalPointStencilTable();
+}
+
 // Get patch array information
 int PatchTable_GetNumPatches_PatchArray(const PatchTable* table, int arrayIndex) {
     if (arrayIndex < 0 || arrayIndex >= table->GetNumPatchArrays()) {
