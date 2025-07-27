@@ -6,10 +6,9 @@ mod test_utils;
 mod tests {
     use crate::test_utils::*;
     use opensubdiv_petite::far::{
-        AdaptiveRefinementOptions, EndCapType, PatchTable, PatchTableOptions, PrimvarRefiner,
+        AdaptiveRefinementOptions, PatchTable, PatchTableOptions, PrimvarRefiner,
         TopologyDescriptor, TopologyRefiner, TopologyRefinerOptions,
     };
-    use opensubdiv_petite::Index;
     use std::f32::consts::PI;
 
     /// Create vertices for an icosahedron.
@@ -41,7 +40,7 @@ mod tests {
     }
 
     /// Create faces for an icosahedron.
-    fn create_icosahedron_faces() -> (Vec<u32>, Vec<Index>) {
+    fn create_icosahedron_faces() -> (Vec<u32>, Vec<u32>) {
         let face_vertex_counts = vec![3; 20]; // 20 triangular faces
 
         let face_indices = vec![
@@ -50,8 +49,7 @@ mod tests {
             10, 6, 10, 7,
         ];
 
-        let indices = face_indices.iter().map(|&i| Index::from(i)).collect();
-        (face_vertex_counts, indices)
+        (face_vertex_counts, face_indices)
     }
 
     /// Apply a twist operation to vertices.
@@ -73,7 +71,6 @@ mod tests {
     /// Apply a bulge operation to vertices.
     fn apply_bulge(vertices: &mut [[f32; 3]], factor: f32) {
         for vertex in vertices.iter_mut() {
-            let r = (vertex[0] * vertex[0] + vertex[2] * vertex[2]).sqrt();
             let scale = 1.0 + factor * (1.0 - vertex[1].abs());
 
             vertex[0] *= scale;
@@ -204,9 +201,45 @@ mod tests {
         );
 
         // Build vertex buffer
-        let all_vertices = build_vertex_buffer(&refiner, &vertex_positions);
+        let mut all_vertices = build_vertex_buffer(&refiner, &vertex_positions);
 
         println!("Total vertices after refinement: {}", all_vertices.len());
+
+        // Check if patch table has local points that need to be appended
+        let num_local_points = patch_table.local_point_count();
+        
+        // If there are local points, we need to evaluate them using the stencil table
+        if num_local_points > 0 {
+            if let Some(stencil_table) = patch_table.local_point_stencil_table() {
+                // Apply stencils to compute local points (3 floats per point)
+                let mut local_points = Vec::with_capacity(num_local_points);
+                
+                for dim in 0..3 {
+                    // Extract just this dimension from source vertices
+                    let src_dim: Vec<f32> = all_vertices
+                        .iter()
+                        .map(|v| v[dim])
+                        .collect();
+                        
+                    // Apply stencils for this dimension
+                    let dst_dim = stencil_table.update_values(&src_dim, None, None);
+                    
+                    // Store results
+                    for (i, &val) in dst_dim.iter().enumerate() {
+                        if dim == 0 {
+                            local_points.push([val, 0.0, 0.0]);
+                        } else {
+                            local_points[i][dim] = val;
+                        }
+                    }
+                }
+                
+                // Append local points to the existing vertex buffer
+                all_vertices.extend_from_slice(&local_points);
+                
+                println!("Added {} local points, total vertices: {}", num_local_points, all_vertices.len());
+            }
+        }
 
         // Convert patches to truck shell
         let shell = patch_table
@@ -231,6 +264,9 @@ mod tests {
         std::fs::write(&step_path, &step_string).expect("Failed to write STEP file");
 
         println!("Successfully generated {}", step_path.display());
+        
+        // Compare with expected file
+        assert_file_matches(&step_path, "complex_polyhedron_crease4.step");
 
         // Also export an OBJ file for visualization comparison
         let obj_path = test_output_path("complex_polyhedron_crease4.obj");
