@@ -1,6 +1,7 @@
 #include <opensubdiv/far/stencilTable.h>
 #include <numeric>
 #include <vector>
+#include <algorithm>
 
 #include "../vtr/types.hpp"
 
@@ -75,12 +76,26 @@ extern "C" {
         int numControlVerts = st->GetNumControlVertices();
         int numStencils = st->GetNumStencils();
         
+        // AIDEV-NOTE: Handle local point stencil tables
+        // Local point stencil tables may report 0 control vertices but still
+        // need to process data. In this case, we need to infer the actual
+        // number of control vertices from the stencil indices.
+        
+        int actualNumControlVerts = numControlVerts;
+        if (numControlVerts == 0) {
+            // Find the maximum control vertex index referenced
+            const auto& indices = st->GetControlIndices();
+            if (!indices.empty()) {
+                actualNumControlVerts = *std::max_element(indices.begin(), indices.end()) + 1;
+            }
+        }
+        
         // Create wrapper arrays
-        std::vector<FloatValue> srcValues(numControlVerts);
+        std::vector<FloatValue> srcValues(actualNumControlVerts);
         std::vector<FloatValue> dstValues(numStencils);
         
         // Copy input data to wrapper
-        for (int i = 0; i < numControlVerts; ++i) {
+        for (int i = 0; i < actualNumControlVerts; ++i) {
             srcValues[i].value = src[i];
         }
         
@@ -92,7 +107,7 @@ extern "C" {
         int actualEnd = (end < 0 || end > numStencils) ? numStencils : end;
         
         for (int i = actualStart; i < actualEnd; ++i) {
-            dst[i] = dstValues[i].value;
+            dst[i - actualStart] = dstValues[i].value;
         }
     }
 }
