@@ -20,10 +20,9 @@
 //! The main data structures in `far` related to topology refinement are:
 //!
 //! * [`TopologyDescriptor`] -- Describes a mesh.
-//! * [`TopologyRefiner`] --
-//!   Encapsulates mesh refinement.
-//! * [`TopologyLevel`] -- Represents
-//!   one level of refinement within a `TopologyRefiner`.
+//! * [`TopologyRefiner`] -- Encapsulates mesh refinement.
+//! * [`TopologyLevel`] -- Represents one level of refinement within a
+//!   `TopologyRefiner`.
 //!
 //! ## Primvar Refinement
 //! *Primitive Variable* (primvar) *refinement* is the process of computing
@@ -40,9 +39,8 @@
 //! The main data structures in `far` related to primvar refinement are:
 //! * [`PrimvarRefiner`] -- Implements refinement of primvar data at the
 //!   locations of topological vertices.
-//! * `PatchTable` -- A representation of the refined surface topology
-//!   that can be used for efficient evaluation of primvar data at arbitrary
-//!   locations.
+//! * `PatchTable` -- A representation of the refined surface topology that can
+//!   be used for efficient evaluation of primvar data at arbitrary locations.
 //! * [`StencilTable`] -- A representation of refinement weights suitable for
 //!   efficient parallel processing of primvar refinement.
 //! * `LimitStencilTable` -- A representation of refinement weights suitable for

@@ -4,23 +4,23 @@
 //! structures available on various backends such as *TBB*, *CUDA*, *OpenCL*,
 //! *GLSL*, etc. The main roles of `osd` are:
 //!
-//! * **Refinement**<br>
-//!   Compute stencil-based uniform/adaptive subdivision on *CPU/GPU* backends.
+//! * **Refinement**<br> Compute stencil-based uniform/adaptive subdivision on
+//!   *CPU/GPU* backends.
 //!
-//! * **Limit Stencil Evaluation**<br>
-//!   Compute limit surfaces by limit stencils on *CPU/GPU* backends.
+//! * **Limit Stencil Evaluation**<br> Compute limit surfaces by limit stencils
+//!   on *CPU/GPU* backends.
 //!
-//! * **Limit Evaluation with `PatchTable`**<br>
-//!   Compute limit surfaces by patch evaluation on *CPU/GPU* backends.
+//! * **Limit Evaluation with `PatchTable`**<br> Compute limit surfaces by patch
+//!   evaluation on *CPU/GPU* backends.
 //!
-//! * **OpenGL/DX11/Metal Drawing with Hardware Tessellation**<br>
-//!   Provide *GLSL/HLSL/Metal* tessellation functions for patch table.
+//! * **OpenGL/DX11/Metal Drawing with Hardware Tessellation**<br> Provide
+//!   *GLSL/HLSL/Metal* tessellation functions for patch table.
 //!
-//! * **Interleaved/Batched Buffer Configuration**<br>
-//!   Provide consistent buffer descriptor to deal with arbitrary buffer layout.
+//! * **Interleaved/Batched Buffer Configuration**<br> Provide consistent buffer
+//!   descriptor to deal with arbitrary buffer layout.
 //!
-//! * **Cross-Platform Implementation**<br>
-//!   Provide convenient ways to interop between compute and draw APIs.
+//! * **Cross-Platform Implementation**<br> Provide convenient ways to interop
+//!   between compute and draw APIs.
 //!
 //! These are independently used by clients. For example, a client can use only
 //! the limit stencil evaluation, or a client can refine subdivision surfaces

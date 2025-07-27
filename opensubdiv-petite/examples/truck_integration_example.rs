@@ -148,8 +148,9 @@ fn main() {
                 // - STEP export
                 // - Further CAD operations
 
-                // Example: Export to STEP format (requires additional truck modules)
-                // let step_string = truck_stepio::out::shell_to_string(&shell);
+                // Example: Export to STEP format (requires additional truck
+                // modules) let step_string =
+                // truck_stepio::out::shell_to_string(&shell);
             }
             Err(e) => {
                 println!("Error creating shell: {}", e);

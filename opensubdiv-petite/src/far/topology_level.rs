@@ -199,7 +199,8 @@ impl<'a> TopologyLevel<'a> {
         }
     }
 
-    /// Returns the local indices of a vertex with respect to its incident faces.
+    /// Returns the local indices of a vertex with respect to its incident
+    /// faces.
     pub fn vertex_face_local_indices(&self, vertex: Index) -> Option<&[LocalIndex]> {
         unsafe {
             let arr = sys::far::TopologyLevel_GetVertexFaceLocalIndices(self.ptr, vertex.into());
@@ -211,7 +212,8 @@ impl<'a> TopologyLevel<'a> {
         }
     }
 
-    /// Returns the local indices of a vertex with respect to its incident edges.
+    /// Returns the local indices of a vertex with respect to its incident
+    /// edges.
     pub fn vertex_edge_local_indices(&self, vertex: Index) -> Option<&[LocalIndex]> {
         unsafe {
             let arr = sys::far::TopologyLevel_GetVertexEdgeLocalIndices(self.ptr, vertex.into());
