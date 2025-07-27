@@ -108,10 +108,12 @@ extern "C" {
         param: *mut PatchParam,
     );
     pub fn PatchTable_GetPatchControlVerticesTable(table: *const PatchTable) -> *const c_int;
-    
+
     // Local point functions
     pub fn PatchTable_GetNumLocalPoints(table: *const PatchTable) -> c_int;
-    pub fn PatchTable_GetLocalPointStencilTable(table: *const PatchTable) -> *const crate::far::StencilTable;
+    pub fn PatchTable_GetLocalPointStencilTable(
+        table: *const PatchTable,
+    ) -> *const crate::far::StencilTable;
 
     // PatchTableFactory::Options functions
     pub fn PatchTableFactory_Options_new() -> *mut PatchTableFactoryOptions;
