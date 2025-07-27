@@ -54,7 +54,7 @@ impl StencilTable {
     /// Create a new stencil table.
     pub fn new(refiner: &TopologyRefiner, options: StencilTableOptions) -> StencilTable {
         let mut sys_options = sys::far::stencil_table::StencilTableOptions::new();
-        
+
         // Set the bitfield values
         sys_options.set_interpolation_mode(options.interpolation_mode as u32);
         sys_options.set_generate_offsets(options.generate_offsets);
@@ -63,10 +63,9 @@ impl StencilTable {
         sys_options.set_factorize_intermediate_levels(options.factorize_intermediate_levels);
         sys_options.set_max_level(options.max_level.try_into().unwrap());
         sys_options.fvar_channel = options.face_varying_channel.try_into().unwrap();
-        
-        let ptr = unsafe {
-            sys::far::stencil_table::StencilTableFactory_Create(refiner.0, sys_options)
-        };
+
+        let ptr =
+            unsafe { sys::far::stencil_table::StencilTableFactory_Create(refiner.0, sys_options) };
 
         if ptr.is_null() {
             panic!("StencilTableFactory_Create() returned null");
@@ -156,47 +155,54 @@ impl StencilTable {
             std::slice::from_raw_parts(vr.data(), vr.size())
         }
     }
-    
+
     /// Update values by applying the stencil table
-    /// 
+    ///
     /// # Arguments
     /// * `src` - Source values to interpolate from
     /// * `start` - Optional index of first destination value to update
     /// * `end` - Optional index of last destination value to update
-    /// 
+    ///
     /// # Returns
     /// A vector containing the interpolated values
     pub fn update_values(&self, src: &[f32], start: Option<usize>, end: Option<usize>) -> Vec<f32> {
         self.update_values_impl(self.0, src, start, end)
     }
-    
-    fn update_values_impl(&self, ptr: sys::far::StencilTablePtr, src: &[f32], start: Option<usize>, end: Option<usize>) -> Vec<f32> {
+
+    fn update_values_impl(
+        &self,
+        ptr: sys::far::StencilTablePtr,
+        src: &[f32],
+        start: Option<usize>,
+        end: Option<usize>,
+    ) -> Vec<f32> {
         // Determine the output size based on the number of stencils
-        let num_stencils = unsafe { sys::far::stencil_table::StencilTable_GetNumStencils(ptr) as usize };
+        let num_stencils =
+            unsafe { sys::far::stencil_table::StencilTable_GetNumStencils(ptr) as usize };
         let actual_start = start.unwrap_or(0);
         let actual_end = end.unwrap_or(num_stencils);
         let output_size = actual_end - actual_start;
-        
+
         // AIDEV-NOTE: Local point stencil tables may report 0 control vertices
         // In this case, we assume the source array size matches what's expected
         // The output will have one value per stencil
-        
+
         // Create output buffer with the size matching number of stencils
         let mut dst = Vec::with_capacity(output_size);
-        
+
         unsafe {
             sys::far::stencil_table::StencilTable_UpdateValues(
                 ptr,
                 src.as_ptr(),
                 dst.as_mut_ptr(),
                 start.map(|s| s as i32).unwrap_or(-1),
-                end.map(|e| e as i32).unwrap_or(-1)
+                end.map(|e| e as i32).unwrap_or(-1),
             );
-            
+
             // Set length after successful update
             dst.set_len(output_size);
         }
-        
+
         dst
     }
 }
@@ -239,7 +245,7 @@ impl<'a> StencilTableRef<'a> {
     pub fn control_vertex_count(&self) -> usize {
         unsafe { sys::far::stencil_table::StencilTable_GetNumControlVertices(self.ptr) as _ }
     }
-    
+
     /// Update values by applying the stencil table
     pub fn update_values(&self, src: &[f32], start: Option<usize>, end: Option<usize>) -> Vec<f32> {
         // Use the same implementation as StencilTable
