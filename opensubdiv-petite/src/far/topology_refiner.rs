@@ -305,8 +305,8 @@ use super::topology_level::TopologyLevel;
 ///
 /// ```
 /// use opensubdiv_petite::far::{
-///     TopologyRefinerOptions, Scheme, BoundaryInterpolation,
-///     FaceVaryingLinearInterpolation, CreasingMethod, TriangleSubdivision
+///     BoundaryInterpolation, CreasingMethod, FaceVaryingLinearInterpolation, Scheme,
+///     TopologyRefinerOptions, TriangleSubdivision,
 /// };
 ///
 /// // Create options with defaults
