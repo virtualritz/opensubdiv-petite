@@ -85,6 +85,9 @@ pub mod tri_mesh_buffers;
 #[cfg(feature = "truck")]
 pub mod truck_integration;
 
+pub mod obj_bspline_export;
+pub mod iges_export;
+
 /// A vertex, edge, or face index in the topology.
 ///
 /// # Examples

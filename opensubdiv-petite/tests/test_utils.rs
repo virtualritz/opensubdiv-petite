@@ -2,6 +2,22 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::env;
 
+#[cfg(feature = "truck")]
+use opensubdiv_petite::far::EndCapType;
+
+/// Get the default EndCapType based on feature flags
+#[cfg(feature = "truck")]
+pub fn default_end_cap_type() -> EndCapType {
+    #[cfg(feature = "b_spline_end_caps")]
+    {
+        EndCapType::BSplineBasis
+    }
+    #[cfg(not(feature = "b_spline_end_caps"))]
+    {
+        EndCapType::GregoryBasis
+    }
+}
+
 /// Check if tests should update expected results
 pub fn should_update_expected() -> bool {
     // Check for UPDATE_EXPECTED environment variable
