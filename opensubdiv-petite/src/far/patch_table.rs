@@ -8,8 +8,8 @@
 //! that describes the number and arrangement of control points, and a `PatchParam`
 //! that provides additional information about the patch's parameterization.
 
-use crate::{Error, Index};
 use super::StencilTableRef;
+use crate::{Error, Index};
 use opensubdiv_petite_sys as sys;
 use std::marker::PhantomData;
 use std::pin::Pin;
@@ -176,12 +176,12 @@ impl PatchTable {
     pub fn max_valence(&self) -> usize {
         unsafe { sys::far::PatchTable_GetMaxValence(self.ptr) as usize }
     }
-    
+
     /// Get the number of local points
     pub fn local_point_count(&self) -> usize {
         unsafe { sys::far::PatchTable_GetNumLocalPoints(self.ptr) as usize }
     }
-    
+
     /// Get the stencil table for local points
     pub fn local_point_stencil_table(&self) -> Option<StencilTableRef<'_>> {
         unsafe {
@@ -451,12 +451,7 @@ pub type BasisWeights = (Vec<f32>, Vec<f32>, Vec<f32>, Vec<f32>, Vec<f32>, Vec<f
 
 impl PatchTable {
     /// Evaluate basis functions for a patch at given parametric coordinates
-    pub fn evaluate_basis(
-        &self,
-        patch_index: usize,
-        u: f32,
-        v: f32,
-    ) -> Option<BasisWeights> {
+    pub fn evaluate_basis(&self, patch_index: usize, u: f32, v: f32) -> Option<BasisWeights> {
         if patch_index >= self.patches_len() {
             return None;
         }

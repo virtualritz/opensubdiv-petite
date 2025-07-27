@@ -43,21 +43,26 @@ impl std::fmt::Display for TruckIntegrationError {
 
 impl std::error::Error for TruckIntegrationError {}
 
-/// A wrapper around a single patch with its associated data
+/// A wrapper around a single patch with its associated data.
 pub struct PatchRef<'a> {
+    /// Reference to the patch table containing this patch.
     pub patch_table: &'a PatchTable,
+    /// Index of this patch within the patch table.
     pub patch_index: usize,
+    /// Control points for the entire mesh.
     pub control_points: &'a [[f32; 3]],
 }
 
-/// A wrapper around patches with control points for conversion
+/// A wrapper around patches with control points for conversion.
 pub struct PatchTableWithControlPointsRef<'a> {
+    /// Reference to the patch table.
     pub patch_table: &'a PatchTable,
+    /// Control points for the entire mesh.
     pub control_points: &'a [[f32; 3]],
 }
 
 impl<'a> PatchRef<'a> {
-    /// Create a new patch reference
+    /// Create a new patch reference.
     pub fn new(
         patch_table: &'a PatchTable,
         patch_index: usize,
@@ -70,7 +75,7 @@ impl<'a> PatchRef<'a> {
         }
     }
 
-    /// Get patch array information
+    /// Get patch array information.
     fn patch_info(&self) -> std::result::Result<(usize, usize, PatchType), TruckIntegrationError> {
         let mut current_index = self.patch_index;
 
@@ -90,7 +95,7 @@ impl<'a> PatchRef<'a> {
         Err(TruckIntegrationError::InvalidControlPoints)
     }
 
-    /// Extract control points for this patch
+    /// Extract control points for this patch.
     fn control_points(&self) -> std::result::Result<Vec<Vec<Point3<f64>>>, TruckIntegrationError> {
         let (array_index, local_index, patch_type) = self.patch_info()?;
 
@@ -99,14 +104,20 @@ impl<'a> PatchRef<'a> {
         // Gregory patches are used at extraordinary vertices (valence != 4).
         // For now, we approximate Gregory patches as B-spline patches.
         match patch_type {
-            PatchType::Regular => self.extract_regular_patch_control_points(array_index, local_index),
-            PatchType::GregoryBasis => self.extract_gregory_basis_patch_control_points(array_index, local_index),
-            PatchType::GregoryTriangle => self.extract_gregory_triangle_patch_control_points(array_index, local_index),
+            PatchType::Regular => {
+                self.extract_regular_patch_control_points(array_index, local_index)
+            }
+            PatchType::GregoryBasis => {
+                self.extract_gregory_basis_patch_control_points(array_index, local_index)
+            }
+            PatchType::GregoryTriangle => {
+                self.extract_gregory_triangle_patch_control_points(array_index, local_index)
+            }
             _ => Err(TruckIntegrationError::UnsupportedPatchType(patch_type)),
         }
     }
 
-    /// Extract control points for a regular B-spline patch
+    /// Extract control points for a regular B-spline patch.
     fn extract_regular_patch_control_points(
         &self,
         array_index: usize,
@@ -129,8 +140,15 @@ impl<'a> PatchRef<'a> {
 
         let start = local_index * desc.control_vertices_len();
         if start + desc.control_vertices_len() > cv_indices.len() {
-            eprintln!("Patch {} (array {}, local {}): start={}, cvs_needed={}, available={}", 
-                     self.patch_index, array_index, local_index, start, desc.control_vertices_len(), cv_indices.len());
+            eprintln!(
+                "Patch {} (array {}, local {}): start={}, cvs_needed={}, available={}",
+                self.patch_index,
+                array_index,
+                local_index,
+                start,
+                desc.control_vertices_len(),
+                cv_indices.len()
+            );
             return Err(TruckIntegrationError::InvalidControlPoints);
         }
         let patch_cvs = &cv_indices[start..start + desc.control_vertices_len()];
@@ -144,8 +162,12 @@ impl<'a> PatchRef<'a> {
 
             let idx: usize = cv_idx.into();
             if idx >= self.control_points.len() {
-                eprintln!("Patch {}: Control vertex index {} is out of bounds (max {})", 
-                         self.patch_index, idx, self.control_points.len() - 1);
+                eprintln!(
+                    "Patch {}: Control vertex index {} is out of bounds (max {})",
+                    self.patch_index,
+                    idx,
+                    self.control_points.len() - 1
+                );
                 return Err(TruckIntegrationError::InvalidControlPoints);
             }
 
@@ -156,11 +178,11 @@ impl<'a> PatchRef<'a> {
         // AIDEV-NOTE: Check if this patch is adjacent to an extraordinary vertex
         // If so, we may need to adjust the control points to ensure proper continuity
         // This is a workaround for when OpenSubdiv generates Regular patches instead of Gregory patches
-        
+
         Ok(control_matrix)
     }
 
-    /// Extract control points for a Gregory basis patch (20 control points)
+    /// Extract control points for a Gregory basis patch (20 control points).
     fn extract_gregory_basis_patch_control_points(
         &self,
         _array_index: usize,
@@ -170,23 +192,21 @@ impl<'a> PatchRef<'a> {
         // Gregory basis patches have 20 control points arranged in a special pattern.
         // For now, we evaluate the patch at a 4x4 grid to create an approximation.
         // This is not ideal but allows us to export something at extraordinary vertices.
-        
+
         // Evaluate the patch at 16 points to create a 4x4 control point grid
         let mut control_matrix = vec![vec![Point3::origin(); 4]; 4];
-        
+
         for i in 0..4 {
             for j in 0..4 {
                 // Map to parameter space [0,1]
                 let u = i as f32 / 3.0;
                 let v = j as f32 / 3.0;
-                
+
                 // Evaluate the patch at this parameter location
-                if let Some(result) = self.patch_table.evaluate_point(
-                    self.patch_index,
-                    u,
-                    v,
-                    self.control_points,
-                ) {
+                if let Some(result) =
+                    self.patch_table
+                        .evaluate_point(self.patch_index, u, v, self.control_points)
+                {
                     control_matrix[i][j] = Point3::new(
                         result.point[0] as f64,
                         result.point[1] as f64,
@@ -197,11 +217,11 @@ impl<'a> PatchRef<'a> {
                 }
             }
         }
-        
+
         Ok(control_matrix)
     }
 
-    /// Extract control points for a Gregory triangle patch (18 control points)
+    /// Extract control points for a Gregory triangle patch (18 control points).
     fn extract_gregory_triangle_patch_control_points(
         &self,
         _array_index: usize,
@@ -211,16 +231,16 @@ impl<'a> PatchRef<'a> {
         // Gregory triangle patches have 18 control points for triangular domains.
         // For now, we evaluate the patch at a 4x4 grid to create a quad approximation.
         // This converts the triangular patch to a degenerate quad patch.
-        
+
         // Evaluate the patch at 16 points to create a 4x4 control point grid
         let mut control_matrix = vec![vec![Point3::origin(); 4]; 4];
-        
+
         for i in 0..4 {
             for j in 0..4 {
                 // For triangular patches, we need to ensure u + v <= 1
                 let u = i as f32 / 3.0;
                 let v = j as f32 / 3.0;
-                
+
                 // If we're outside the triangular domain, collapse to the edge
                 let (u_eval, v_eval) = if u + v > 1.0 {
                     // Project back onto the triangle edge
@@ -229,7 +249,7 @@ impl<'a> PatchRef<'a> {
                 } else {
                     (u, v)
                 };
-                
+
                 // Evaluate the patch at this parameter location
                 if let Some(result) = self.patch_table.evaluate_point(
                     self.patch_index,
@@ -247,7 +267,7 @@ impl<'a> PatchRef<'a> {
                 }
             }
         }
-        
+
         Ok(control_matrix)
     }
 }
@@ -293,19 +313,29 @@ impl<'a> TryFrom<PatchTableWithControlPointsRef<'a>> for Vec<BSplineSurface<Poin
             if let Some(desc) = patches.patch_table.patch_array_descriptor(array_idx) {
                 let patch_type = desc.patch_type();
                 // Handle Regular, GregoryBasis, and GregoryTriangle patches
-                if matches!(patch_type, PatchType::Regular | PatchType::GregoryBasis | PatchType::GregoryTriangle) {
+                if matches!(
+                    patch_type,
+                    PatchType::Regular | PatchType::GregoryBasis | PatchType::GregoryTriangle
+                ) {
                     for _ in 0..patches.patch_table.patch_array_patches_len(array_idx) {
                         let patch =
                             PatchRef::new(patches.patch_table, patch_index, patches.control_points);
                         match BSplineSurface::try_from(patch) {
                             Ok(surface) => surfaces.push(surface),
-                            Err(e) => eprintln!("Failed to convert patch {} (type {:?}): {:?}", patch_index, patch_type, e),
+                            Err(e) => eprintln!(
+                                "Failed to convert patch {} (type {:?}): {:?}",
+                                patch_index, patch_type, e
+                            ),
                         }
                         patch_index += 1;
                     }
                 } else {
-                    eprintln!("Skipping patch array {} with type {:?} ({} patches)", 
-                             array_idx, patch_type, patches.patch_table.patch_array_patches_len(array_idx));
+                    eprintln!(
+                        "Skipping patch array {} with type {:?} ({} patches)",
+                        array_idx,
+                        patch_type,
+                        patches.patch_table.patch_array_patches_len(array_idx)
+                    );
                     patch_index += patches.patch_table.patch_array_patches_len(array_idx);
                 }
             }
@@ -514,15 +544,25 @@ impl<'a> TryFrom<PatchTableWithControlPointsRef<'a>> for Shell {
             if let Some(desc) = patches.patch_table.patch_array_descriptor(array_idx) {
                 let patch_type = desc.patch_type();
                 let num_patches = patches.patch_table.patch_array_patches_len(array_idx);
-                eprintln!("Shell conversion: Processing patch array {} with type {:?} ({} patches)", array_idx, patch_type, num_patches);
-                
+                eprintln!(
+                    "Shell conversion: Processing patch array {} with type {:?} ({} patches)",
+                    array_idx, patch_type, num_patches
+                );
+
                 // Handle Regular, GregoryBasis, and GregoryTriangle patches
-                if matches!(patch_type, PatchType::Regular | PatchType::GregoryBasis | PatchType::GregoryTriangle) {
+                if matches!(
+                    patch_type,
+                    PatchType::Regular | PatchType::GregoryBasis | PatchType::GregoryTriangle
+                ) {
                     for local_idx in 0..num_patches {
-                        let patch = PatchRef::new(patches.patch_table, patch_index, patches.control_points);
-                        
-                        eprintln!("  Converting patch {} (array {}, local {}) of type {:?}", patch_index, array_idx, local_idx, patch_type);
-                        
+                        let patch =
+                            PatchRef::new(patches.patch_table, patch_index, patches.control_points);
+
+                        eprintln!(
+                            "  Converting patch {} (array {}, local {}) of type {:?}",
+                            patch_index, array_idx, local_idx, patch_type
+                        );
+
                         // Get the control points matrix
                         let _control_matrix = match patch.control_points() {
                             Ok(cp) => cp,
@@ -532,7 +572,7 @@ impl<'a> TryFrom<PatchTableWithControlPointsRef<'a>> for Shell {
                                 continue;
                             }
                         };
-                        
+
                         // Convert to truck surface
                         let surface: BSplineSurface<Point3<f64>> = match patch.try_into() {
                             Ok(s) => s,
@@ -542,19 +582,19 @@ impl<'a> TryFrom<PatchTableWithControlPointsRef<'a>> for Shell {
                                 continue;
                             }
                         };
-                        
+
                         #[cfg(feature = "truck_export_boundary")]
                         {
                             // Create B-spline boundary curves from control points
                             // The valid surface region uses rows/columns 1 and 2
                             use truck_geometry::prelude::BSplineCurve;
-                            
+
                             // AIDEV-NOTE: Boundary control point extraction
                             // For OpenSubdiv B-spline patches with uniform knot vectors,
                             // we need to extract the correct boundary control points.
                             // Using all 4 control points for each edge to define the
                             // B-spline boundary curves.
-                            
+
                             // Bottom edge (row 0): (0,0), (0,1), (0,2), (0,3)
                             let bottom_cps = vec![
                                 control_matrix[0][0],
@@ -562,7 +602,7 @@ impl<'a> TryFrom<PatchTableWithControlPointsRef<'a>> for Shell {
                                 control_matrix[0][2],
                                 control_matrix[0][3],
                             ];
-                            
+
                             // Right edge (column 3): (0,3), (1,3), (2,3), (3,3)
                             let right_cps = vec![
                                 control_matrix[0][3],
@@ -570,7 +610,7 @@ impl<'a> TryFrom<PatchTableWithControlPointsRef<'a>> for Shell {
                                 control_matrix[2][3],
                                 control_matrix[3][3],
                             ];
-                            
+
                             // Top edge (row 3, reversed): (3,3), (3,2), (3,1), (3,0)
                             let top_cps = vec![
                                 control_matrix[3][3],
@@ -578,7 +618,7 @@ impl<'a> TryFrom<PatchTableWithControlPointsRef<'a>> for Shell {
                                 control_matrix[3][1],
                                 control_matrix[3][0],
                             ];
-                            
+
                             // Left edge (column 0, reversed): (3,0), (2,0), (1,0), (0,0)
                             let left_cps = vec![
                                 control_matrix[3][0],
@@ -586,16 +626,17 @@ impl<'a> TryFrom<PatchTableWithControlPointsRef<'a>> for Shell {
                                 control_matrix[1][0],
                                 control_matrix[0][0],
                             ];
-                            
+
                             // Create the same knot vector as the surface
-                            let edge_knots = KnotVec::from(vec![-3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0, 4.0]);
-                            
+                            let edge_knots =
+                                KnotVec::from(vec![-3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0, 4.0]);
+
                             // Create B-spline curves for edges
                             let bottom_curve = BSplineCurve::new(edge_knots.clone(), bottom_cps);
                             let right_curve = BSplineCurve::new(edge_knots.clone(), right_cps);
                             let top_curve = BSplineCurve::new(edge_knots.clone(), top_cps);
                             let left_curve = BSplineCurve::new(edge_knots, left_cps);
-                            
+
                             // Create vertices at the corner positions
                             // AIDEV-NOTE: For B-spline surfaces with our knot vectors,
                             // we use the corner control points directly
@@ -603,13 +644,13 @@ impl<'a> TryFrom<PatchTableWithControlPointsRef<'a>> for Shell {
                             let v10 = Vertex::new(control_matrix[0][3]); // Bottom-right
                             let v11 = Vertex::new(control_matrix[3][3]); // Top-right
                             let v01 = Vertex::new(control_matrix[3][0]); // Top-left
-                            
+
                             // Create edges with B-spline curves
                             let e0 = Edge::new(&v00, &v10, Curve::BSplineCurve(bottom_curve));
                             let e1 = Edge::new(&v10, &v11, Curve::BSplineCurve(right_curve));
                             let e2 = Edge::new(&v11, &v01, Curve::BSplineCurve(top_curve));
                             let e3 = Edge::new(&v01, &v00, Curve::BSplineCurve(left_curve));
-                            
+
                             // Create wire and face
                             let wire = Wire::from(vec![e0, e1, e2, e3]);
                             let face = Face::new(vec![wire], Surface::BSplineSurface(surface));
@@ -622,11 +663,14 @@ impl<'a> TryFrom<PatchTableWithControlPointsRef<'a>> for Shell {
                             let face = Face::new(vec![], Surface::BSplineSurface(surface));
                             faces.push(face);
                         }
-                        
+
                         patch_index += 1;
                     }
                 } else {
-                    eprintln!("  Skipping {} patches of type {:?}", num_patches, patch_type);
+                    eprintln!(
+                        "  Skipping {} patches of type {:?}",
+                        num_patches, patch_type
+                    );
                     patch_index += patches.patch_table.patch_array_patches_len(array_idx);
                 }
             }
@@ -652,28 +696,32 @@ impl<'a> TryFrom<PatchTableWithControlPointsRef<'a>> for Vec<Shell> {
             if let Some(desc) = patches.patch_table.patch_array_descriptor(array_idx) {
                 let patch_type = desc.patch_type();
                 // Handle Regular, GregoryBasis, and GregoryTriangle patches
-                if matches!(patch_type, PatchType::Regular | PatchType::GregoryBasis | PatchType::GregoryTriangle) {
+                if matches!(
+                    patch_type,
+                    PatchType::Regular | PatchType::GregoryBasis | PatchType::GregoryTriangle
+                ) {
                     for _ in 0..patches.patch_table.patch_array_patches_len(array_idx) {
-                        let patch = PatchRef::new(patches.patch_table, patch_index, patches.control_points);
-                        
+                        let patch =
+                            PatchRef::new(patches.patch_table, patch_index, patches.control_points);
+
                         // Get the control points matrix
                         let _control_matrix = patch.control_points()?;
-                        
+
                         // Convert to truck surface
                         let surface: BSplineSurface<Point3<f64>> = patch.try_into()?;
-                        
+
                         #[cfg(feature = "truck_export_boundary")]
                         {
                             // Create B-spline boundary curves from control points
                             // The valid surface region uses rows/columns 1 and 2
                             use truck_geometry::prelude::BSplineCurve;
-                            
+
                             // AIDEV-NOTE: Boundary control point extraction
                             // For OpenSubdiv B-spline patches with uniform knot vectors,
                             // we need to extract the correct boundary control points.
                             // Using all 4 control points for each edge to define the
                             // B-spline boundary curves.
-                            
+
                             // Bottom edge (row 0): (0,0), (0,1), (0,2), (0,3)
                             let bottom_cps = vec![
                                 control_matrix[0][0],
@@ -681,7 +729,7 @@ impl<'a> TryFrom<PatchTableWithControlPointsRef<'a>> for Vec<Shell> {
                                 control_matrix[0][2],
                                 control_matrix[0][3],
                             ];
-                            
+
                             // Right edge (column 3): (0,3), (1,3), (2,3), (3,3)
                             let right_cps = vec![
                                 control_matrix[0][3],
@@ -689,7 +737,7 @@ impl<'a> TryFrom<PatchTableWithControlPointsRef<'a>> for Vec<Shell> {
                                 control_matrix[2][3],
                                 control_matrix[3][3],
                             ];
-                            
+
                             // Top edge (row 3, reversed): (3,3), (3,2), (3,1), (3,0)
                             let top_cps = vec![
                                 control_matrix[3][3],
@@ -697,7 +745,7 @@ impl<'a> TryFrom<PatchTableWithControlPointsRef<'a>> for Vec<Shell> {
                                 control_matrix[3][1],
                                 control_matrix[3][0],
                             ];
-                            
+
                             // Left edge (column 0, reversed): (3,0), (2,0), (1,0), (0,0)
                             let left_cps = vec![
                                 control_matrix[3][0],
@@ -705,16 +753,17 @@ impl<'a> TryFrom<PatchTableWithControlPointsRef<'a>> for Vec<Shell> {
                                 control_matrix[1][0],
                                 control_matrix[0][0],
                             ];
-                            
+
                             // Create the same knot vector as the surface
-                            let edge_knots = KnotVec::from(vec![-3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0, 4.0]);
-                            
+                            let edge_knots =
+                                KnotVec::from(vec![-3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0, 4.0]);
+
                             // Create B-spline curves for edges
                             let bottom_curve = BSplineCurve::new(edge_knots.clone(), bottom_cps);
                             let right_curve = BSplineCurve::new(edge_knots.clone(), right_cps);
                             let top_curve = BSplineCurve::new(edge_knots.clone(), top_cps);
                             let left_curve = BSplineCurve::new(edge_knots, left_cps);
-                            
+
                             // Create vertices at the corner positions
                             // AIDEV-NOTE: For B-spline surfaces with our knot vectors,
                             // we use the corner control points directly
@@ -722,17 +771,17 @@ impl<'a> TryFrom<PatchTableWithControlPointsRef<'a>> for Vec<Shell> {
                             let v10 = Vertex::new(control_matrix[0][3]); // Bottom-right
                             let v11 = Vertex::new(control_matrix[3][3]); // Top-right
                             let v01 = Vertex::new(control_matrix[3][0]); // Top-left
-                            
+
                             // Create edges with B-spline curves
                             let e0 = Edge::new(&v00, &v10, Curve::BSplineCurve(bottom_curve));
                             let e1 = Edge::new(&v10, &v11, Curve::BSplineCurve(right_curve));
                             let e2 = Edge::new(&v11, &v01, Curve::BSplineCurve(top_curve));
                             let e3 = Edge::new(&v01, &v00, Curve::BSplineCurve(left_curve));
-                            
+
                             // Create wire and face
                             let wire = Wire::from(vec![e0, e1, e2, e3]);
                             let face = Face::new(vec![wire], Surface::BSplineSurface(surface));
-                            
+
                             // Create a shell with just this one face
                             shells.push(Shell::from(vec![face]));
                         }
@@ -743,7 +792,7 @@ impl<'a> TryFrom<PatchTableWithControlPointsRef<'a>> for Vec<Shell> {
                             let face = Face::new(vec![], Surface::BSplineSurface(surface));
                             shells.push(Shell::from(vec![face]));
                         }
-                        
+
                         patch_index += 1;
                     }
                 } else {
@@ -756,7 +805,7 @@ impl<'a> TryFrom<PatchTableWithControlPointsRef<'a>> for Vec<Shell> {
     }
 }
 
-/// Convert patch evaluation result to Point3
+/// Convert patch evaluation result to Point3.
 impl From<PatchEvalResult> for Point3<f64> {
     fn from(result: PatchEvalResult) -> Self {
         Point3::new(
@@ -767,13 +816,13 @@ impl From<PatchEvalResult> for Point3<f64> {
     }
 }
 
-/// Helper function to convert array to Vector3
+/// Helper function to convert array to Vector3.
 pub fn array_to_vector3(v: &[f32; 3]) -> Vector3<f64> {
     Vector3::new(v[0] as f64, v[1] as f64, v[2] as f64)
 }
 
-/// Create a triangular patch as a degenerate quad B-spline surface
-/// This is used to fill gaps near extraordinary vertices
+/// Create a triangular patch as a degenerate quad B-spline surface.
+/// This is used to fill gaps near extraordinary vertices.
 pub fn create_triangular_patch(
     p0: Point3<f64>,
     p1: Point3<f64>,
@@ -784,11 +833,11 @@ pub fn create_triangular_patch(
     // When OpenSubdiv doesn't generate Gregory patches, we need to create
     // triangular patches to fill the gaps. We do this by creating a degenerate
     // quad patch where one edge collapses to a point.
-    
+
     // Create control points for a degenerate quad patch
     // The patch will have one corner at the extraordinary vertex (center)
     // and form a triangle with p0, p1, p2
-    
+
     // Compute intermediate control points using cubic interpolation
     let c01 = Point3::from_vec((p0.to_vec() * 2.0 + p1.to_vec()) / 3.0);
     let c10 = Point3::from_vec((p1.to_vec() * 2.0 + p0.to_vec()) / 3.0);
@@ -796,54 +845,59 @@ pub fn create_triangular_patch(
     let _c20 = Point3::from_vec((p2.to_vec() * 2.0 + p0.to_vec()) / 3.0);
     let c12 = Point3::from_vec((p1.to_vec() * 2.0 + p2.to_vec()) / 3.0);
     let _c21 = Point3::from_vec((p2.to_vec() * 2.0 + p1.to_vec()) / 3.0);
-    
+
     // Center control points
     let cc = Point3::from_vec((p0.to_vec() + p1.to_vec() + p2.to_vec() + center.to_vec()) / 4.0);
     let cc0 = Point3::from_vec((center.to_vec() * 2.0 + p0.to_vec()) / 3.0);
     let cc1 = Point3::from_vec((center.to_vec() * 2.0 + p1.to_vec()) / 3.0);
     let cc2 = Point3::from_vec((center.to_vec() * 2.0 + p2.to_vec()) / 3.0);
-    
+
     // Build 4x4 control point matrix
     // Row 0: degenerate to center point
     let control_matrix = vec![
         vec![center, center, center, center],
         vec![cc0, cc, cc1, cc2],
-        vec![c02, Point3::from_vec((c02.to_vec() + c10.to_vec()) / 2.0), c10, c12],
+        vec![
+            c02,
+            Point3::from_vec((c02.to_vec() + c10.to_vec()) / 2.0),
+            c10,
+            c12,
+        ],
         vec![p0, c01, p1, p2],
     ];
-    
+
     // Use the same knot vectors as regular patches
     let u_knots = KnotVec::from(vec![-3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0, 4.0]);
     let v_knots = KnotVec::from(vec![-3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0, 4.0]);
-    
+
     BSplineSurface::new((u_knots, v_knots), control_matrix)
 }
 
-/// Extension trait for PatchTable to provide conversion methods
+/// Extension trait for PatchTable to provide conversion methods.
 pub trait PatchTableExt {
-    /// Create a wrapper for conversion to truck surfaces
+    /// Create a wrapper for conversion to truck surfaces.
     fn with_control_points<'a>(
         &'a self,
         control_points: &'a [[f32; 3]],
     ) -> PatchTableWithControlPointsRef<'a>;
 
-    /// Get a specific patch for conversion
+    /// Get a specific patch for conversion.
     fn patch<'a>(&'a self, index: usize, control_points: &'a [[f32; 3]]) -> PatchRef<'a>;
 
-    /// Convert patches to a truck shell with the given control points
+    /// Convert patches to a truck shell with the given control points.
     fn to_truck_shell(&self, control_points: &[[f32; 3]]) -> Result<Shell>;
 
-    /// Convert patches to truck surfaces with the given control points
+    /// Convert patches to truck surfaces with the given control points.
     fn to_truck_surfaces(
         &self,
         control_points: &[[f32; 3]],
     ) -> Result<Vec<BSplineSurface<Point3<f64>>>>;
 
     /// Convert patches to individual shells (one per patch) for disconnected
-    /// export
+    /// export.
     fn to_truck_shells(&self, control_points: &[[f32; 3]]) -> Result<Vec<Shell>>;
-    
-    /// Convert patches to a shell with gap filling for extraordinary vertices
+
+    /// Convert patches to a shell with gap filling for extraordinary vertices.
     fn to_truck_shell_with_gap_filling(&self, control_points: &[[f32; 3]]) -> Result<Shell>;
 }
 
@@ -879,30 +933,30 @@ impl PatchTableExt for PatchTable {
         let wrapper = self.with_control_points(control_points);
         Vec::<Shell>::try_from(wrapper)
     }
-    
+
     fn to_truck_shell_with_gap_filling(&self, control_points: &[[f32; 3]]) -> Result<Shell> {
         // AIDEV-NOTE: Gap filling for extraordinary vertices
         // This method detects gaps in the patch layout and fills them with
         // triangular patches. This is a workaround for when OpenSubdiv
         // doesn't generate Gregory patches at extraordinary vertices.
-        
+
         // First, convert regular patches
         let wrapper = self.with_control_points(control_points);
         let shell = Shell::try_from(wrapper)?;
-        
+
         // Analyze patch connectivity to detect gaps
         let num_faces = shell.face_iter().count();
         println!("Gap-filling: Initial shell has {} faces", num_faces);
-        
+
         // For a cube with extraordinary vertices at corners:
         // - 8 corners with valence 3
         // - Each corner should have 3 patches meeting
         // - If OpenSubdiv generates only Regular patches, gaps may appear
-        
+
         // Count edges and vertices in the shell
         let mut edge_count = 0;
         let mut vertex_positions = std::collections::HashSet::new();
-        
+
         for face in shell.face_iter() {
             for wire in face.boundaries() {
                 for edge in wire.edge_iter() {
@@ -910,7 +964,7 @@ impl PatchTableExt for PatchTable {
                     // Get vertex positions to count unique vertices
                     let v0_pos = edge.front().point();
                     let v1_pos = edge.back().point();
-                    
+
                     // Store positions with some tolerance for uniqueness
                     let v0_key = (
                         (v0_pos.x * 1000.0).round() as i32,
@@ -922,28 +976,33 @@ impl PatchTableExt for PatchTable {
                         (v1_pos.y * 1000.0).round() as i32,
                         (v1_pos.z * 1000.0).round() as i32,
                     );
-                    
+
                     vertex_positions.insert(v0_key);
                     vertex_positions.insert(v1_key);
                 }
             }
         }
-        
+
         let num_vertices = vertex_positions.len();
-        println!("Shell has {} unique vertices and {} edges", num_vertices, edge_count);
-        
+        println!(
+            "Shell has {} unique vertices and {} edges",
+            num_vertices, edge_count
+        );
+
         // For a cube:
         // - Should have 8 vertices after subdivision with extraordinary corners
         // - Each vertex has valence 3 (3 edges meeting)
         // - Total edges = 12 for a cube
-        
+
         // With proper boundary extraction, patches should meet correctly
         // The boundary fix ensures that adjacent patches share exact boundary curves
-        
+
         println!("Gap-filling analysis complete.");
-        println!("Note: With corrected boundary extraction, patches should meet properly at edges.");
+        println!(
+            "Note: With corrected boundary extraction, patches should meet properly at edges."
+        );
         println!("Any remaining gaps would be at extraordinary vertices where > 4 patches meet.");
-        
+
         Ok(shell)
     }
 }
