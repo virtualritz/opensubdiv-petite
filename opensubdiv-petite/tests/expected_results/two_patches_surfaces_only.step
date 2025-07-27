@@ -1,7 +1,7 @@
 ISO-10303-21;
 HEADER;
 FILE_DESCRIPTION(('Shape Data from Truck'), '2;1');
-FILE_NAME('two_patches_surfaces_only.step', '2025-07-26 22:26:43.714995561', (('')), (('')), 'truck', '', '');
+FILE_NAME('two_patches_surfaces_only.step', '2025-07-27 10:39:21.808613604', (('')), (('')), 'truck', '', '');
 FILE_SCHEMA(('ISO-10303-042'));
 ENDSEC;
 DATA;

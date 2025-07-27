@@ -54,7 +54,7 @@ fn test_index_equality() {
     let idx1 = Index(42);
     let idx2 = Index(42);
     let idx3 = Index(43);
-    
+
     assert_eq!(idx1, idx2);
     assert_ne!(idx1, idx3);
 }
@@ -64,7 +64,7 @@ fn test_index_ordering() {
     let idx1 = Index(1);
     let idx2 = Index(2);
     let idx3 = Index(2);
-    
+
     assert!(idx1 < idx2);
     assert!(idx2 > idx1);
     assert!(idx2 <= idx3);
@@ -74,11 +74,11 @@ fn test_index_ordering() {
 #[test]
 fn test_index_hash() {
     use std::collections::HashMap;
-    
+
     let mut map = HashMap::new();
     map.insert(Index(1), "one");
     map.insert(Index(2), "two");
-    
+
     assert_eq!(map.get(&Index(1)), Some(&"one"));
     assert_eq!(map.get(&Index(2)), Some(&"two"));
     assert_eq!(map.get(&Index(3)), None);
@@ -87,7 +87,7 @@ fn test_index_hash() {
 #[test]
 fn test_index_in_vec() {
     let indices = vec![Index(0), Index(1), Index(2)];
-    
+
     assert_eq!(indices[0].0, 0);
     assert_eq!(indices[1].0, 1);
     assert_eq!(indices[2].0, 2);
@@ -97,11 +97,11 @@ fn test_index_in_vec() {
 fn test_index_arithmetic() {
     let idx1 = Index(10);
     let idx2 = Index(5);
-    
+
     // Can access the inner value for arithmetic.
     let sum = idx1.0 + idx2.0;
     assert_eq!(sum, 15);
-    
+
     let diff = idx1.0 - idx2.0;
     assert_eq!(diff, 5);
 }
