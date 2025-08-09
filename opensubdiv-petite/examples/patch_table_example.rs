@@ -1,8 +1,8 @@
 //! Example demonstrating patch table creation and usage
 
 use opensubdiv_petite::far::{
-    EndCapType, PatchTable, PatchTableOptions, PatchType, TopologyDescriptor,
-    TopologyRefiner, TopologyRefinerOptions, UniformRefinementOptions,
+    EndCapType, PatchTable, PatchTableOptions, TopologyDescriptor, TopologyRefiner,
+    TopologyRefinerOptions, UniformRefinementOptions,
 };
 
 fn main() {

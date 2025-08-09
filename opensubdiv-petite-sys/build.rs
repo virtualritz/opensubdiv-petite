@@ -23,8 +23,6 @@ pub fn main() {
         .define("NO_REGRESSION", "1")
         .define("NO_PTEX", "1")
         .define("NO_DOC", "1")
-        .define("NO_OPENCL", "1")
-        .define("NO_CLEW", "1")
         .define("NO_TBB", "1")
         .define("NO_GLFW", "1")
         .define("NO_OPENGL", "1") // Disable OpenGL to avoid GPU-related build issues
@@ -34,6 +32,13 @@ pub fn main() {
     // Always disable CUDA unless explicitly enabled
     #[cfg(not(feature = "cuda"))]
     open_subdiv.define("NO_CUDA", "1");
+
+    // Disable OpenCL unless explicitly enabled
+    #[cfg(not(feature = "opencl"))]
+    {
+        open_subdiv.define("NO_OPENCL", "1");
+        open_subdiv.define("NO_CLEW", "1");
+    }
 
     #[cfg(any(target_os = "macos", not(feature = "openmp")))]
     open_subdiv.define("NO_OMP", "1");
@@ -83,7 +88,7 @@ pub fn main() {
 
     osd_capi
         .include(&osd_inlude_path)
-        .include("OpenSubdiv")  // Add source directory for headers like patchBasis.h
+        .include("OpenSubdiv") // Add source directory for headers like patchBasis.h
         .cpp(true)
         .static_flag(true)
         .flag("-std=c++14")
@@ -109,6 +114,18 @@ pub fn main() {
         .file("c-api/osd/cuda_evaluator.cpp")
         .file("c-api/osd/cuda_vertex_buffer.cpp");
 
+    #[cfg(all(feature = "metal", target_os = "macos"))]
+    osd_capi
+        .include(&osd_inlude_path)
+        .file("c-api/osd/metal_evaluator.cpp")
+        .file("c-api/osd/metal_vertex_buffer.cpp");
+
+    #[cfg(feature = "opencl")]
+    osd_capi
+        .include(&osd_inlude_path)
+        .file("c-api/osd/opencl_evaluator.cpp")
+        .file("c-api/osd/opencl_vertex_buffer.cpp");
+
     osd_capi.compile("osd-capi");
 
     println!("cargo:rustc-link-lib=static=osd-capi");
@@ -121,6 +138,19 @@ pub fn main() {
 
     #[cfg(feature = "cuda")]
     println!("cargo:rustc-link-lib=static=osdGPU");
+
+    #[cfg(feature = "metal")]
+    {
+        println!("cargo:rustc-link-lib=static=osdGPU");
+        println!("cargo:rustc-link-lib=framework=Metal");
+        println!("cargo:rustc-link-lib=framework=Foundation");
+    }
+
+    #[cfg(feature = "opencl")]
+    {
+        println!("cargo:rustc-link-lib=static=osdGPU");
+        println!("cargo:rustc-link-lib=dylib=OpenCL");
+    }
 
     // Link appropriate C++ standard library
     #[cfg(target_os = "linux")]
