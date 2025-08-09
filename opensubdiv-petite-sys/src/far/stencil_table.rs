@@ -125,5 +125,11 @@ extern "C" {
     /// Returns the stencil interpolation weights
     pub fn StencilTable_GetWeights(st: StencilTablePtr) -> FloatVectorRef;
     /// Update values by applying the stencil table
-    pub fn StencilTable_UpdateValues(st: StencilTablePtr, src: *const f32, dst: *mut f32, start: i32, end: i32);
+    pub fn StencilTable_UpdateValues(
+        st: StencilTablePtr,
+        src: *const f32,
+        dst: *mut f32,
+        start: i32,
+        end: i32,
+    );
 }
