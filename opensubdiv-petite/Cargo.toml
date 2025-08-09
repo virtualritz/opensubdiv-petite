@@ -59,6 +59,11 @@ name = "osd_tutorial_0_cuda"
 required-features = [ "cuda" ]
 
 [[example]]
+path = "examples/osd_tutorial_0_metal.rs"
+name = "osd_tutorial_0_metal"
+required-features = [ "metal" ]
+
+[[example]]
 path = "examples/bevy.rs"
 name = "bevy"
 required-features = [ "tri_mesh_buffers", "bevy" ]
