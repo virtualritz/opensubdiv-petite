@@ -72,5 +72,10 @@ path = "examples/truck_integration_example.rs"
 name = "truck_integration_example"
 required-features = ["truck"]
 
+[[bin]]
+name = "generator"
+path = "src/bin/generator.rs"
+required-features = ["tri_mesh_buffers"]
+
 [package.metadata.docs.rs]
 features = ["tri_mesh_buffers", "topology_validation"]
