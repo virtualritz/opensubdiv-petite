@@ -1,4 +1,4 @@
-#include <opensubdiv/osd/clComputeContext.h>
+#ifdef OPENSUBDIV_HAS_OPENCL
 #include <opensubdiv/osd/clEvaluator.h>
 #include <opensubdiv/osd/clVertexBuffer.h>
 
@@ -32,3 +32,17 @@ bool CLEvaluator_EvalStencils(CLVertexBuffer* src_buffer,
         kernel, command_queue);
 }
 }
+#else
+// Stub implementations when OpenCL is not available
+typedef void CLStencilTable;
+typedef void CLVertexBuffer;
+struct BufferDescriptor { int offset, length, stride; };
+
+extern "C" {
+CLStencilTable* CLStencilTable_Create(const void*, void*) { return nullptr; }
+void CLStencilTable_destroy(CLStencilTable*) {}
+bool CLEvaluator_EvalStencils(CLVertexBuffer*, BufferDescriptor,
+                              CLVertexBuffer*, BufferDescriptor,
+                              CLStencilTable*, void*, void*) { return false; }
+}
+#endif // OPENSUBDIV_HAS_OPENCL

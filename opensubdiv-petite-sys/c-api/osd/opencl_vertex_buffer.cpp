@@ -1,3 +1,4 @@
+#ifdef OPENSUBDIV_HAS_OPENCL
 #include <opensubdiv/osd/clVertexBuffer.h>
 
 typedef OpenSubdiv::Osd::CLVertexBuffer CLVertexBuffer;
@@ -36,3 +37,16 @@ void* CLVertexBuffer_BindCLBuffer(CLVertexBuffer* vb, void* clCommandQueue) {
     return vb->BindCLBuffer(clCommandQueue);
 }
 }
+#else
+// Stub implementations when OpenCL is not available
+typedef void CLVertexBuffer;
+
+extern "C" {
+CLVertexBuffer* CLVertexBuffer_Create(int, int, void*) { return nullptr; }
+void CLVertexBuffer_destroy(CLVertexBuffer*) {}
+void CLVertexBuffer_UpdateData(CLVertexBuffer*, const float*, int, int, void*) {}
+int CLVertexBuffer_GetNumElements(CLVertexBuffer*) { return 0; }
+int CLVertexBuffer_GetNumVertices(CLVertexBuffer*) { return 0; }
+void* CLVertexBuffer_BindCLBuffer(CLVertexBuffer*, void*) { return nullptr; }
+}
+#endif // OPENSUBDIV_HAS_OPENCL
