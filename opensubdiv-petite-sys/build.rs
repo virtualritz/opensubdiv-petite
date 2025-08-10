@@ -33,11 +33,24 @@ pub fn main() {
     #[cfg(not(feature = "cuda"))]
     open_subdiv.define("NO_CUDA", "1");
     
-    // When CUDA is enabled, add flag to support GCC 13+
+    // When CUDA is enabled, configure for better compatibility
     #[cfg(feature = "cuda")]
     {
-        // Set OSD_CUDA_NVCC_FLAGS to allow unsupported compilers (GCC 13+)
-        open_subdiv.define("OSD_CUDA_NVCC_FLAGS", "-allow-unsupported-compiler");
+        // Use Clang if available for better CUDA compatibility
+        if std::process::Command::new("clang")
+            .arg("--version")
+            .output()
+            .is_ok()
+        {
+            open_subdiv
+                .define("CMAKE_C_COMPILER", "clang")
+                .define("CMAKE_CXX_COMPILER", "clang++");
+            // Try to use clang as the host compiler for nvcc
+            open_subdiv.define("OSD_CUDA_NVCC_FLAGS", "-allow-unsupported-compiler --compiler-bindir /usr/bin/clang++");
+        } else {
+            // Fallback to GCC with allow-unsupported-compiler flag
+            open_subdiv.define("OSD_CUDA_NVCC_FLAGS", "-allow-unsupported-compiler");
+        }
     }
 
     // Disable OpenCL unless explicitly enabled
