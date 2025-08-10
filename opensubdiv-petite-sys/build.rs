@@ -32,6 +32,13 @@ pub fn main() {
     // Always disable CUDA unless explicitly enabled
     #[cfg(not(feature = "cuda"))]
     open_subdiv.define("NO_CUDA", "1");
+    
+    // When CUDA is enabled, add flag to support GCC 13+
+    #[cfg(feature = "cuda")]
+    {
+        // Set OSD_CUDA_NVCC_FLAGS to allow unsupported compilers (GCC 13+)
+        open_subdiv.define("OSD_CUDA_NVCC_FLAGS", "-allow-unsupported-compiler");
+    }
 
     // Disable OpenCL unless explicitly enabled
     #[cfg(not(feature = "opencl"))]
