@@ -93,8 +93,8 @@ pub fn export_patches_as_bspline_surfaces<W: Write>(
                     write!(writer, "surf 0.0 1.0 0.0 1.0")?;
 
                     // Write control point indices in row-major order
-                    for i in 0..16 {
-                        let cv_idx = patch_cvs[i].0 as usize;
+                    for cv in patch_cvs.iter().take(16) {
+                        let cv_idx = cv.0 as usize;
                         if cv_idx >= control_points.len() {
                             return Err(ObjExportError::InvalidControlPoints);
                         }
