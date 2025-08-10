@@ -36,20 +36,24 @@ pub fn main() {
     // When CUDA is enabled, configure for better compatibility
     #[cfg(feature = "cuda")]
     {
-        // Use Clang if available for better CUDA compatibility
-        if std::process::Command::new("clang")
+        // CUDA 12.0 has compatibility issues with GCC 13's headers (_Float32 types)
+        // We need to either use GCC 12 or define the missing types
+        
+        // Check if gcc-12 is available
+        if std::process::Command::new("gcc-12")
             .arg("--version")
             .output()
             .is_ok()
         {
-            open_subdiv
-                .define("CMAKE_C_COMPILER", "clang")
-                .define("CMAKE_CXX_COMPILER", "clang++");
-            // Try to use clang as the host compiler for nvcc
-            open_subdiv.define("OSD_CUDA_NVCC_FLAGS", "-allow-unsupported-compiler --compiler-bindir /usr/bin/clang++");
+            // Use GCC 12 as the host compiler for CUDA
+            open_subdiv.define("OSD_CUDA_NVCC_FLAGS", "-ccbin gcc-12");
+            env::set_var("NVCC_PREPEND_FLAGS", "-ccbin /usr/bin/g++-12");
+            env::set_var("CUDAHOSTCXX", "/usr/bin/g++-12");
         } else {
-            // Fallback to GCC with allow-unsupported-compiler flag
-            open_subdiv.define("OSD_CUDA_NVCC_FLAGS", "-allow-unsupported-compiler");
+            // Fallback: Define the _Float types to work around the incompatibility
+            // This is less ideal but works when GCC 12 is not available
+            open_subdiv.define("OSD_CUDA_NVCC_FLAGS", 
+                "-allow-unsupported-compiler -D_Float32=float -D_Float64=double -D_Float32x=float -D_Float64x=\"long double\" -D_Float128=\"long double\"");
         }
     }
 
@@ -159,11 +163,13 @@ pub fn main() {
     #[cfg(feature = "cuda")]
     {
         println!("cargo:rustc-link-lib=static=osdGPU");
-        // Link CUDA runtime library if available
+        // Link CUDA runtime library - check common locations
         if std::path::Path::new("/usr/local/cuda/lib64").exists() {
             println!("cargo:rustc-link-search=native=/usr/local/cuda/lib64");
-            println!("cargo:rustc-link-lib=dylib=cudart");
+        } else if std::path::Path::new("/usr/lib/x86_64-linux-gnu/libcudart.so").exists() {
+            println!("cargo:rustc-link-search=native=/usr/lib/x86_64-linux-gnu");
         }
+        println!("cargo:rustc-link-lib=dylib=cudart");
     }
 
     #[cfg(feature = "metal")]
