@@ -106,24 +106,21 @@ The following GPU backends are now available:
 
 ### Known Issues
 
-#### CUDA Compiler Compatibility
-CUDA 12.0 officially supports only up to GCC 12. On systems with GCC 13+ or when using Clang, you may encounter compilation errors related to C++ standard library headers.
+#### CUDA Compiler Compatibility  
+While CUDA documentation states support for GCC up to version 15, CUDA 12.0 has compatibility issues with GCC 13+ due to changes in C++ standard library headers (specifically `_Float32` types in math headers).
 
-**Workarounds**:
-1. **Install and use GCC 12** (recommended):
-   ```bash
-   sudo apt-get install gcc-12 g++-12
-   CC=gcc-12 CXX=g++-12 cargo build --features cuda
-   ```
+**Solution**:
+The build system automatically detects and uses GCC 12 if available for CUDA compilation. On Ubuntu 24.04:
 
-2. **Build without CUDA support** on systems with GCC 13+:
-   ```bash
-   cargo build  # Without cuda feature
-   ```
+```bash
+# Install GCC 12 (if not already installed)
+sudo apt-get install gcc-12 g++-12
 
-3. **Wait for CUDA 12.4+** which has better support for newer compilers.
+# Build with CUDA support (automatic GCC 12 detection)
+cargo build --features cuda
+```
 
-Note: We've attempted to add compatibility flags (`-allow-unsupported-compiler`) but fundamental incompatibilities between CUDA 12.0 and newer C++ standard libraries remain.
+The build script will automatically use GCC 12 for CUDA compilation while the rest of your system continues to use GCC 13+.
 
 ## Help Wanted
 
