@@ -94,17 +94,32 @@ wrapper:
 cargo doc -p opensubdiv --no-deps --open
 ```
 
+## GPU Backend Support
+
+### Available GPU Backends
+
+The following GPU backends are now available:
+
+* **CUDA** (NVIDIA GPUs) - Enable with `cuda` feature flag
+* **Metal** (Apple GPUs) - Enable with `metal` feature flag  
+* **OpenCL** (Cross-platform) - Enable with `opencl` feature flag
+
+### Known Issues
+
+#### CUDA with GCC 13+
+When building with CUDA support on systems with GCC 13 or newer, you may encounter compilation errors. CUDA 12.0 officially supports up to GCC 12. While we've added the `-allow-unsupported-compiler` flag to the build configuration, there are still compatibility issues with system headers.
+
+**Workaround**: Use GCC 12 or earlier, or build without CUDA support on systems with GCC 13+.
+
 ## Help Wanted
 
-This is an early release. None of the GPU acceleration backends are yet exposed
-on the Rust side.
-
-Specifically (in no particular order) these are issue for which you can put your
+Specifically (in no particular order) these are issues for which you can put your
 hand up or just open a PR:
 
-* [ ] Add support for the *CUDA* backend/[ensure *CUDA* code works](https://github.com/virtualritz/opensubdiv-petite/issues/6).
+* [x] Add support for the *CUDA* backend (initial support added, GCC 13+ compatibility issues remain).
 * [ ] [Add support for the *DX11* backend](https://github.com/virtualritz/opensubdiv-petite/issues/4).
-* [ ] [Add support for the *Metal* backend](https://github.com/virtualritz/opensubdiv-petite/issues/3).
+* [x] Add support for the *Metal* backend (initial support added).
+* [x] Add support for the *OpenCL* backend (initial support added).
 * [ ] [Fix *OpenMP* detection on macOS](https://github.com/virtualritz/opensubdiv-petite/issues/2).
 * [ ] [Fix `StencilTable`](https://github.com/virtualritz/opensubdiv-petite/issues/1).
 * [ ] [Add `PatchTable`](https://github.com/virtualritz/opensubdiv-petite/issues/5).
