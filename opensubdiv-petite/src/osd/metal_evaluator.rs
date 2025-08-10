@@ -1,11 +1,36 @@
 use super::buffer_descriptor::BufferDescriptor;
-use super::metal_vertex_buffer::MetalVertexBuffer;
+use super::metal_vertex_buffer::{MetalCommandBuffer, MetalDevice, MetalVertexBuffer};
 use crate::far::StencilTable;
 
 use opensubdiv_petite_sys as sys;
 
 use crate::Error;
+use std::ptr::NonNull;
+use std::rc::Rc;
 type Result<T, E = Error> = std::result::Result<T, E>;
+
+/// Safe wrapper for Metal compute encoder.
+#[derive(Debug, Clone)]
+pub struct MetalComputeEncoder {
+    ptr: Rc<NonNull<std::ffi::c_void>>,
+}
+
+impl MetalComputeEncoder {
+    /// Create a new Metal compute encoder wrapper from a raw pointer.
+    ///
+    /// # Safety
+    ///
+    /// The caller must ensure that the pointer is valid and remains valid
+    /// for the lifetime of this wrapper.
+    pub unsafe fn from_ptr(ptr: *mut std::ffi::c_void) -> Option<Self> {
+        NonNull::new(ptr).map(|ptr| Self { ptr: Rc::new(ptr) })
+    }
+
+    /// Get the raw pointer for FFI calls.
+    pub(crate) fn as_ptr(&self) -> *mut std::ffi::c_void {
+        self.ptr.as_ptr()
+    }
+}
 
 /// Generic static eval stencils function for Metal.
 ///
@@ -27,8 +52,8 @@ pub fn evaluate_stencils(
     dst_buffer: &mut MetalVertexBuffer,
     dst_desc: BufferDescriptor,
     stencil_table: &MetalStencilTable,
-    command_buffer: *const std::ffi::c_void,
-    compute_encoder: *const std::ffi::c_void,
+    command_buffer: &MetalCommandBuffer,
+    compute_encoder: &MetalComputeEncoder,
 ) -> Result<()> {
     unsafe {
         if sys::osd::MTLComputeEvaluator_EvalStencils(
@@ -37,8 +62,8 @@ pub fn evaluate_stencils(
             dst_buffer.0,
             dst_desc.0,
             stencil_table.ptr,
-            command_buffer,
-            compute_encoder,
+            command_buffer.as_ptr() as *const _,
+            compute_encoder.as_ptr() as *const _,
         ) {
             Ok(())
         } else {
@@ -53,8 +78,9 @@ pub struct MetalStencilTable<'a> {
 }
 
 impl<'a> MetalStencilTable<'a> {
-    pub fn new(st: &StencilTable, context: *const std::ffi::c_void) -> MetalStencilTable<'_> {
-        let ptr = unsafe { sys::osd::MTLStencilTable_Create(st.0, context) };
+    /// Create a new Metal stencil table from a Far stencil table.
+    pub fn new(st: &'a StencilTable, device: &MetalDevice) -> MetalStencilTable<'a> {
+        let ptr = unsafe { sys::osd::MTLStencilTable_Create(st.0, device.as_ptr() as *const _) };
         if ptr.is_null() {
             panic!("Could not create MetalStencilTable");
         }

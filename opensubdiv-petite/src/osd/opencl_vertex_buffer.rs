@@ -1,5 +1,53 @@
 use opensubdiv_petite_sys as sys;
 use std::convert::TryInto;
+use std::ptr::NonNull;
+use std::rc::Rc;
+
+/// Safe wrapper for OpenCL context.
+#[derive(Debug, Clone)]
+pub struct OpenCLContext {
+    ptr: Rc<NonNull<std::ffi::c_void>>,
+}
+
+impl OpenCLContext {
+    /// Create a new OpenCL context wrapper from a raw pointer.
+    ///
+    /// # Safety
+    ///
+    /// The caller must ensure that the pointer is valid and remains valid
+    /// for the lifetime of this wrapper.
+    pub unsafe fn from_ptr(ptr: *mut std::ffi::c_void) -> Option<Self> {
+        NonNull::new(ptr).map(|ptr| Self { ptr: Rc::new(ptr) })
+    }
+
+    /// Get the raw pointer for FFI calls.
+    pub(crate) fn as_ptr(&self) -> *mut std::ffi::c_void {
+        self.ptr.as_ptr()
+    }
+}
+
+/// Safe wrapper for OpenCL command queue.
+#[derive(Debug, Clone)]
+pub struct OpenCLCommandQueue {
+    ptr: Rc<NonNull<std::ffi::c_void>>,
+}
+
+impl OpenCLCommandQueue {
+    /// Create a new OpenCL command queue wrapper from a raw pointer.
+    ///
+    /// # Safety
+    ///
+    /// The caller must ensure that the pointer is valid and remains valid
+    /// for the lifetime of this wrapper.
+    pub unsafe fn from_ptr(ptr: *mut std::ffi::c_void) -> Option<Self> {
+        NonNull::new(ptr).map(|ptr| Self { ptr: Rc::new(ptr) })
+    }
+
+    /// Get the raw pointer for FFI calls.
+    pub(crate) fn as_ptr(&self) -> *mut std::ffi::c_void {
+        self.ptr.as_ptr()
+    }
+}
 
 /// Concrete vertex buffer class for OpenCL subdivision.
 ///
@@ -16,17 +64,18 @@ impl Drop for OpenCLVertexBuffer {
 }
 
 impl OpenCLVertexBuffer {
+    /// Create a new OpenCL vertex buffer.
     #[inline]
     pub fn new(
         elements_len: usize,
         vertices_len: usize,
-        cl_context: *const std::ffi::c_void,
+        context: &OpenCLContext,
     ) -> OpenCLVertexBuffer {
         let ptr = unsafe {
             sys::osd::CLVertexBuffer_Create(
                 elements_len.try_into().unwrap(),
                 vertices_len.try_into().unwrap(),
-                cl_context,
+                context.as_ptr() as *const _,
             )
         };
         if ptr.is_null() {
@@ -50,11 +99,8 @@ impl OpenCLVertexBuffer {
 
     /// Get the OpenCL buffer object.
     #[inline]
-    pub fn bind_cl_buffer(
-        &self,
-        cl_command_queue: *const std::ffi::c_void,
-    ) -> *const std::ffi::c_void {
-        unsafe { sys::osd::CLVertexBuffer_BindCLBuffer(self.0, cl_command_queue) }
+    pub fn bind_cl_buffer(&self, command_queue: &OpenCLCommandQueue) -> *const std::ffi::c_void {
+        unsafe { sys::osd::CLVertexBuffer_BindCLBuffer(self.0, command_queue.as_ptr() as *const _) }
     }
 
     /// This method is meant to be used in client code in order to provide
@@ -65,7 +111,7 @@ impl OpenCLVertexBuffer {
         src: &[f32],
         start_vertex: usize,
         vertices_len: usize,
-        cl_command_queue: *const std::ffi::c_void,
+        command_queue: &OpenCLCommandQueue,
     ) {
         // do some basic error checking
         let elements_len = self.elements_len();
@@ -92,7 +138,7 @@ impl OpenCLVertexBuffer {
                 src.as_ptr(),
                 start_vertex.try_into().unwrap(),
                 vertices_len.try_into().unwrap(),
-                cl_command_queue,
+                command_queue.as_ptr() as *const _,
             );
         }
     }

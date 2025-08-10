@@ -74,9 +74,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .flat_map(|v| v.iter().copied())
             .collect();
 
-        println!(
-            "Level {level}: interpolating from {prev_count} vertices"
-        );
+        println!("Level {level}: interpolating from {prev_count} vertices");
 
         if let Some(refined) = primvar_refiner.interpolate(level, 3, &src_data) {
             let level_vertices: Vec<[f32; 3]> = refined

@@ -137,7 +137,14 @@ pub fn main() {
     println!("cargo:rustc-link-lib=static=osdOMP");
 
     #[cfg(feature = "cuda")]
-    println!("cargo:rustc-link-lib=static=osdGPU");
+    {
+        println!("cargo:rustc-link-lib=static=osdGPU");
+        // Link CUDA runtime library if available
+        if std::path::Path::new("/usr/local/cuda/lib64").exists() {
+            println!("cargo:rustc-link-search=native=/usr/local/cuda/lib64");
+            println!("cargo:rustc-link-lib=dylib=cudart");
+        }
+    }
 
     #[cfg(feature = "metal")]
     {

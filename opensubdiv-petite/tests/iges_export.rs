@@ -2,8 +2,8 @@ mod test_utils;
 use test_utils::*;
 
 use opensubdiv_petite::far::{
-    AdaptiveRefinementOptions, PatchTable, PatchTableOptions, PrimvarRefiner,
-    TopologyDescriptor, TopologyRefiner, TopologyRefinerOptions,
+    AdaptiveRefinementOptions, PatchTable, PatchTableOptions, PrimvarRefiner, TopologyDescriptor,
+    TopologyRefiner, TopologyRefinerOptions,
 };
 use opensubdiv_petite::iges_export::PatchTableIgesExt;
 

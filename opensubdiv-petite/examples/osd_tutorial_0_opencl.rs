@@ -1,14 +1,12 @@
-#![cfg(target_os = "macos")]
-
 use opensubdiv_petite::{far, osd};
 
 fn main() {
-    println!("Metal example for OpenSubdiv");
-    println!("Note: This example requires Metal framework setup which is beyond the scope of this basic example.");
+    println!("OpenCL example for OpenSubdiv");
+    println!("Note: This example requires OpenCL runtime setup which is beyond the scope of this basic example.");
     println!("You would need to:");
-    println!("1. Initialize a Metal device");
-    println!("2. Create command queue and command buffers");
-    println!("3. Pass those to the Metal evaluator");
+    println!("1. Initialize an OpenCL context");
+    println!("2. Create command queue");
+    println!("3. Pass those to the OpenCL evaluator");
 
     let vertices = [
         -0.5, -0.5, 0.5, 0.5, -0.5, 0.5, -0.5, 0.5, 0.5, 0.5, 0.5, 0.5, -0.5, 0.5, -0.5, 0.5, 0.5,
@@ -57,33 +55,33 @@ fn main() {
     println!("Created topology with {} coarse vertices", n_coarse_verts);
     println!("Refined to {} vertices", n_refined_verts);
 
-    // Metal implementation would go here
+    // OpenCL implementation would go here
     // You would need to:
-    // 1. Initialize Metal and wrap the device/buffers in safe wrappers:
-    //    let device_ptr = ...; // Get Metal device
-    //    let command_buffer_ptr = ...; // Create command buffer
-    //    let compute_encoder_ptr = ...; // Create compute encoder
+    // 1. Initialize OpenCL and wrap the context/queue in safe wrappers:
+    //    let cl_context_ptr = ...; // Initialize OpenCL context
+    //    let cl_queue_ptr = ...;   // Create command queue
+    //    let cl_kernel_ptr = ...;  // Create kernel
     //
-    //    let device = unsafe { osd::metal_vertex_buffer::MetalDevice::from_ptr(device_ptr) }
-    //        .expect("Failed to create Metal device wrapper");
-    //    let command_buffer = unsafe { osd::metal_vertex_buffer::MetalCommandBuffer::from_ptr(command_buffer_ptr) }
-    //        .expect("Failed to create Metal command buffer wrapper");
-    //    let compute_encoder = unsafe { osd::metal_evaluator::MetalComputeEncoder::from_ptr(compute_encoder_ptr) }
-    //        .expect("Failed to create Metal compute encoder wrapper");
+    //    let context = unsafe { osd::opencl_vertex_buffer::OpenCLContext::from_ptr(cl_context_ptr) }
+    //        .expect("Failed to create OpenCL context wrapper");
+    //    let command_queue = unsafe { osd::opencl_vertex_buffer::OpenCLCommandQueue::from_ptr(cl_queue_ptr) }
+    //        .expect("Failed to create OpenCL command queue wrapper");
+    //    let kernel = unsafe { osd::opencl_evaluator::OpenCLKernel::from_ptr(cl_kernel_ptr) }
+    //        .expect("Failed to create OpenCL kernel wrapper");
     //
     // 2. Create vertex buffers using safe API:
-    //    let src_buffer = osd::metal_vertex_buffer::MetalVertexBuffer::new(3, n_coarse_verts, &device);
-    //    let dst_buffer = osd::metal_vertex_buffer::MetalVertexBuffer::new(3, n_refined_verts, &device);
+    //    let src_buffer = osd::opencl_vertex_buffer::OpenCLVertexBuffer::new(3, n_coarse_verts, &context);
+    //    let dst_buffer = osd::opencl_vertex_buffer::OpenCLVertexBuffer::new(3, n_refined_verts, &context);
     //
     // 3. Create stencil table using safe API:
-    //    let metal_stencil_table = osd::metal_evaluator::MetalStencilTable::new(&stencil_table, &device);
+    //    let opencl_stencil_table = osd::opencl_evaluator::OpenCLStencilTable::new(&stencil_table, &context);
     //
     // 4. Update data and evaluate using safe API:
-    //    src_buffer.update_data(&vertices, 0, n_coarse_verts, &command_buffer);
+    //    src_buffer.update_data(&vertices, 0, n_coarse_verts, &command_queue);
     //    let src_desc = osd::BufferDescriptor::new(0, 3, 3);
     //    let dst_desc = osd::BufferDescriptor::new(0, 3, 3);
-    //    osd::metal_evaluator::evaluate_stencils(
+    //    osd::opencl_evaluator::evaluate_stencils(
     //        &src_buffer, src_desc, &mut dst_buffer, dst_desc,
-    //        &metal_stencil_table, &command_buffer, &compute_encoder
+    //        &opencl_stencil_table, &kernel, &command_queue
     //    ).expect("eval_stencils failed");
 }

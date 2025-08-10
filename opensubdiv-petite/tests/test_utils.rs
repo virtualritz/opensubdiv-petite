@@ -54,7 +54,8 @@ pub fn assert_file_matches(actual_path: &Path, expected_filename: &str) {
 
     if should_update_expected() {
         // Update mode: copy actual to expected
-        fs::copy(actual_path, &expected_path).unwrap_or_else(|_| panic!("Failed to update expected file: {expected_filename}"));
+        fs::copy(actual_path, &expected_path)
+            .unwrap_or_else(|_| panic!("Failed to update expected file: {expected_filename}"));
         println!("Updated expected file: {expected_filename}");
     } else {
         // Compare mode
@@ -64,10 +65,11 @@ pub fn assert_file_matches(actual_path: &Path, expected_filename: &str) {
             expected_path.display()
         );
 
-        let actual_content = fs::read_to_string(actual_path).unwrap_or_else(|_| panic!("Failed to read actual file: {}",
-            actual_path.display()));
-        let expected_content = fs::read_to_string(&expected_path).unwrap_or_else(|_| panic!("Failed to read expected file: {}",
-            expected_path.display()));
+        let actual_content = fs::read_to_string(actual_path)
+            .unwrap_or_else(|_| panic!("Failed to read actual file: {}", actual_path.display()));
+        let expected_content = fs::read_to_string(&expected_path).unwrap_or_else(|_| {
+            panic!("Failed to read expected file: {}", expected_path.display())
+        });
 
         // For STEP files, normalize the timestamp line before comparison
         let normalize_step = |content: &str| -> String {
@@ -140,7 +142,8 @@ pub fn assert_content_matches(actual_content: &str, expected_filename: &str) {
 
     if should_update_expected() {
         // Update mode: write content to expected file
-        fs::write(&expected_path, actual_content).unwrap_or_else(|_| panic!("Failed to update expected file: {expected_filename}"));
+        fs::write(&expected_path, actual_content)
+            .unwrap_or_else(|_| panic!("Failed to update expected file: {expected_filename}"));
         println!("Updated expected file: {expected_filename}");
     } else {
         // Compare mode
@@ -150,8 +153,9 @@ pub fn assert_content_matches(actual_content: &str, expected_filename: &str) {
             expected_path.display()
         );
 
-        let expected_content = fs::read_to_string(&expected_path).unwrap_or_else(|_| panic!("Failed to read expected file: {}",
-            expected_path.display()));
+        let expected_content = fs::read_to_string(&expected_path).unwrap_or_else(|_| {
+            panic!("Failed to read expected file: {}", expected_path.display())
+        });
 
         assert_eq!(
             actual_content,

@@ -1,8 +1,8 @@
 mod test_utils;
 
 use opensubdiv_petite::far::{
-    AdaptiveRefinementOptions, PatchTable, PatchTableOptions, PrimvarRefiner,
-    TopologyDescriptor, TopologyRefiner, TopologyRefinerOptions,
+    AdaptiveRefinementOptions, PatchTable, PatchTableOptions, PrimvarRefiner, TopologyDescriptor,
+    TopologyRefiner, TopologyRefinerOptions,
 };
 use std::fs::File;
 use std::io::Write;
