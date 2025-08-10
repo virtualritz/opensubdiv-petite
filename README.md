@@ -106,10 +106,24 @@ The following GPU backends are now available:
 
 ### Known Issues
 
-#### CUDA with GCC 13+
-When building with CUDA support on systems with GCC 13 or newer, you may encounter compilation errors. CUDA 12.0 officially supports up to GCC 12. While we've added the `-allow-unsupported-compiler` flag to the build configuration, there are still compatibility issues with system headers.
+#### CUDA Compiler Compatibility
+CUDA 12.0 officially supports only up to GCC 12. On systems with GCC 13+ or when using Clang, you may encounter compilation errors related to C++ standard library headers.
 
-**Workaround**: Use GCC 12 or earlier, or build without CUDA support on systems with GCC 13+.
+**Workarounds**:
+1. **Install and use GCC 12** (recommended):
+   ```bash
+   sudo apt-get install gcc-12 g++-12
+   CC=gcc-12 CXX=g++-12 cargo build --features cuda
+   ```
+
+2. **Build without CUDA support** on systems with GCC 13+:
+   ```bash
+   cargo build  # Without cuda feature
+   ```
+
+3. **Wait for CUDA 12.4+** which has better support for newer compilers.
+
+Note: We've attempted to add compatibility flags (`-allow-unsupported-compiler`) but fundamental incompatibilities between CUDA 12.0 and newer C++ standard libraries remain.
 
 ## Help Wanted
 
