@@ -1,5 +1,4 @@
 mod test_utils;
-use test_utils::default_end_cap_type;
 
 #[cfg(feature = "truck")]
 #[test]

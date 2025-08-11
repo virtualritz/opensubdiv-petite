@@ -23,8 +23,6 @@ pub fn main() {
         .define("NO_REGRESSION", "1")
         .define("NO_PTEX", "1")
         .define("NO_DOC", "1")
-        .define("NO_OPENCL", "1")
-        .define("NO_CLEW", "1")
         .define("NO_TBB", "1")
         .define("NO_GLFW", "1")
         .define("NO_OPENGL", "1") // Disable OpenGL to avoid GPU-related build issues
@@ -34,6 +32,37 @@ pub fn main() {
     // Always disable CUDA unless explicitly enabled
     #[cfg(not(feature = "cuda"))]
     open_subdiv.define("NO_CUDA", "1");
+    
+    // When CUDA is enabled, configure for better compatibility
+    #[cfg(feature = "cuda")]
+    {
+        // CUDA 12.0 has compatibility issues with GCC 13's headers (_Float32 types)
+        // We need to either use GCC 12 or define the missing types
+        
+        // Check if gcc-12 is available
+        if std::process::Command::new("gcc-12")
+            .arg("--version")
+            .output()
+            .is_ok()
+        {
+            // Use GCC 12 as the host compiler for CUDA
+            open_subdiv.define("OSD_CUDA_NVCC_FLAGS", "-ccbin gcc-12");
+            env::set_var("NVCC_PREPEND_FLAGS", "-ccbin /usr/bin/g++-12");
+            env::set_var("CUDAHOSTCXX", "/usr/bin/g++-12");
+        } else {
+            // Fallback: Define the _Float types to work around the incompatibility
+            // This is less ideal but works when GCC 12 is not available
+            open_subdiv.define("OSD_CUDA_NVCC_FLAGS", 
+                "-allow-unsupported-compiler -D_Float32=float -D_Float64=double -D_Float32x=float -D_Float64x=\"long double\" -D_Float128=\"long double\"");
+        }
+    }
+
+    // Disable OpenCL unless explicitly enabled
+    #[cfg(not(feature = "opencl"))]
+    {
+        open_subdiv.define("NO_OPENCL", "1");
+        open_subdiv.define("NO_CLEW", "1");
+    }
 
     #[cfg(any(target_os = "macos", not(feature = "openmp")))]
     open_subdiv.define("NO_OMP", "1");
@@ -109,6 +138,18 @@ pub fn main() {
         .file("c-api/osd/cuda_evaluator.cpp")
         .file("c-api/osd/cuda_vertex_buffer.cpp");
 
+    #[cfg(all(feature = "metal", target_os = "macos"))]
+    osd_capi
+        .include(&osd_inlude_path)
+        .file("c-api/osd/metal_evaluator.cpp")
+        .file("c-api/osd/metal_vertex_buffer.cpp");
+
+    #[cfg(feature = "opencl")]
+    osd_capi
+        .include(&osd_inlude_path)
+        .file("c-api/osd/opencl_evaluator.cpp")
+        .file("c-api/osd/opencl_vertex_buffer.cpp");
+
     osd_capi.compile("osd-capi");
 
     println!("cargo:rustc-link-lib=static=osd-capi");
@@ -120,7 +161,29 @@ pub fn main() {
     println!("cargo:rustc-link-lib=static=osdOMP");
 
     #[cfg(feature = "cuda")]
-    println!("cargo:rustc-link-lib=static=osdGPU");
+    {
+        println!("cargo:rustc-link-lib=static=osdGPU");
+        // Link CUDA runtime library - check common locations
+        if std::path::Path::new("/usr/local/cuda/lib64").exists() {
+            println!("cargo:rustc-link-search=native=/usr/local/cuda/lib64");
+        } else if std::path::Path::new("/usr/lib/x86_64-linux-gnu/libcudart.so").exists() {
+            println!("cargo:rustc-link-search=native=/usr/lib/x86_64-linux-gnu");
+        }
+        println!("cargo:rustc-link-lib=dylib=cudart");
+    }
+
+    #[cfg(feature = "metal")]
+    {
+        println!("cargo:rustc-link-lib=static=osdGPU");
+        println!("cargo:rustc-link-lib=framework=Metal");
+        println!("cargo:rustc-link-lib=framework=Foundation");
+    }
+
+    #[cfg(feature = "opencl")]
+    {
+        println!("cargo:rustc-link-lib=static=osdGPU");
+        println!("cargo:rustc-link-lib=dylib=OpenCL");
+    }
 
     // Link appropriate C++ standard library
     #[cfg(target_os = "linux")]

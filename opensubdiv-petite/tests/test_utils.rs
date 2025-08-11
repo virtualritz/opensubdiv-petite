@@ -137,8 +137,7 @@ pub fn assert_file_matches(actual_path: &Path, expected_filename: &str) {
         assert_eq!(
             normalized_actual,
             normalized_expected,
-            "File content mismatch for {}. Run with UPDATE_EXPECTED=1 or --update to update expected results.",
-            expected_filename
+            "File content mismatch for {expected_filename}. Run with UPDATE_EXPECTED=1 or --update to update expected results."
         );
     }
 }
@@ -170,8 +169,7 @@ pub fn assert_content_matches(actual_content: &str, expected_filename: &str) {
         assert_eq!(
             actual_content,
             expected_content,
-            "Content mismatch for {}. Run with UPDATE_EXPECTED=1 or --update to update expected results.",
-            expected_filename
+            "Content mismatch for {expected_filename}. Run with UPDATE_EXPECTED=1 or --update to update expected results."
         );
     }
 }
