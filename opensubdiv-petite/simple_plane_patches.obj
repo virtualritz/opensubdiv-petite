@@ -1,0 +1,30 @@
+# OpenSubdiv Patch Control Cages
+# Number of patches: 1
+#
+# Patch 0 (array 0, local 0)
+v 0 0 0
+v 1 0 0
+v 2 0 0
+v 3 0 0
+v 0 1 0
+v 1 1 0
+v 2 1 0
+v 3 1 0
+v 0 2 0
+v 1 2 0
+v 2 2 0
+v 3 2 0
+v 0 3 0
+v 1 3 0
+v 2 3 0
+v 3 3 0
+f 1 2 6 5
+f 2 3 7 6
+f 3 4 8 7
+f 5 6 10 9
+f 6 7 11 10
+f 7 8 12 11
+f 9 10 14 13
+f 10 11 15 14
+f 11 12 16 15
+

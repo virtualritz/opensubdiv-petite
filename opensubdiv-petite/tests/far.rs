@@ -14,7 +14,7 @@ fn test_topology_descriptor_creation() {
     let descriptor = TopologyDescriptor::new(8, &vertices_per_face, &face_vertices);
 
     // Clone should work.
-    let _cloned = descriptor.clone();
+    let _cloned = descriptor;
 }
 
 #[test]
@@ -283,11 +283,11 @@ fn test_stencil_table() {
     let total_verts = refiner.vertex_total_count();
 
     println!("Debug StencilTable test:");
-    println!("  Refinement levels: {}", num_levels);
-    println!("  Level 0 vertices: {}", level0_verts);
-    println!("  Level 1 vertices: {}", level1_verts);
-    println!("  Level 2 vertices: {}", level2_verts);
-    println!("  Total vertices: {}", total_verts);
+    println!("  Refinement levels: {num_levels}");
+    println!("  Level 0 vertices: {level0_verts}");
+    println!("  Level 1 vertices: {level1_verts}");
+    println!("  Level 2 vertices: {level2_verts}");
+    println!("  Total vertices: {total_verts}");
     println!("  StencilTable options:");
     println!("    generate_offsets: {}", stencil_options.generate_offsets);
     println!(
