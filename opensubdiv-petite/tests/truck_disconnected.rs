@@ -28,7 +28,7 @@ mod tests {
         // Calculate total vertices needed
         let mut total_vertices = base_vertices.len();
         for level in 1..=num_levels {
-            total_vertices += refiner.level(level).unwrap().vertices_len();
+            total_vertices += refiner.level(level).unwrap().vertex_count();
         }
         println!("  Total vertices across all levels: {}", total_vertices);
 
@@ -43,7 +43,7 @@ mod tests {
 
         for level in 1..=num_levels {
             let level_obj = refiner.level(level).unwrap();
-            let level_count = level_obj.vertices_len();
+            let level_count = level_obj.vertex_count();
 
             println!(
                 "  Level {}: {} vertices (interpolating from {} vertices at level {})",

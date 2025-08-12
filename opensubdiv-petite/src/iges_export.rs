@@ -191,26 +191,6 @@ impl DirectoryEntry {
         }
     }
 
-    /// Create a directory entry for a color definition (entity 314)
-    #[allow(dead_code)]
-    fn color_definition(parameter_pointer: i32) -> Self {
-        Self {
-            entity_type: 314,
-            parameter_pointer,
-            structure: 0,
-            line_font_pattern: 0,
-            level: 0,
-            view: 0,
-            transformation_matrix: 0,
-            label_display: 0,
-            status_number: "00010201".to_string(), // Color entity status
-            line_weight: 0,
-            color: 0,
-            parameter_line_count: 1,
-            form: 0,
-            entity_label: "".to_string(),
-        }
-    }
 }
 
 /// Export OpenSubdiv patches as B-spline surfaces to IGES format
