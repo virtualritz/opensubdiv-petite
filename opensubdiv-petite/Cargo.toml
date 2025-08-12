@@ -22,6 +22,7 @@ metal = ["opensubdiv-petite-sys/metal"]
 omp = ["opensubdiv-petite-sys/omp"]
 opencl = ["opensubdiv-petite-sys/opencl"]
 openmp = ["opensubdiv-petite-sys/openmp"]
+parallel = ["rayon"]
 ptex = ["opensubdiv-petite-sys/ptex"]
 tri_mesh_buffers = ["itertools", "ultraviolet", "slice-of-array"]
 topology_validation = []
@@ -34,6 +35,8 @@ b_spline_end_caps = []
 derive_more = { version = "2", features = ["full"] }
 opensubdiv-petite-sys = { version = "0.3.0", path = "../opensubdiv-petite-sys" }
 num_enum = "0.7"
+thiserror = "1.0"
+rayon = { version = "1.10", optional = true }
 itertools = { version = "0.14", optional = true }
 ultraviolet = { version = "0.10", optional = true }
 slice-of-array = { version = "0.3", optional = true }

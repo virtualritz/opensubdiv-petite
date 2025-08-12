@@ -6,6 +6,7 @@
 
 use crate::far::{PatchEvalResult, PatchTable, PatchType};
 use std::convert::TryFrom;
+use thiserror::Error;
 use truck_geometry::prelude::{BSplineSurface, KnotVec};
 use truck_modeling::{
     cgmath::{EuclideanSpace, Point3, Vector3},
@@ -18,30 +19,24 @@ use truck_modeling::{Curve, Edge, Vertex, Wire};
 pub type Result<T> = std::result::Result<T, TruckIntegrationError>;
 
 /// Error type for truck integration
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Error)]
 pub enum TruckIntegrationError {
     /// Unsupported patch type
+    #[error("Unsupported patch type: {0:?}")]
     UnsupportedPatchType(PatchType),
+    
     /// Invalid control point configuration
+    #[error("Invalid control points configuration")]
     InvalidControlPoints,
+    
     /// Patch evaluation failed
+    #[error("Patch evaluation failed")]
     EvaluationFailed,
+    
     /// Invalid knot vector
+    #[error("Invalid knot vector")]
     InvalidKnotVector,
 }
-
-impl std::fmt::Display for TruckIntegrationError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::UnsupportedPatchType(t) => write!(f, "Unsupported patch type: {t:?}"),
-            Self::InvalidControlPoints => write!(f, "Invalid control point configuration"),
-            Self::EvaluationFailed => write!(f, "Patch evaluation failed"),
-            Self::InvalidKnotVector => write!(f, "Invalid knot vector"),
-        }
-    }
-}
-
-impl std::error::Error for TruckIntegrationError {}
 
 /// A wrapper around a single patch with its associated data
 pub struct PatchRef<'a> {

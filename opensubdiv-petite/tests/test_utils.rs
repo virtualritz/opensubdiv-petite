@@ -142,7 +142,11 @@ pub fn assert_file_matches(actual_path: &Path, expected_filename: &str) {
     }
 }
 
-/// Compare or update test result with in-memory content
+/// Compare or update test result with in-memory content.
+/// 
+/// This is useful when you have content in memory that you want to compare
+/// with expected results, without writing to a file first.
+#[allow(dead_code)] // Available for future use
 pub fn assert_content_matches(actual_content: &str, expected_filename: &str) {
     let expected_path = expected_results_dir().join(expected_filename);
 

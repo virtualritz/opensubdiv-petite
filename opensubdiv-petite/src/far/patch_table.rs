@@ -148,7 +148,7 @@ impl PatchTable {
             let ptr = sys::far::PatchTableFactory_Create(refiner.as_ptr(), options_ptr);
 
             if ptr.is_null() {
-                Err(Error::CreateTopologyRefinerFailed)
+                Err(Error::PatchTableCreation)
             } else {
                 Ok(Self {
                     ptr,
