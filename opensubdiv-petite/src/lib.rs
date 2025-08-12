@@ -76,8 +76,12 @@
 //! - `v0.2.x` – *OpenSubdiv* `v3.5.x`
 //! - `v0.1.x` – *OpenSubdiv* `v3.4.x`
 
+pub mod error;
 pub mod far;
 pub mod osd;
+
+// Re-export error types for convenience
+pub use error::{Error, Result};
 
 #[cfg(feature = "tri_mesh_buffers")]
 pub mod tri_mesh_buffers;
@@ -136,13 +140,4 @@ impl From<Index> for usize {
     }
 }
 
-#[macro_use]
-extern crate derive_more;
 
-#[derive(Display, Debug, Error)]
-pub enum Error {
-    #[display("Failed to create TopologyRefiner")]
-    CreateTopologyRefinerFailed,
-    #[display("Stencil evaluation failed")]
-    EvalStencilsFailed,
-}
