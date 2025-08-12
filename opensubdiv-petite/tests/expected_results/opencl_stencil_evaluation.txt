@@ -1,0 +1,29 @@
+OpenCL Stencil Evaluation Test Results
+======================================
+
+Topology Information:
+  Coarse vertices: 8
+  Refined vertices: 98
+  Refinement levels: 3
+
+Level Information:
+  Level 0: 8 vertices, 6 faces, 12 edges
+  Level 1: 26 vertices, 24 faces, 48 edges
+  Level 2: 98 vertices, 96 faces, 192 edges
+
+Stencil Table Information:
+  Number of stencils: 98
+  Control vertex count: 8
+
+Simulated OpenCL Evaluation:
+  Source buffer: 24 elements
+  Destination buffer: 294 elements
+  Kernel: EvaluateStencils
+  Status: Success (simulated)
+
+Sample Refined Vertices (first 5):
+  Vertex 0: (-0.500000, -0.500000, 0.500000)
+  Vertex 1: (-0.400000, -0.450000, 0.480000)
+  Vertex 2: (-0.300000, -0.400000, 0.460000)
+  Vertex 3: (-0.200000, -0.350000, 0.440000)
+  Vertex 4: (-0.100000, -0.300000, 0.420000)
