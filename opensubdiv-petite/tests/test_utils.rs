@@ -20,8 +20,8 @@ pub fn default_end_cap_type() -> EndCapType {
 
 /// Check if tests should update expected results
 pub fn should_update_expected() -> bool {
-    // Check for UPDATE_EXPECTED environment variable
-    if env::var("UPDATE_EXPECTED").is_ok() {
+    // Check for RUST_UPDATE_EXPECTED_TEST_RESULTS environment variable
+    if env::var("RUST_UPDATE_EXPECTED_TEST_RESULTS").is_ok() {
         return true;
     }
 
@@ -63,7 +63,7 @@ pub fn assert_file_matches(actual_path: &Path, expected_filename: &str) {
         // Compare mode
         assert!(
             expected_path.exists(),
-            "Expected file does not exist: {}. Run with UPDATE_EXPECTED=1 or --update to create it.",
+            "Expected file does not exist: {}. Run with RUST_UPDATE_EXPECTED_TEST_RESULTS=1 or --update to create it.",
             expected_path.display()
         );
 
@@ -137,7 +137,7 @@ pub fn assert_file_matches(actual_path: &Path, expected_filename: &str) {
         assert_eq!(
             normalized_actual,
             normalized_expected,
-            "File content mismatch for {expected_filename}. Run with UPDATE_EXPECTED=1 or --update to update expected results."
+            "File content mismatch for {expected_filename}. Run with RUST_UPDATE_EXPECTED_TEST_RESULTS=1 or --update to update expected results."
         );
     }
 }
@@ -157,7 +157,7 @@ pub fn assert_content_matches(actual_content: &str, expected_filename: &str) {
         // Compare mode
         assert!(
             expected_path.exists(),
-            "Expected file does not exist: {}. Run with UPDATE_EXPECTED=1 or --update to create it.",
+            "Expected file does not exist: {}. Run with RUST_UPDATE_EXPECTED_TEST_RESULTS=1 or --update to create it.",
             expected_path.display()
         );
 
@@ -169,7 +169,7 @@ pub fn assert_content_matches(actual_content: &str, expected_filename: &str) {
         assert_eq!(
             actual_content,
             expected_content,
-            "Content mismatch for {expected_filename}. Run with UPDATE_EXPECTED=1 or --update to update expected results."
+            "Content mismatch for {expected_filename}. Run with RUST_UPDATE_EXPECTED_TEST_RESULTS=1 or --update to update expected results."
         );
     }
 }
