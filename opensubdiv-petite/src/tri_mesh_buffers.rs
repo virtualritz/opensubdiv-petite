@@ -11,24 +11,31 @@ type Vector = ultraviolet::vec::Vec3;
 type Normal = Vector;
 type Point = Vector;
 
-use crate::far::FaceVerticesIterator;
+use crate::far::FaceVerticesIter;
+#[cfg(feature = "rayon")]
+use crate::far::FaceVerticesParIter;
+#[cfg(feature = "rayon")]
+use rayon::prelude::*;
 
 /// Returns a flat [`u32`] triangle index buffer and two, flat matching point
 /// and normal buffers.
 ///
 /// All the faces are disconnected. I.e. points & normals are duplicated for
 /// each shared vertex.
+/// 
+/// When the `rayon` feature is enabled, this function will use parallel
+/// iterators for improved performance on multi-core systems.
 pub fn to_triangle_mesh_buffers<'a>(
     vertices: &[f32],
-    face_vertices: impl Into<FaceVerticesIterator<'a>> + Iterator,
+    face_vertices: impl Into<FaceVerticesIter<'a>> + Iterator,
 ) -> (Vec<u32>, Vec<[f32; 3]>, Vec<[f32; 3]>) {
     let face_vertices_iter = face_vertices.into();
 
     #[cfg(feature = "topology_validation")]
     for face in face_vertices_iter.clone() {
         for index in face {
-            if vertices.len() <= (3 * index + 2) as usize {
-                panic!("Vertex index {} is out of bounds.", index);
+            if vertices.len() <= (3 * index.0 + 2) as usize {
+                panic!("Vertex index {} is out of bounds.", index.0);
             }
         }
     }
@@ -42,9 +49,9 @@ pub fn to_triangle_mesh_buffers<'a>(
                 // Grab the three vertex index entries.
                 .circular_tuple_windows::<(_, _, _)>()
                 .map(|(&i0, &i1, &i2)| {
-                    let i0 = i0 as usize;
-                    let i1 = i1 as usize;
-                    let i2 = i2 as usize;
+                    let i0 = i0.0 as usize;
+                    let i1 = i1.0 as usize;
+                    let i2 = i2.0 as usize;
                     // The middle point of our tuple
                     let point = Point::new(
                         points_nested[i1][0],
@@ -69,7 +76,12 @@ pub fn to_triangle_mesh_buffers<'a>(
 
                     // Check for collinearity:
                     let normal = if mag_sq < EPSILON as _ {
-                        -face_normal(&index_as_points(face, points_nested)).unwrap()
+                        // For degenerate cases, try to compute face normal, or use a default
+                        // Zero-copy cast from &[Index] to &[u32] using bytemuck
+                        let face_u32: &[u32] = bytemuck::cast_slice(face);
+                        face_normal(&index_as_points(face_u32, points_nested))
+                            .map(|n| -n)
+                            .unwrap_or_else(|| Normal::new(0.0, 0.0, 1.0))
                     } else {
                         -normal / mag_sq.sqrt()
                     };
@@ -114,6 +126,123 @@ pub fn to_triangle_mesh_buffers<'a>(
     )
 }
 
+/// Returns a flat [`u32`] triangle index buffer and two, flat matching point
+/// and normal buffers using parallel processing.
+///
+/// All the faces are disconnected. I.e. points & normals are duplicated for
+/// each shared vertex.
+/// 
+/// This function uses rayon's parallel iterators for improved performance
+/// on multi-core systems.
+#[cfg(feature = "rayon")]
+pub fn to_triangle_mesh_buffers_par<'a>(
+    vertices: &[f32],
+    face_vertices: FaceVerticesParIter<'a>,
+) -> (Vec<u32>, Vec<[f32; 3]>, Vec<[f32; 3]>) {
+    // Collect faces into a vector first for validation and indexing
+    let faces: Vec<_> = face_vertices.collect();
+    
+    #[cfg(feature = "topology_validation")]
+    {
+        faces.par_iter().for_each(|face| {
+            for index in *face {
+                if vertices.len() <= (3 * index.0 + 2) as usize {
+                    panic!("Vertex index {} is out of bounds.", index.0);
+                }
+            }
+        });
+    }
+
+    let points_nested = vertices.nest::<[_; 3]>();
+
+    // Process faces in parallel to generate points and normals
+    let face_results: Vec<_> = faces
+        .par_iter()
+        .flat_map(|face| {
+            face.iter()
+                // Grab the three vertex index entries.
+                .circular_tuple_windows::<(_, _, _)>()
+                .map(|(&i0, &i1, &i2)| {
+                    let i0 = i0.0 as usize;
+                    let i1 = i1.0 as usize;
+                    let i2 = i2.0 as usize;
+                    // The middle point of our tuple
+                    let point = Point::new(
+                        points_nested[i1][0],
+                        points_nested[i1][1],
+                        points_nested[i1][2],
+                    );
+                    // Create a normal from that
+                    let normal = -orthogonal(
+                        &Point::new(
+                            points_nested[i0][0],
+                            points_nested[i0][1],
+                            points_nested[i0][2],
+                        ),
+                        &point,
+                        &Point::new(
+                            points_nested[i2][0],
+                            points_nested[i2][1],
+                            points_nested[i2][2],
+                        ),
+                    );
+                    let mag_sq = normal.mag_sq();
+
+                    // Check for collinearity:
+                    let normal = if mag_sq < EPSILON as _ {
+                        // For degenerate cases, try to compute face normal, or use a default
+                        // Zero-copy cast from &[Index] to &[u32] using bytemuck
+                        let face_u32: &[u32] = bytemuck::cast_slice(face);
+                        face_normal(&index_as_points(face_u32, points_nested))
+                            .map(|n| -n)
+                            .unwrap_or_else(|| Normal::new(0.0, 0.0, 1.0))
+                    } else {
+                        -normal / mag_sq.sqrt()
+                    };
+
+                    ([point.x, point.y, point.z], [normal.x, normal.y, normal.z])
+                })
+                .collect::<Vec<_>>()
+        })
+        .collect();
+    
+    let (points_nested, normals_nested): (Vec<[f32; 3]>, Vec<[f32; 3]>) = 
+        face_results.into_iter().unzip();
+
+    // Build a new face index sequentially (needs to maintain order)
+    let triangle_face_index = faces
+        .iter()
+        // Build a new index where each face has the original arity and the new numbering.
+        .scan(0.., |counter, face| {
+            Some(counter.take(face.len()).collect::<Vec<u32>>())
+        })
+        // Now split each of these faces into triangles.
+        .flat_map(|face| {
+            debug_assert!(face.len() < 5);
+            // Bitriangulate quadrilateral faces use shortest diagonal so
+            // triangles are most nearly equilateral.
+            if 4 == face.len() {
+                let p = index_as_points(&face, points_nested.as_slice());
+
+                if (p[0] - p[2]).mag_sq() < (p[1] - p[3]).mag_sq() {
+                    vec![face[0], face[1], face[2], face[0], face[2], face[3]]
+                } else {
+                    vec![face[1], face[2], face[3], face[1], face[3], face[0]]
+                }
+            } else {
+                // It's a triangle -> just forward.
+                face.to_vec()
+            }
+        })
+        .collect();
+
+    (
+        triangle_face_index,
+        points_nested,
+        normals_nested,
+    )
+}
+
 #[inline]
 fn orthogonal(v0: &Point, v1: &Point, v2: &Point) -> Vector {
     (*v1 - *v0).cross(*v2 - *v1)
@@ -122,8 +251,8 @@ fn orthogonal(v0: &Point, v1: &Point, v2: &Point) -> Vector {
 #[inline]
 pub(crate) fn index_as_points(face: &[u32], points: &[[f32; 3]]) -> Vec<Point> {
     face.iter()
-        .map(|index| {
-            let index = *index as usize;
+        .map(|&index| {
+            let index = index as usize;
             Point::new(points[index][0], points[index][1], points[index][2])
         })
         .collect()

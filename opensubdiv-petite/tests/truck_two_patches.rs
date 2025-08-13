@@ -1,7 +1,7 @@
-mod test_utils;
+mod utils;
 
 #[cfg(feature = "truck")]
-use test_utils::*;
+use utils::*;
 
 #[cfg(feature = "truck")]
 #[test]

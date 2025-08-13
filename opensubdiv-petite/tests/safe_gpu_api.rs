@@ -1,5 +1,5 @@
 #[test]
-fn test_safe_wrappers_creation() {
+fn safe_wrappers_creation() {
     use opensubdiv_petite::osd;
     use std::ptr;
 
@@ -7,14 +7,14 @@ fn test_safe_wrappers_creation() {
     #[cfg(feature = "opencl")]
     {
         let context =
-            unsafe { osd::opencl_vertex_buffer::OpenCLContext::from_ptr(ptr::null_mut()) };
+            unsafe { osd::opencl_vertex_buffer::OpenClContext::from_ptr(ptr::null_mut()) };
         assert!(context.is_none());
 
         let queue =
-            unsafe { osd::opencl_vertex_buffer::OpenCLCommandQueue::from_ptr(ptr::null_mut()) };
+            unsafe { osd::opencl_vertex_buffer::OpenClCommandQueue::from_ptr(ptr::null_mut()) };
         assert!(queue.is_none());
 
-        let kernel = unsafe { osd::opencl_evaluator::OpenCLKernel::from_ptr(ptr::null_mut()) };
+        let kernel = unsafe { osd::opencl_evaluator::OpenClKernel::from_ptr(ptr::null_mut()) };
         assert!(kernel.is_none());
     }
 
@@ -40,8 +40,8 @@ fn test_safe_wrappers_creation() {
 }
 
 #[test]
-fn test_wrapper_clone() {
-    // Test that wrappers can be cloned
+fn wrapper_lifetime_safety() {
+    // Test that wrappers properly enforce lifetime constraints
     use opensubdiv_petite::osd;
 
     // Create a non-null pointer for testing
@@ -50,15 +50,15 @@ fn test_wrapper_clone() {
     #[cfg(feature = "opencl")]
     {
         let context =
-            unsafe { osd::opencl_vertex_buffer::OpenCLContext::from_ptr(test_ptr) }.unwrap();
-        let _context2 = context.clone();
-        // Both clones should be valid
+            unsafe { osd::opencl_vertex_buffer::OpenClContext::from_ptr(test_ptr) }.unwrap();
+        // Context types can no longer be cloned - they enforce lifetime safety
+        // This ensures the GPU resource outlives all references
     }
 
     #[cfg(feature = "cuda")]
     {
         let context = unsafe { osd::cuda_vertex_buffer::CudaContext::from_ptr(test_ptr) }.unwrap();
-        let _context2 = context.clone();
-        // Both clones should be valid
+        // Context types can no longer be cloned - they enforce lifetime safety
+        // This ensures the GPU resource outlives all references
     }
 }

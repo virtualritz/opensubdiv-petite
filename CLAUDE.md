@@ -120,7 +120,7 @@ Add specially formatted comments for important implementation details.
 - Follow Rust API guidelines for naming.
 - Be consistently verbose (no surprising abbreviations).
 - Use canonical Rust names: `len()` not `numStencils()`.
-- Use `vertices_len()` not `num_vertices()`.
+- Use `vertex_count()` not `num_vertices()`.
 - Unsigned types for counts/sizes: `usize`, `u32`.
 
 ## FFI Safety Rules

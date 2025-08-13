@@ -1,23 +1,28 @@
+use crate::{Error, Result};
 use opensubdiv_petite_sys as sys;
 use std::convert::TryInto;
+use std::marker::PhantomData;
 use std::ptr::NonNull;
-use std::rc::Rc;
 
 /// Safe wrapper for Metal device.
-#[derive(Debug, Clone)]
-pub struct MetalDevice {
-    ptr: Rc<NonNull<std::ffi::c_void>>,
+#[derive(Debug)]
+pub struct MetalDevice<'a> {
+    ptr: NonNull<std::ffi::c_void>,
+    _marker: PhantomData<&'a std::ffi::c_void>,
 }
 
-impl MetalDevice {
+impl<'a> MetalDevice<'a> {
     /// Create a new Metal device wrapper from a raw pointer.
     ///
     /// # Safety
     ///
     /// The caller must ensure that the pointer is valid and remains valid
-    /// for the lifetime of this wrapper.
-    pub unsafe fn from_ptr(ptr: *mut std::ffi::c_void) -> Option<Self> {
-        NonNull::new(ptr).map(|ptr| Self { ptr: Rc::new(ptr) })
+    /// for the lifetime 'a.
+    pub unsafe fn from_ptr(ptr: *mut std::ffi::c_void) -> Option<MetalDevice<'a>> {
+        NonNull::new(ptr).map(|ptr| MetalDevice {
+            ptr,
+            _marker: PhantomData,
+        })
     }
 
     /// Get the raw pointer for FFI calls.
@@ -27,20 +32,24 @@ impl MetalDevice {
 }
 
 /// Safe wrapper for Metal command buffer.
-#[derive(Debug, Clone)]
-pub struct MetalCommandBuffer {
-    ptr: Rc<NonNull<std::ffi::c_void>>,
+#[derive(Debug)]
+pub struct MetalCommandBuffer<'a> {
+    ptr: NonNull<std::ffi::c_void>,
+    _marker: PhantomData<&'a std::ffi::c_void>,
 }
 
-impl MetalCommandBuffer {
+impl<'a> MetalCommandBuffer<'a> {
     /// Create a new Metal command buffer wrapper from a raw pointer.
     ///
     /// # Safety
     ///
     /// The caller must ensure that the pointer is valid and remains valid
-    /// for the lifetime of this wrapper.
-    pub unsafe fn from_ptr(ptr: *mut std::ffi::c_void) -> Option<Self> {
-        NonNull::new(ptr).map(|ptr| Self { ptr: Rc::new(ptr) })
+    /// for the lifetime 'a.
+    pub unsafe fn from_ptr(ptr: *mut std::ffi::c_void) -> Option<MetalCommandBuffer<'a>> {
+        NonNull::new(ptr).map(|ptr| MetalCommandBuffer {
+            ptr,
+            _marker: PhantomData,
+        })
     }
 
     /// Get the raw pointer for FFI calls.
@@ -67,33 +76,48 @@ impl MetalVertexBuffer {
     /// Create a new Metal vertex buffer.
     #[inline]
     pub fn new(
-        elements_len: usize,
-        vertices_len: usize,
-        device: &MetalDevice,
-    ) -> MetalVertexBuffer {
+        element_count: usize,
+        vertex_count: usize,
+        device: Option<&MetalDevice>,
+    ) -> Result<MetalVertexBuffer> {
+        let element_count_i32 = element_count
+            .try_into()
+            .map_err(|_| Error::InvalidBufferSize {
+                expected: element_count,
+                actual: i32::MAX as usize,
+            })?;
+        let vertex_count_i32 = vertex_count
+            .try_into()
+            .map_err(|_| Error::InvalidBufferSize {
+                expected: vertex_count,
+                actual: i32::MAX as usize,
+            })?;
+
         let ptr = unsafe {
             sys::osd::MTLVertexBuffer_Create(
-                elements_len.try_into().unwrap(),
-                vertices_len.try_into().unwrap(),
-                device.as_ptr() as *const _,
+                element_count_i32,
+                vertex_count_i32,
+                device.map_or(std::ptr::null(), |d| d.as_ptr() as *const _),
             )
         };
         if ptr.is_null() {
-            panic!("MTLVertexBuffer_Create returned null");
+            return Err(Error::GpuBackend(
+                "MTLVertexBuffer_Create returned null".to_string(),
+            ));
         }
 
-        MetalVertexBuffer(ptr)
+        Ok(MetalVertexBuffer(ptr))
     }
 
     /// Returns how many elements defined in this vertex buffer.
     #[inline]
-    pub fn elements_len(&self) -> usize {
+    pub fn element_count(&self) -> usize {
         unsafe { sys::osd::MTLVertexBuffer_GetNumElements(self.0) as _ }
     }
 
     /// Returns how many vertices allocated in this vertex buffer.
     #[inline]
-    pub fn vertices_len(&self) -> usize {
+    pub fn vertex_count(&self) -> usize {
         unsafe { sys::osd::MTLVertexBuffer_GetNumVertices(self.0) as _ }
     }
 
@@ -110,36 +134,46 @@ impl MetalVertexBuffer {
         &mut self,
         src: &[f32],
         start_vertex: usize,
-        vertices_len: usize,
+        vertex_count: usize,
         command_buffer: &MetalCommandBuffer,
-    ) {
+    ) -> Result<()> {
         // do some basic error checking
-        let elements_len = self.elements_len();
+        let element_count = self.element_count();
 
-        if start_vertex * elements_len > src.len() {
-            panic!(
-                "Start vertex is out of range of the src slice: {} ({})",
-                start_vertex,
-                src.len()
-            );
+        if start_vertex * element_count > src.len() {
+            return Err(Error::InvalidBufferSize {
+                expected: start_vertex * element_count,
+                actual: src.len(),
+            });
         }
 
-        if vertices_len * elements_len > src.len() {
-            panic!(
-                "vertices_len is out of range of the src slice: {} ({})",
-                vertices_len,
-                src.len()
-            );
+        if vertex_count * element_count > src.len() {
+            return Err(Error::InvalidBufferSize {
+                expected: vertex_count * element_count,
+                actual: src.len(),
+            });
         }
 
         unsafe {
             sys::osd::MTLVertexBuffer_UpdateData(
                 self.0,
                 src.as_ptr(),
-                start_vertex.try_into().unwrap(),
-                vertices_len.try_into().unwrap(),
+                start_vertex
+                    .try_into()
+                    .map_err(|_| Error::InvalidBufferSize {
+                        expected: start_vertex,
+                        actual: i32::MAX as usize,
+                    })?,
+                vertex_count
+                    .try_into()
+                    .map_err(|_| Error::InvalidBufferSize {
+                        expected: vertex_count,
+                        actual: i32::MAX as usize,
+                    })?,
                 command_buffer.as_ptr() as *const _,
             );
         }
+
+        Ok(())
     }
 }

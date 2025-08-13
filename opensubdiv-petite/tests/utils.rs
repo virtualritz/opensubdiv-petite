@@ -143,7 +143,7 @@ pub fn assert_file_matches(actual_path: &Path, expected_filename: &str) {
 }
 
 /// Compare or update test result with in-memory content.
-/// 
+///
 /// This is useful when you have content in memory that you want to compare
 /// with expected results, without writing to a file first.
 #[allow(dead_code)] // Available for future use

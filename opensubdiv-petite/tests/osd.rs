@@ -3,8 +3,8 @@
 use opensubdiv_petite::{far, osd};
 
 #[test]
-fn test_buffer_descriptor_creation() {
-    let desc = osd::BufferDescriptor::new(0, 3, 3);
+fn buffer_descriptor_creation() {
+    let desc = osd::BufferDescriptor::new(0, 3, 3).unwrap();
     // BufferDescriptor should be created successfully.
     let _ = desc;
 }
@@ -76,8 +76,8 @@ fn test_cpu_evaluator() {
 
     src_buffer.update_data(&positions, 0, n_coarse_verts);
 
-    let src_desc = osd::BufferDescriptor::new(0, 3, 3);
-    let dst_desc = osd::BufferDescriptor::new(0, 3, 3);
+    let src_desc = osd::BufferDescriptor::new(0, 3, 3).unwrap();
+    let dst_desc = osd::BufferDescriptor::new(0, 3, 3).unwrap();
 
     // Evaluate stencils.
     osd::cpu_evaluator::evaluate_stencils(
@@ -142,8 +142,8 @@ fn test_cuda_evaluator() {
 
     src_buffer.update_data(&positions, 0, n_coarse_verts);
 
-    let src_desc = osd::BufferDescriptor::new(0, 3, 3);
-    let dst_desc = osd::BufferDescriptor::new(0, 3, 3);
+    let src_desc = osd::BufferDescriptor::new(0, 3, 3).unwrap();
+    let dst_desc = osd::BufferDescriptor::new(0, 3, 3).unwrap();
 
     let cuda_stencil_table = osd::CudaStencilTable::new(&stencil_table);
 

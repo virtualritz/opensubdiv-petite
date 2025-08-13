@@ -1,5 +1,5 @@
-mod test_utils;
-use test_utils::{assert_file_matches, test_output_path};
+mod utils;
+use utils::{assert_file_matches, test_output_path};
 
 #[cfg(feature = "opencl")]
 #[test]
@@ -22,8 +22,7 @@ fn test_opencl_stencil_evaluation() {
     ];
 
     // Create topology descriptor
-    let descriptor =
-        far::TopologyDescriptor::new(num_vertices, &verts_per_face, &vert_indices);
+    let descriptor = far::TopologyDescriptor::new(num_vertices, &verts_per_face, &vert_indices);
 
     // Create TopologyRefiner
     let mut refiner = far::TopologyRefiner::new(
@@ -96,11 +95,17 @@ fn test_opencl_stencil_evaluation() {
     .unwrap();
     writeln!(file).unwrap();
 
-    // Simulate evaluation results (since we can't actually run OpenCL without proper setup)
-    // In a real scenario, this would be the output from OpenCL evaluation
+    // Simulate evaluation results (since we can't actually run OpenCL without
+    // proper setup) In a real scenario, this would be the output from OpenCL
+    // evaluation
     writeln!(file, "Simulated OpenCL Evaluation:").unwrap();
     writeln!(file, "  Source buffer: {} elements", vertices.len()).unwrap();
-    writeln!(file, "  Destination buffer: {} elements", n_refined_verts * 3).unwrap();
+    writeln!(
+        file,
+        "  Destination buffer: {} elements",
+        n_refined_verts * 3
+    )
+    .unwrap();
     writeln!(file, "  Kernel: EvaluateStencils").unwrap();
     writeln!(file, "  Status: Success (simulated)").unwrap();
     writeln!(file).unwrap();
@@ -114,7 +119,7 @@ fn test_opencl_stencil_evaluation() {
             i,
             -0.5 + (i as f32) * 0.1,  // Simulated X
             -0.5 + (i as f32) * 0.05, // Simulated Y
-            0.5 - (i as f32) * 0.02    // Simulated Z
+            0.5 - (i as f32) * 0.02   // Simulated Z
         )
         .unwrap();
     }

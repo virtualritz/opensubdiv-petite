@@ -2,7 +2,6 @@
 //! hierarchy.
 use super::topology_refiner::TopologyRefiner;
 use opensubdiv_petite_sys as sys;
-use std::convert::TryInto;
 
 use crate::Index;
 use sys::vtr::types::LocalIndex;
@@ -23,6 +22,12 @@ pub struct TopologyLevel<'a> {
     pub(crate) ptr: sys::far::TopologyLevelPtr,
     pub(crate) refiner: std::marker::PhantomData<&'a TopologyRefiner>,
 }
+
+// SAFETY: TopologyLevel is a read-only view into the underlying C++ object
+// which is immutable after creation. The TopologyRefiner ensures the data
+// remains valid for the lifetime 'a.
+unsafe impl<'a> Send for TopologyLevel<'a> {}
+unsafe impl<'a> Sync for TopologyLevel<'a> {}
 
 /// ### Methods to Inspect the Overall Inventory of Components
 ///
@@ -82,12 +87,20 @@ impl<'a> TopologyLevel<'a> {
     }
 
     /// Returns an iterator over the face vertices of this level.
-    pub fn face_vertices_iter(&self) -> FaceVerticesIterator<'_> {
-        FaceVerticesIterator {
+    pub fn face_vertices_iter(&self) -> FaceVerticesIter<'_> {
+        FaceVerticesIter {
             level: self,
             current: 0,
-            num: self.face_vertex_count() as _,
+            num: self.face_count() as _,
         }
+    }
+
+    /// Returns a parallel iterator over the face vertices of this level.
+    ///
+    /// This method is only available when the `rayon` feature is enabled.
+    #[cfg(feature = "rayon")]
+    pub fn face_vertices_par_iter(&self) -> FaceVerticesParIter<'_> {
+        FaceVerticesParIter::new(self)
     }
 }
 
@@ -252,13 +265,13 @@ impl<'a> TopologyLevel<'a> {
 
 /// An iterator over the face vertices of this [`TopologyLevel`].
 #[derive(Copy, Clone)]
-pub struct FaceVerticesIterator<'a> {
+pub struct FaceVerticesIter<'a> {
     level: &'a TopologyLevel<'a>,
     num: u32,
     current: u32,
 }
 
-impl<'a> Iterator for FaceVerticesIterator<'a> {
+impl<'a> Iterator for FaceVerticesIter<'a> {
     type Item = &'a [Index];
 
     #[inline]
@@ -269,6 +282,70 @@ impl<'a> Iterator for FaceVerticesIterator<'a> {
             self.current += 1;
             self.level.face_vertices((self.current - 1).into())
         }
+    }
+}
+
+// Parallel iterator support with rayon
+#[cfg(feature = "rayon")]
+use rayon::prelude::*;
+
+/// A parallel iterator over the face vertices of this [`TopologyLevel`].
+#[cfg(feature = "rayon")]
+#[derive(Copy, Clone)]
+pub struct FaceVerticesParIter<'a> {
+    level: &'a TopologyLevel<'a>,
+    num: u32,
+}
+
+#[cfg(feature = "rayon")]
+impl<'a> FaceVerticesParIter<'a> {
+    fn new(level: &'a TopologyLevel<'a>) -> Self {
+        Self {
+            level,
+            num: level.face_count() as u32,
+        }
+    }
+}
+
+#[cfg(feature = "rayon")]
+impl<'a> ParallelIterator for FaceVerticesParIter<'a> {
+    type Item = &'a [Index];
+
+    fn drive_unindexed<C>(self, consumer: C) -> C::Result
+    where
+        C: rayon::iter::plumbing::UnindexedConsumer<Self::Item>,
+    {
+        (0..self.num)
+            .into_par_iter()
+            .map(|i| self.level.face_vertices(i.into()).unwrap())
+            .drive_unindexed(consumer)
+    }
+}
+
+#[cfg(feature = "rayon")]
+impl<'a> IndexedParallelIterator for FaceVerticesParIter<'a> {
+    fn len(&self) -> usize {
+        self.num as usize
+    }
+
+    fn drive<C>(self, consumer: C) -> C::Result
+    where
+        C: rayon::iter::plumbing::Consumer<Self::Item>,
+    {
+        (0..self.num)
+            .into_par_iter()
+            .map(|i| self.level.face_vertices(i.into()).unwrap())
+            .drive(consumer)
+    }
+
+    fn with_producer<CB>(self, callback: CB) -> CB::Output
+    where
+        CB: rayon::iter::plumbing::ProducerCallback<Self::Item>,
+    {
+        (0..self.num)
+            .into_par_iter()
+            .map(|i| self.level.face_vertices(i.into()).unwrap())
+            .with_producer(callback)
     }
 }
 
@@ -350,7 +427,10 @@ impl<'a> TopologyLevel<'a> {
     #[inline]
     pub fn face_varying_value_count(&self, channel: usize) -> usize {
         unsafe {
-            sys::far::TopologyLevel_GetNumFVarValues(self.ptr, channel.try_into().unwrap()) as _
+            // Channel index is typically small (0-3), so saturating to i32::MAX is
+            // reasonable
+            let channel_i32 = channel.min(i32::MAX as usize) as i32;
+            sys::far::TopologyLevel_GetNumFVarValues(self.ptr, channel_i32) as _
         }
     }
 
@@ -383,10 +463,11 @@ impl<'a> TopologyLevel<'a> {
     #[inline]
     pub fn vertex_face_varying_topology_matches(&self, vertex: Index, channel: usize) -> bool {
         unsafe {
+            let channel_i32 = channel.min(i32::MAX as usize) as i32;
             sys::far::TopologyLevel_DoesVertexFVarTopologyMatch(
                 self.ptr,
                 vertex.into(),
-                channel.try_into().unwrap(),
+                channel_i32,
             )
         }
     }
@@ -395,11 +476,8 @@ impl<'a> TopologyLevel<'a> {
     #[inline]
     pub fn edge_face_varying_topology_matches(&self, edge: Index, channel: usize) -> bool {
         unsafe {
-            sys::far::TopologyLevel_DoesEdgeFVarTopologyMatch(
-                self.ptr,
-                edge.into(),
-                channel.try_into().unwrap(),
-            )
+            let channel_i32 = channel.min(i32::MAX as usize) as i32;
+            sys::far::TopologyLevel_DoesEdgeFVarTopologyMatch(self.ptr, edge.into(), channel_i32)
         }
     }
 
@@ -407,11 +485,8 @@ impl<'a> TopologyLevel<'a> {
     #[inline]
     pub fn face_varying_topology_on_face_matches(&self, face: Index, channel: usize) -> bool {
         unsafe {
-            sys::far::TopologyLevel_DoesFaceFVarTopologyMatch(
-                self.ptr,
-                face.into(),
-                channel.try_into().unwrap(),
-            )
+            let channel_i32 = channel.min(i32::MAX as usize) as i32;
+            sys::far::TopologyLevel_DoesFaceFVarTopologyMatch(self.ptr, face.into(), channel_i32)
         }
     }
 }

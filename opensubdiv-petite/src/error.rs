@@ -56,8 +56,8 @@ pub enum Error {
 
     /// Truck integration error.
     #[cfg(feature = "truck")]
-    #[error("Truck integration error: {0}")]
-    TruckIntegration(#[from] crate::truck_integration::TruckIntegrationError),
+    #[error("Truck error: {0}")]
+    Truck(#[from] crate::truck::TruckError),
 
     /// IO error for file operations.
     #[error("IO error: {0}")]

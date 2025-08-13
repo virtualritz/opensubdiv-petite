@@ -1,4 +1,4 @@
-mod test_utils;
+mod utils;
 
 use opensubdiv_petite::far::{
     AdaptiveRefinementOptions, PatchTable, PatchTableOptions, PrimvarRefiner, TopologyDescriptor,
@@ -182,13 +182,13 @@ fn test_export_simple_plane_patches() {
     let all_vertices = build_vertex_buffer(&refiner, &vertex_positions);
 
     // Export to OBJ
-    let output_path = test_utils::test_output_path("simple_plane_patches.obj");
+    let output_path = utils::test_output_path("simple_plane_patches.obj");
     println!("Writing OBJ to: {:?}", output_path);
     export_patch_cages_to_obj(output_path.to_str().unwrap(), &patch_table, &all_vertices)
         .expect("Failed to export OBJ");
 
     // Compare or update expected results
-    test_utils::assert_file_matches(&output_path, "simple_plane_patches.obj");
+    utils::assert_file_matches(&output_path, "simple_plane_patches.obj");
 }
 
 #[test]
@@ -240,13 +240,13 @@ fn test_export_simple_cube_patches() {
     let all_vertices = build_vertex_buffer(&refiner, &vertex_positions);
 
     // Export to OBJ
-    let output_path = test_utils::test_output_path("simple_cube_patches.obj");
+    let output_path = utils::test_output_path("simple_cube_patches.obj");
     println!("Writing OBJ to: {:?}", output_path);
     export_patch_cages_to_obj(output_path.to_str().unwrap(), &patch_table, &all_vertices)
         .expect("Failed to export OBJ");
 
     // Compare or update expected results
-    test_utils::assert_file_matches(&output_path, "simple_cube_patches.obj");
+    utils::assert_file_matches(&output_path, "simple_cube_patches.obj");
 }
 
 #[test]
@@ -308,7 +308,7 @@ fn test_export_creased_cube_patches() {
     let all_vertices = build_vertex_buffer(&refiner, &vertex_positions);
 
     // Export to OBJ
-    let output_path = test_utils::test_output_path("creased_cube_patches.obj");
+    let output_path = utils::test_output_path("creased_cube_patches.obj");
     println!("Writing OBJ to: {:?}", output_path);
     export_patch_cages_to_obj(output_path.to_str().unwrap(), &patch_table, &all_vertices)
         .expect("Failed to export OBJ");
@@ -316,5 +316,5 @@ fn test_export_creased_cube_patches() {
     println!("Number of patches: {}", patch_table.patches_len());
 
     // Compare or update expected results
-    test_utils::assert_file_matches(&output_path, "creased_cube_patches.obj");
+    utils::assert_file_matches(&output_path, "creased_cube_patches.obj");
 }

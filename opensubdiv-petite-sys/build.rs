@@ -32,13 +32,13 @@ pub fn main() {
     // Always disable CUDA unless explicitly enabled
     #[cfg(not(feature = "cuda"))]
     open_subdiv.define("NO_CUDA", "1");
-    
+
     // When CUDA is enabled, configure for better compatibility
     #[cfg(feature = "cuda")]
     {
         // CUDA 12.0 has compatibility issues with GCC 13's headers (_Float32 types)
         // We need to either use GCC 12 or define the missing types
-        
+
         // Check if gcc-12 is available
         if std::process::Command::new("gcc-12")
             .arg("--version")

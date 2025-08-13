@@ -1,5 +1,6 @@
 use bevy::prelude::*;
-use bevy::render::mesh::{Indices, Mesh, PrimitiveTopology};
+use bevy::render::mesh::{Indices, PrimitiveTopology};
+use bevy::render::render_asset::RenderAssetUsages;
 use opensubdiv_petite::{far, tri_mesh_buffers};
 use smooth_bevy_cameras::{
     controllers::orbit::{OrbitCameraBundle, OrbitCameraController, OrbitCameraPlugin},
@@ -11,13 +12,11 @@ static MAX_LEVEL: usize = 3;
 
 fn main() {
     App::new()
-        .insert_resource(Msaa::Sample4)
         .add_plugins(DefaultPlugins)
-        .add_plugin(LookTransformPlugin)
-        .add_plugin(OrbitCameraPlugin::default())
-        .add_startup_system(setup)
-        .add_system(rotator_system)
-        .add_system(bevy::window::close_on_esc)
+        .add_plugins(LookTransformPlugin)
+        .add_plugins(OrbitCameraPlugin::default())
+        .add_systems(Startup, setup)
+        .add_systems(Update, (rotator_system, close_on_esc))
         .run();
 }
 
@@ -28,7 +27,13 @@ struct Rotator;
 /// rotates the parent, which will result in the child also rotating
 fn rotator_system(time: Res<Time>, mut query: Query<&mut Transform, With<Rotator>>) {
     for mut transform in &mut query {
-        transform.rotate_x(3.0 * time.delta_seconds());
+        transform.rotate_x(3.0 * time.delta_secs());
+    }
+}
+
+fn close_on_esc(mut exit: EventWriter<AppExit>, keyboard: Res<ButtonInput<KeyCode>>) {
+    if keyboard.just_pressed(KeyCode::Escape) {
+        exit.write(AppExit::Success);
     }
 }
 
@@ -37,40 +42,41 @@ fn setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
+    mut ambient_light: ResMut<AmbientLight>,
 ) {
+    // Add ambient light so materials are visible
+    ambient_light.brightness = 300.0;
+    ambient_light.color = Color::WHITE;
     // chamfered_tetrahedron
 
-    commands
-        .spawn(PbrBundle {
-            mesh: meshes.add(subdivided_chamfered_tetrahedron()),
-            material: materials.add(Color::rgb(0.8, 0.7, 0.6).into()),
-            transform: Transform::from_xyz(0.0, 0.25, 0.0)
-                * Transform::from_scale(Vec3::new(2.0, 2.0, 2.0)),
-            ..Default::default()
-        })
-        .insert(Rotator);
+    commands.spawn((
+        Mesh3d(meshes.add(subdivided_chamfered_tetrahedron())),
+        MeshMaterial3d(materials.add(Color::srgb(0.8, 0.7, 0.6))),
+        Transform::from_xyz(0.0, 0.25, 0.0).with_scale(Vec3::splat(2.0)),
+        Rotator,
+    ));
 
-    commands
-        // light
-        .spawn(DirectionalLightBundle {
-            transform: Transform::from_translation(Vec3::new(4.0, 8.0, 4.0)),
-            ..Default::default()
-        });
+    // Add a test cube to verify materials work
+    commands.spawn((
+        Mesh3d(meshes.add(Cuboid::new(1.0, 1.0, 1.0))),
+        MeshMaterial3d(materials.add(Color::srgb(0.3, 0.3, 0.9))),
+        Transform::from_xyz(3.0, 0.5, 0.0),
+    ));
 
+    // light
+    commands.spawn((
+        DirectionalLight {
+            shadows_enabled: true,
+            ..default()
+        },
+        Transform::from_xyz(4.0, 8.0, 4.0).looking_at(Vec3::ZERO, Vec3::Y),
+    ));
+
+    // camera
     commands
-        // camera
         .spawn((
-            Camera3dBundle {
-                camera: Camera {
-                    hdr: true,
-                    ..default()
-                },
-                ..default()
-            },
-            EnvironmentMapLight {
-                diffuse_map: asset_server.load("environment_maps/pisa_diffuse_rgb9e5_zstd.ktx2"),
-                specular_map: asset_server.load("environment_maps/pisa_specular_rgb9e5_zstd.ktx2"),
-            },
+            Camera3d::default(),
+            Transform::from_xyz(-2.0, 2.5, 5.0).looking_at(Vec3::ZERO, Vec3::Y),
         ))
         .insert(OrbitCameraBundle::new(
             OrbitCameraController::default(),
@@ -81,6 +87,7 @@ fn setup(
 }
 
 fn subdivided_chamfered_tetrahedron() -> Mesh {
+    eprintln!("Starting subdivided_chamfered_tetrahedron");
     // Topology for a chamfered tetrahedron.
     // cT – in Conway notation.
     let vertices = [
@@ -151,15 +158,18 @@ fn subdivided_chamfered_tetrahedron() -> Mesh {
     let crease_weights = [2.0; 24];
 
     // Create a refiner (a subdivider) from a topology descriptor.
+    eprintln!("Creating TopologyDescriptor");
+    let mut descriptor = far::TopologyDescriptor::new(vertices.len() / 3, &face_arities, &face_vertices)
+        .expect("Could not create TopologyDescriptor");
+    descriptor.creases(&creases, &crease_weights);
+    descriptor.left_handed(true);
+    
+    eprintln!("Creating TopologyRefiner");
     let mut refiner = far::TopologyRefiner::new(
-        // Populate the descriptor with our raw data.
-        far::TopologyDescriptor::new(vertices.len() / 3, &face_arities, &face_vertices)
-            .creases(&creases, &crease_weights)
-            .left_handed(true)
-            .clone(),
+        descriptor,
         far::TopologyRefinerOptions {
             scheme: far::Scheme::CatmullClark,
-            boundary_interpolation: far::BoundaryInterpolation::EdgeOnly,
+            boundary_interpolation: Some(far::BoundaryInterpolation::EdgeOnly),
             ..Default::default()
         },
     )
@@ -172,7 +182,8 @@ fn subdivided_chamfered_tetrahedron() -> Mesh {
     });
 
     // Interpolate vertex primvar data.
-    let primvar_refiner = far::PrimvarRefiner::new(&refiner);
+    eprintln!("Creating PrimvarRefiner");
+    let primvar_refiner = far::PrimvarRefiner::new(&refiner).expect("Could not create PrimvarRefiner");
 
     let mut refined_vertices = vertices.to_vec();
 
@@ -196,11 +207,12 @@ fn subdivided_chamfered_tetrahedron() -> Mesh {
         refiner.level(MAX_LEVEL).unwrap().face_vertices_iter(),
     );
 
-    let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
+    let mut mesh = Mesh::new(PrimitiveTopology::TriangleList, RenderAssetUsages::default());
 
-    mesh.set_indices(Some(Indices::U32(index)));
+    mesh.insert_indices(Indices::U32(index));
     mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, points);
     mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, normals);
 
+    eprintln!("About to return from subdivided_chamfered_tetrahedron");
     mesh
 }

@@ -1,10 +1,10 @@
 //! Tests for exporting patches as disconnected surfaces to STEP format
 
-mod test_utils;
+mod utils;
 
 #[cfg(feature = "truck")]
 mod tests {
-    use crate::test_utils::default_end_cap_type;
+    use crate::utils::default_end_cap_type;
     use opensubdiv_petite::far::{
         EndCapType, PatchTable, PatchTableOptions, PrimvarRefiner, TopologyDescriptor,
         TopologyRefiner, TopologyRefinerOptions, UniformRefinementOptions,

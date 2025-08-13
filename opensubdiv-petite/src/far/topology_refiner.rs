@@ -72,23 +72,41 @@ impl TopologyRefiner {
     pub fn options(&self) -> TopologyRefinerOptions {
         let options = unsafe { &(*self.0)._subdivOptions };
         TopologyRefinerOptions {
-            scheme: unsafe { (*self.0)._subdivType }.try_into().unwrap(),
+            scheme: unsafe { (*self.0)._subdivType }
+                .try_into()
+                .expect("invalid subdivision scheme from C++"),
             boundary_interpolation: if options._vtxBoundInterp
                 == sys::far::topology_refiner::VTX_BOUNDARY_NONE
             {
                 None
             } else {
-                Some(options._vtxBoundInterp.try_into().unwrap())
+                Some(
+                    options
+                        ._vtxBoundInterp
+                        .try_into()
+                        .expect("invalid boundary interpolation from C++"),
+                )
             },
             face_varying_linear_interpolation: if options._fvarLinInterp
                 == sys::far::topology_refiner::FVAR_LINEAR_NONE
             {
                 None
             } else {
-                Some(options._fvarLinInterp.try_into().unwrap())
+                Some(
+                    options
+                        ._fvarLinInterp
+                        .try_into()
+                        .expect("invalid face-varying interpolation from C++"),
+                )
             },
-            creasing_method: options._creasingMethod.try_into().unwrap(),
-            triangle_subdivision: options._triangleSub.try_into().unwrap(),
+            creasing_method: options
+                ._creasingMethod
+                .try_into()
+                .expect("invalid creasing method from C++"),
+            triangle_subdivision: options
+                ._triangleSub
+                .try_into()
+                .expect("invalid triangle subdivision from C++"),
         }
     }
 
@@ -118,54 +136,82 @@ impl TopologyRefiner {
 
     /// Returns the total number of vertices in all levels.
     #[inline]
-    pub fn vertex_total_count(&self) -> usize {
+    pub fn vertex_count_all_levels(&self) -> usize {
         unsafe { sys::far::topology_refiner::TopologyRefiner_GetNumVerticesTotal(self.0) as _ }
     }
 
     /// Returns the total number of vertices in all levels.
-    #[deprecated(since = "0.3.0", note = "Use `vertex_total_count` instead")]
+    #[deprecated(since = "0.3.0", note = "Use `vertex_count_all_levels` instead")]
+    #[inline]
+    pub fn vertex_total_count(&self) -> usize {
+        self.vertex_count_all_levels()
+    }
+
+    /// Returns the total number of vertices in all levels.
+    #[deprecated(since = "0.3.0", note = "Use `vertex_count_all_levels` instead")]
     #[inline]
     pub fn vertices_total_len(&self) -> usize {
-        self.vertex_total_count()
+        self.vertex_count_all_levels()
     }
 
     /// Returns the total number of edges in all levels.
     #[inline]
-    pub fn edge_total_count(&self) -> usize {
+    pub fn edge_count_all_levels(&self) -> usize {
         unsafe { sys::far::topology_refiner::TopologyRefiner_GetNumEdgesTotal(self.0) as _ }
     }
 
     /// Returns the total number of edges in all levels.
-    #[deprecated(since = "0.3.0", note = "Use `edge_total_count` instead")]
+    #[deprecated(since = "0.3.0", note = "Use `edge_count_all_levels` instead")]
+    #[inline]
+    pub fn edge_total_count(&self) -> usize {
+        self.edge_count_all_levels()
+    }
+
+    /// Returns the total number of edges in all levels.
+    #[deprecated(since = "0.3.0", note = "Use `edge_count_all_levels` instead")]
     #[inline]
     pub fn edges_total_len(&self) -> usize {
-        self.edge_total_count()
+        self.edge_count_all_levels()
     }
 
     /// Returns the total number of faces in all levels.
     #[inline]
-    pub fn face_total_count(&self) -> usize {
+    pub fn face_count_all_levels(&self) -> usize {
         unsafe { sys::far::topology_refiner::TopologyRefiner_GetNumFacesTotal(self.0) as _ }
     }
 
     /// Returns the total number of faces in all levels.
-    #[deprecated(since = "0.3.0", note = "Use `face_total_count` instead")]
+    #[deprecated(since = "0.3.0", note = "Use `face_count_all_levels` instead")]
+    #[inline]
+    pub fn face_total_count(&self) -> usize {
+        self.face_count_all_levels()
+    }
+
+    /// Returns the total number of faces in all levels.
+    #[deprecated(since = "0.3.0", note = "Use `face_count_all_levels` instead")]
     #[inline]
     pub fn faces_total_len(&self) -> usize {
-        self.face_total_count()
+        self.face_count_all_levels()
     }
 
     /// Returns the total number of face vertices in all levels.
     #[inline]
-    pub fn face_vertex_total_count(&self) -> usize {
+    pub fn face_vertex_count_all_levels(&self) -> usize {
         unsafe { sys::far::topology_refiner::TopologyRefiner_GetNumFaceVerticesTotal(self.0) as _ }
     }
 
     /// Returns the total number of face vertices in all levels.
-    #[deprecated(since = "0.3.0", note = "Use `face_vertex_total_count` instead")]
+    #[deprecated(since = "0.3.0", note = "Use `face_vertex_count_all_levels` instead")]
+    #[inline]
+    pub fn face_vertex_total_count(&self) -> usize {
+        self.face_vertex_count_all_levels()
+    }
+
+    /// Returns the total number of face vertices in all levels.
+    #[deprecated(since = "0.3.0", note = "Use `face_vertex_count_all_levels` instead")]
     #[inline]
     pub fn face_vertices_total_len(&self) -> usize {
-        self.face_vertex_total_count()
+        self.face_vertex_count_all_levels()
     }
 
     /// Returns the highest level of refinement.
@@ -184,7 +230,7 @@ impl TopologyRefiner {
             let ptr = unsafe {
                 sys::far::topology_refiner::TopologyRefiner_GetLevel(
                     self.0,
-                    level.try_into().unwrap(),
+                    level.min(i32::MAX as usize) as i32,
                 )
             };
             if ptr.is_null() {
@@ -203,6 +249,8 @@ impl TopologyRefiner {
     /// This method applies uniform refinement to the level specified in the
     /// given [`UniformRefinementOptions`]s.
     ///
+    /// # Arguments
+    ///
     /// * `options` - Options controlling uniform refinement.
     #[inline]
     pub fn refine_uniform(&mut self, options: UniformRefinementOptions) {
@@ -211,7 +259,7 @@ impl TopologyRefiner {
 
         sys_options._bitfield_1 =
             sys::far::topology_refiner::UniformRefinementOptions::new_bitfield_1(
-                options.refinement_level.try_into().unwrap(),
+                options.refinement_level.min(u32::MAX as usize) as u32,
                 options.order_vertices_from_faces_first as _,
                 options.full_topology_in_last_level as _,
             );
@@ -226,7 +274,10 @@ impl TopologyRefiner {
     /// This method applies uniform refinement to the level specified in the
     /// given [`AdaptiveRefinementOptions`]s.
     ///
-    /// * `options` - Options controlling uniform refinement.
+    /// # Arguments
+    ///
+    /// * `options` - Options controlling adaptive refinement.
+    /// * `selected_faces` - Indices of faces to refine adaptively.
     #[inline]
     pub fn refine_adaptive(
         &mut self,
@@ -238,8 +289,8 @@ impl TopologyRefiner {
 
         sys_options._bitfield_1 =
             sys::far::topology_refiner::AdaptiveRefinementOptions::new_bitfield_1(
-                options.isolation_level.try_into().unwrap(),
-                options.secondary_level.try_into().unwrap(),
+                options.isolation_level.min(u32::MAX as usize) as u32,
+                options.secondary_level.min(u32::MAX as usize) as u32,
                 options.single_crease_patch as _,
                 options.infintely_sharp_patch as _,
                 options.consider_face_varying_channels as _,
@@ -248,7 +299,7 @@ impl TopologyRefiner {
 
         let const_array = sys::topology_refiner::ConstIndexArray {
             _begin: selected_faces.as_ptr() as _,
-            _size: selected_faces.len().try_into().unwrap(),
+            _size: selected_faces.len().min(i32::MAX as usize) as i32,
             _phantom_0: std::marker::PhantomData,
         };
 
@@ -274,7 +325,7 @@ impl Drop for TopologyRefiner {
     #[inline]
     fn drop(&mut self) {
         unsafe {
-            (*self.0).destruct();
+            sys::far::topology_refiner::TopologyRefiner_destroy(self.0);
         }
     }
 }

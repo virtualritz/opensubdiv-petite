@@ -10,7 +10,6 @@
 //! efficiently recomputed simply by applying the blending weights to the
 //! series of coarse control vertices.
 use opensubdiv_petite_sys as sys;
-use std::convert::TryInto;
 
 use crate::Index;
 
@@ -52,7 +51,10 @@ impl Drop for StencilTable {
 
 impl StencilTable {
     /// Create a new stencil table.
-    pub fn new(refiner: &TopologyRefiner, options: StencilTableOptions) -> StencilTable {
+    pub fn new(
+        refiner: &TopologyRefiner,
+        options: StencilTableOptions,
+    ) -> crate::Result<StencilTable> {
         let mut sys_options = sys::far::stencil_table::StencilTableOptions::new();
 
         // Set the bitfield values
@@ -61,17 +63,17 @@ impl StencilTable {
         sys_options.set_generate_control_vertices(options.generate_control_vertices);
         sys_options.set_generate_intermediate_levels(options.generate_intermediate_levels);
         sys_options.set_factorize_intermediate_levels(options.factorize_intermediate_levels);
-        sys_options.set_max_level(options.max_level.try_into().unwrap());
-        sys_options.fvar_channel = options.face_varying_channel.try_into().unwrap();
+        sys_options.set_max_level(options.max_level.min(u32::MAX as usize) as u32);
+        sys_options.fvar_channel = options.face_varying_channel.min(u32::MAX as usize) as u32;
 
         let ptr =
             unsafe { sys::far::stencil_table::StencilTableFactory_Create(refiner.0, sys_options) };
 
         if ptr.is_null() {
-            panic!("StencilTableFactory_Create() returned null");
+            return Err(crate::Error::StencilTableCreation);
         }
 
-        StencilTable(ptr)
+        Ok(StencilTable(ptr))
     }
 
     /// Returns the number of stencils in the table.
@@ -156,15 +158,17 @@ impl StencilTable {
         }
     }
 
-    /// Update values by applying the stencil table
+    /// Update values by applying the stencil table.
     ///
     /// # Arguments
-    /// * `src` - Source values to interpolate from
-    /// * `start` - Optional index of first destination value to update
-    /// * `end` - Optional index of last destination value to update
+    ///
+    /// * `src` - Source values to interpolate from.
+    /// * `start` - Optional index of first destination value to update.
+    /// * `end` - Optional index of last destination value to update.
     ///
     /// # Returns
-    /// A vector containing the interpolated values
+    ///
+    /// A vector containing the interpolated values.
     pub fn update_values(&self, src: &[f32], start: Option<usize>, end: Option<usize>) -> Vec<f32> {
         self.update_values_impl(self.0, src, start, end)
     }
