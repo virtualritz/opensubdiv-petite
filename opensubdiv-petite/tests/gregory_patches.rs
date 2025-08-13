@@ -1,4 +1,4 @@
-mod test_utils;
+mod utils;
 
 use opensubdiv_petite::far::{
     AdaptiveRefinementOptions, PatchTable, PatchTableOptions, PrimvarRefiner, TopologyDescriptor,
@@ -9,7 +9,7 @@ use opensubdiv_petite::Index;
 #[cfg(feature = "truck")]
 mod truck_tests {
     use super::*;
-    use test_utils::{assert_file_matches, test_output_path};
+    use utils::{assert_file_matches, test_output_path};
     use truck_stepio::out;
 
     /// Build complete vertex buffer including all refinement levels

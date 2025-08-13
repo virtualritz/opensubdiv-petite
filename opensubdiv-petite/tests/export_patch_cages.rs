@@ -1,4 +1,4 @@
-mod test_utils;
+mod utils;
 
 use opensubdiv_petite::far::{
     AdaptiveRefinementOptions, EndCapType, PatchTable, PatchTableOptions, PrimvarRefiner,

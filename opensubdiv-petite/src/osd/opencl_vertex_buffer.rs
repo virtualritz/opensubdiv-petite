@@ -1,23 +1,28 @@
+use crate::{Error, Result};
 use opensubdiv_petite_sys as sys;
 use std::convert::TryInto;
+use std::marker::PhantomData;
 use std::ptr::NonNull;
-use std::rc::Rc;
 
 /// Safe wrapper for OpenCL context.
-#[derive(Debug, Clone)]
-pub struct OpenCLContext {
-    ptr: Rc<NonNull<std::ffi::c_void>>,
+#[derive(Debug)]
+pub struct OpenClContext<'a> {
+    ptr: NonNull<std::ffi::c_void>,
+    _marker: PhantomData<&'a std::ffi::c_void>,
 }
 
-impl OpenCLContext {
+impl<'a> OpenClContext<'a> {
     /// Create a new OpenCL context wrapper from a raw pointer.
     ///
     /// # Safety
     ///
     /// The caller must ensure that the pointer is valid and remains valid
-    /// for the lifetime of this wrapper.
-    pub unsafe fn from_ptr(ptr: *mut std::ffi::c_void) -> Option<Self> {
-        NonNull::new(ptr).map(|ptr| Self { ptr: Rc::new(ptr) })
+    /// for the lifetime 'a.
+    pub unsafe fn from_ptr(ptr: *mut std::ffi::c_void) -> Option<OpenClContext<'a>> {
+        NonNull::new(ptr).map(|ptr| OpenClContext {
+            ptr,
+            _marker: PhantomData,
+        })
     }
 
     /// Get the raw pointer for FFI calls.
@@ -27,20 +32,24 @@ impl OpenCLContext {
 }
 
 /// Safe wrapper for OpenCL command queue.
-#[derive(Debug, Clone)]
-pub struct OpenCLCommandQueue {
-    ptr: Rc<NonNull<std::ffi::c_void>>,
+#[derive(Debug)]
+pub struct OpenClCommandQueue<'a> {
+    ptr: NonNull<std::ffi::c_void>,
+    _marker: PhantomData<&'a std::ffi::c_void>,
 }
 
-impl OpenCLCommandQueue {
+impl<'a> OpenClCommandQueue<'a> {
     /// Create a new OpenCL command queue wrapper from a raw pointer.
     ///
     /// # Safety
     ///
     /// The caller must ensure that the pointer is valid and remains valid
-    /// for the lifetime of this wrapper.
-    pub unsafe fn from_ptr(ptr: *mut std::ffi::c_void) -> Option<Self> {
-        NonNull::new(ptr).map(|ptr| Self { ptr: Rc::new(ptr) })
+    /// for the lifetime 'a.
+    pub unsafe fn from_ptr(ptr: *mut std::ffi::c_void) -> Option<OpenClCommandQueue<'a>> {
+        NonNull::new(ptr).map(|ptr| OpenClCommandQueue {
+            ptr,
+            _marker: PhantomData,
+        })
     }
 
     /// Get the raw pointer for FFI calls.
@@ -51,55 +60,67 @@ impl OpenCLCommandQueue {
 
 /// Concrete vertex buffer class for OpenCL subdivision.
 ///
-/// [`OpenCLVertexBuffer`] implements the VertexBufferInterface. An instance
+/// [`OpenClVertexBuffer`] implements the VertexBufferInterface. An instance
 /// of this buffer class can be passed to
 /// [`evaluate_stencils()`](crate::osd::opencl_evaluator::evaluate_stencils()).
-pub struct OpenCLVertexBuffer(pub(crate) sys::osd::OpenCLVertexBufferPtr);
+pub struct OpenClVertexBuffer(pub(crate) sys::osd::OpenCLVertexBufferPtr);
 
-impl Drop for OpenCLVertexBuffer {
+impl Drop for OpenClVertexBuffer {
     #[inline]
     fn drop(&mut self) {
         unsafe { sys::osd::CLVertexBuffer_destroy(self.0) }
     }
 }
 
-impl OpenCLVertexBuffer {
+impl OpenClVertexBuffer {
     /// Create a new OpenCL vertex buffer.
     #[inline]
     pub fn new(
-        elements_len: usize,
-        vertices_len: usize,
-        context: &OpenCLContext,
-    ) -> OpenCLVertexBuffer {
+        element_count: usize,
+        vertex_count: usize,
+        context: Option<&OpenClContext>,
+    ) -> Result<OpenClVertexBuffer> {
         let ptr = unsafe {
             sys::osd::CLVertexBuffer_Create(
-                elements_len.try_into().unwrap(),
-                vertices_len.try_into().unwrap(),
-                context.as_ptr() as *const _,
+                element_count
+                    .try_into()
+                    .map_err(|_| Error::InvalidBufferSize {
+                        expected: element_count,
+                        actual: i32::MAX as usize,
+                    })?,
+                vertex_count
+                    .try_into()
+                    .map_err(|_| Error::InvalidBufferSize {
+                        expected: vertex_count,
+                        actual: i32::MAX as usize,
+                    })?,
+                context.map_or(std::ptr::null(), |ctx| ctx.as_ptr() as *const _),
             )
         };
         if ptr.is_null() {
-            panic!("CLVertexBuffer_Create returned null");
+            return Err(Error::GpuBackend(
+                "CLVertexBuffer_Create returned null".to_string(),
+            ));
         }
 
-        OpenCLVertexBuffer(ptr)
+        Ok(OpenClVertexBuffer(ptr))
     }
 
     /// Returns how many elements defined in this vertex buffer.
     #[inline]
-    pub fn elements_len(&self) -> usize {
+    pub fn element_count(&self) -> usize {
         unsafe { sys::osd::CLVertexBuffer_GetNumElements(self.0) as _ }
     }
 
     /// Returns how many vertices allocated in this vertex buffer.
     #[inline]
-    pub fn vertices_len(&self) -> usize {
+    pub fn vertex_count(&self) -> usize {
         unsafe { sys::osd::CLVertexBuffer_GetNumVertices(self.0) as _ }
     }
 
     /// Get the OpenCL buffer object.
     #[inline]
-    pub fn bind_cl_buffer(&self, command_queue: &OpenCLCommandQueue) -> *const std::ffi::c_void {
+    pub fn bind_cl_buffer(&self, command_queue: &OpenClCommandQueue) -> *const std::ffi::c_void {
         unsafe { sys::osd::CLVertexBuffer_BindCLBuffer(self.0, command_queue.as_ptr() as *const _) }
     }
 
@@ -110,36 +131,46 @@ impl OpenCLVertexBuffer {
         &mut self,
         src: &[f32],
         start_vertex: usize,
-        vertices_len: usize,
-        command_queue: &OpenCLCommandQueue,
-    ) {
+        vertex_count: usize,
+        command_queue: &OpenClCommandQueue,
+    ) -> Result<()> {
         // do some basic error checking
-        let elements_len = self.elements_len();
+        let element_count = self.element_count();
 
-        if start_vertex * elements_len > src.len() {
-            panic!(
-                "Start vertex is out of range of the src slice: {} ({})",
-                start_vertex,
-                src.len()
-            );
+        if start_vertex * element_count > src.len() {
+            return Err(Error::InvalidBufferSize {
+                expected: start_vertex * element_count,
+                actual: src.len(),
+            });
         }
 
-        if vertices_len * elements_len > src.len() {
-            panic!(
-                "vertices_len is out of range of the src slice: {} ({})",
-                vertices_len,
-                src.len()
-            );
+        if vertex_count * element_count > src.len() {
+            return Err(Error::InvalidBufferSize {
+                expected: vertex_count * element_count,
+                actual: src.len(),
+            });
         }
 
         unsafe {
             sys::osd::CLVertexBuffer_UpdateData(
                 self.0,
                 src.as_ptr(),
-                start_vertex.try_into().unwrap(),
-                vertices_len.try_into().unwrap(),
+                start_vertex
+                    .try_into()
+                    .map_err(|_| Error::InvalidBufferSize {
+                        expected: start_vertex,
+                        actual: i32::MAX as usize,
+                    })?,
+                vertex_count
+                    .try_into()
+                    .map_err(|_| Error::InvalidBufferSize {
+                        expected: vertex_count,
+                        actual: i32::MAX as usize,
+                    })?,
                 command_queue.as_ptr() as *const _,
             );
         }
+
+        Ok(())
     }
 }

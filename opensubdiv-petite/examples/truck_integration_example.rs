@@ -63,7 +63,7 @@ fn main() {
 
         // Get refined vertex positions
         let level = refiner.level(2).expect("Failed to get refinement level");
-        let num_vertices = level.vertices_len();
+        let num_vertices = level.vertex_count();
 
         // For this example, we'll use placeholder positions
         // In a real application, you would use PrimvarRefiner to refine the positions

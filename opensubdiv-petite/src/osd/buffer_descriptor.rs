@@ -15,6 +15,7 @@
 //!    - uTangent (offset = n+7,  length = 3, stride = 13)
 //!    - vTangent (offset = n+10, length = 3, stride = 13)
 //! ```
+use crate::{Error, Result};
 use opensubdiv_petite_sys as sys;
 use std::convert::TryInto;
 
@@ -36,12 +37,24 @@ impl BufferDescriptor {
     ///
     /// Use [`default()`](BufferDescriptor::default()) to create an empty buffer
     /// descriptor.
-    pub fn new(offset: usize, length: usize, stride: usize) -> Self {
-        Self(sys::osd::BufferDescriptor {
-            offset: offset.try_into().unwrap(),
-            length: length.try_into().unwrap(),
-            stride: stride.try_into().unwrap(),
-        })
+    ///
+    /// # Errors
+    /// Returns an error if any of the values cannot fit in an i32.
+    pub fn new(offset: usize, length: usize, stride: usize) -> Result<Self> {
+        Ok(Self(sys::osd::BufferDescriptor {
+            offset: offset.try_into().map_err(|_| Error::InvalidBufferSize {
+                expected: offset,
+                actual: i32::MAX as usize,
+            })?,
+            length: length.try_into().map_err(|_| Error::InvalidBufferSize {
+                expected: length,
+                actual: i32::MAX as usize,
+            })?,
+            stride: stride.try_into().map_err(|_| Error::InvalidBufferSize {
+                expected: stride,
+                actual: i32::MAX as usize,
+            })?,
+        }))
     }
 
     /// Returns the relative offset within a stride.

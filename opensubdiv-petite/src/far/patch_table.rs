@@ -127,7 +127,30 @@ pub enum EndCapType {
 // Re-export TriangleSubdivision from topology_refiner
 pub use crate::far::topology_refiner::TriangleSubdivision;
 
-/// A patch table containing refined surface patches
+/// A patch table containing refined surface patches.
+///
+/// The [`PatchTable`] stores a collection of surface patches generated from
+/// a refined [`TopologyRefiner`](crate::far::TopologyRefiner). It represents
+/// the limit surface as a collection of parametric patches (B-spline, Bezier,
+/// or Gregory patches).
+///
+/// ## Local Points
+///
+/// For patches near extraordinary vertices or boundaries that cannot be
+/// represented with regular B-spline or Bezier patches, OpenSubdiv creates
+/// additional "local points". These are extra control vertices needed for
+/// Gregory patches and other irregular patch types.
+///
+/// The local points are computed from the refined vertices using stencil
+/// tables. When [`local_point_stencil_table`](Self::local_point_stencil_table)
+/// returns a stencil table with `control_vertex_count() == 0`, this indicates
+/// the stencil table is specifically for computing local points from refined
+/// vertices, not from base vertices.
+///
+/// ## Example
+///
+/// See the `patch_table_local_points` example for a complete demonstration
+/// of working with local points and their stencil tables.
 pub struct PatchTable {
     ptr: *mut sys::far::PatchTable,
     _phantom: PhantomData<sys::far::PatchTable>,
@@ -159,18 +182,39 @@ impl PatchTable {
     }
 
     /// Get the number of patch arrays
-    pub fn patch_arrays_len(&self) -> usize {
+    pub fn patch_array_count(&self) -> usize {
         unsafe { sys::far::PatchTable_GetNumPatchArrays(self.ptr) as usize }
     }
 
+    /// Get the number of patch arrays
+    #[deprecated(since = "0.3.0", note = "Use `patch_array_count` instead")]
+    #[inline]
+    pub fn patch_arrays_len(&self) -> usize {
+        self.patch_array_count()
+    }
+
     /// Get the total number of patches
-    pub fn patches_len(&self) -> usize {
+    pub fn patch_count(&self) -> usize {
         unsafe { sys::far::PatchTable_GetNumPatches(self.ptr) as usize }
     }
 
+    /// Get the total number of patches
+    #[deprecated(since = "0.3.0", note = "Use `patch_count` instead")]
+    #[inline]
+    pub fn patches_len(&self) -> usize {
+        self.patch_count()
+    }
+
     /// Get the number of control vertices
-    pub fn control_vertices_len(&self) -> usize {
+    pub fn control_vertex_count(&self) -> usize {
         unsafe { sys::far::PatchTable_GetNumControlVertices(self.ptr) as usize }
+    }
+
+    /// Get the number of control vertices
+    #[deprecated(since = "0.3.0", note = "Use `control_vertex_count` instead")]
+    #[inline]
+    pub fn control_vertices_len(&self) -> usize {
+        self.control_vertex_count()
     }
 
     /// Get the maximum valence
@@ -178,12 +222,41 @@ impl PatchTable {
         unsafe { sys::far::PatchTable_GetMaxValence(self.ptr) as usize }
     }
 
-    /// Get the number of local points
+    /// Get the number of local points.
+    ///
+    /// Local points are additional vertices created for patches that cannot
+    /// be represented with regular B-spline or Bezier patches, such as
+    /// Gregory patches near extraordinary vertices.
     pub fn local_point_count(&self) -> usize {
         unsafe { sys::far::PatchTable_GetNumLocalPoints(self.ptr) as usize }
     }
 
-    /// Get the stencil table for local points
+    /// Get the stencil table for computing local points.
+    ///
+    /// The returned stencil table can be used to compute local point positions
+    /// from refined vertices. When the stencil table's `control_vertex_count()`
+    /// returns 0, it indicates the stencils operate on refined vertices rather
+    /// than base vertices.
+    ///
+    /// # Returns
+    ///
+    /// - `Some(stencil_table)` if local points exist and need to be computed.
+    /// - `None` if there are no local points (all patches are regular).
+    ///
+    /// # Example
+    ///
+    /// ```no_run
+    /// # use opensubdiv_petite::far::{PatchTable, TopologyRefiner};
+    /// # fn example(patch_table: &PatchTable, refined_vertices: &[f32]) {
+    /// if let Some(stencil_table) = patch_table.local_point_stencil_table() {
+    ///     // When control_vertex_count is 0, use refined vertices as input
+    ///     if stencil_table.control_vertex_count() == 0 {
+    ///         let local_points = stencil_table.update_values(refined_vertices, None, None);
+    ///         // local_points now contains the computed local point positions
+    ///     }
+    /// }
+    /// # }
+    /// ```
     pub fn local_point_stencil_table(&self) -> Option<StencilTableRef<'_>> {
         unsafe {
             let stencil_ptr = sys::far::PatchTable_GetLocalPointStencilTable(self.ptr);
@@ -199,15 +272,22 @@ impl PatchTable {
     }
 
     /// Get the number of patches in a specific patch array
-    pub fn patch_array_patches_len(&self, array_index: usize) -> usize {
+    pub fn patch_array_patch_count(&self, array_index: usize) -> usize {
         unsafe {
             sys::far::PatchTable_GetNumPatches_PatchArray(self.ptr, array_index as i32) as usize
         }
     }
 
+    /// Get the number of patches in a specific patch array
+    #[deprecated(since = "0.3.0", note = "Use `patch_array_patch_count` instead")]
+    #[inline]
+    pub fn patch_array_patches_len(&self, array_index: usize) -> usize {
+        self.patch_array_patch_count(array_index)
+    }
+
     /// Get the descriptor for a patch array
     pub fn patch_array_descriptor(&self, array_index: usize) -> Option<PatchDescriptor> {
-        if array_index >= self.patch_arrays_len() {
+        if array_index >= self.patch_array_count() {
             return None;
         }
 
@@ -220,7 +300,7 @@ impl PatchTable {
 
     /// Get the control vertex indices for a patch array
     pub fn patch_array_vertices(&self, array_index: usize) -> Option<&[Index]> {
-        if array_index >= self.patch_arrays_len() {
+        if array_index >= self.patch_array_count() {
             return None;
         }
 
@@ -229,9 +309,9 @@ impl PatchTable {
             if ptr.is_null() {
                 None
             } else {
-                let len = self.patch_array_patches_len(array_index);
+                let len = self.patch_array_patch_count(array_index);
                 let desc = self.patch_array_descriptor(array_index)?;
-                let num_cvs = desc.control_vertices_len();
+                let num_cvs = desc.control_vertex_count();
                 let total_len = len * num_cvs;
 
                 // Cast from i32 to Index (u32)
@@ -242,11 +322,11 @@ impl PatchTable {
 
     /// Get the patch parameter for a specific patch
     pub fn patch_param(&self, array_index: usize, patch_index: usize) -> Option<PatchParam> {
-        if array_index >= self.patch_arrays_len() {
+        if array_index >= self.patch_array_count() {
             return None;
         }
 
-        if patch_index >= self.patch_array_patches_len(array_index) {
+        if patch_index >= self.patch_array_patch_count(array_index) {
             return None;
         }
 
@@ -269,7 +349,7 @@ impl PatchTable {
             if ptr.is_null() {
                 None
             } else {
-                let len = self.control_vertices_len();
+                let len = self.control_vertex_count();
                 // Cast from i32 to Index (u32)
                 Some(std::slice::from_raw_parts(ptr as *const Index, len))
             }
@@ -332,8 +412,15 @@ impl PatchDescriptor {
     }
 
     /// Get the number of control vertices for this patch type
-    pub fn control_vertices_len(&self) -> usize {
+    pub fn control_vertex_count(&self) -> usize {
         unsafe { sys::far::PatchDescriptor_GetNumControlVertices(&self.inner) as usize }
+    }
+
+    /// Get the number of control vertices for this patch type
+    #[deprecated(since = "0.3.0", note = "Use `control_vertex_count` instead")]
+    #[inline]
+    pub fn control_vertices_len(&self) -> usize {
+        self.control_vertex_count()
     }
 
     /// Check if this is a regular patch
@@ -453,7 +540,7 @@ pub type BasisWeights = (Vec<f32>, Vec<f32>, Vec<f32>, Vec<f32>, Vec<f32>, Vec<f
 impl PatchTable {
     /// Evaluate basis functions for a patch at given parametric coordinates
     pub fn evaluate_basis(&self, patch_index: usize, u: f32, v: f32) -> Option<BasisWeights> {
-        if patch_index >= self.patches_len() {
+        if patch_index >= self.patch_count() {
             return None;
         }
 
@@ -461,8 +548,8 @@ impl PatchTable {
         let mut array_index = 0;
         let mut local_patch_index = patch_index;
 
-        for i in 0..self.patch_arrays_len() {
-            let num_patches = self.patch_array_patches_len(i);
+        for i in 0..self.patch_array_count() {
+            let num_patches = self.patch_array_patch_count(i);
             if local_patch_index < num_patches {
                 array_index = i;
                 break;
@@ -472,7 +559,7 @@ impl PatchTable {
 
         // Get the number of control vertices for this patch
         let desc = self.patch_array_descriptor(array_index)?;
-        let num_cvs = desc.control_vertices_len();
+        let num_cvs = desc.control_vertex_count();
 
         // Allocate vectors for weights
         let mut w_p = vec![0.0f32; num_cvs];
@@ -512,7 +599,7 @@ impl PatchTable {
         v: f32,
         control_points: &[[f32; 3]],
     ) -> Option<PatchEvalResult> {
-        if patch_index >= self.patches_len() {
+        if patch_index >= self.patch_count() {
             return None;
         }
 

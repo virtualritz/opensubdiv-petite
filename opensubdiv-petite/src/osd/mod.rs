@@ -40,11 +40,15 @@ pub mod cpu_evaluator;
 pub mod cpu_vertex_buffer;
 pub use cpu_vertex_buffer::*;
 
+#[cfg(feature = "cuda")]
 pub mod cuda_vertex_buffer;
+#[cfg(feature = "cuda")]
 pub use cuda_vertex_buffer::*;
 
+#[cfg(feature = "cuda")]
 pub mod cuda_evaluator;
 // Don't use wildcard export to avoid evaluate_stencils name conflicts
+#[cfg(feature = "cuda")]
 pub use cuda_evaluator::CudaStencilTable;
 
 #[cfg(feature = "metal")]
@@ -67,4 +71,4 @@ pub use opencl_vertex_buffer::*;
 pub mod opencl_evaluator;
 // Don't use wildcard export to avoid evaluate_stencils name conflicts
 #[cfg(feature = "opencl")]
-pub use opencl_evaluator::OpenCLStencilTable;
+pub use opencl_evaluator::OpenClStencilTable;

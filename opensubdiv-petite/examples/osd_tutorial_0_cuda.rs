@@ -58,8 +58,10 @@ fn main() {
         // pack the control vertices at the start of the buffer
         src_buffer.update_data(&vertices, 0, n_coarse_verts);
 
-        let src_desc = osd::BufferDescriptor::new(0, 3, 3);
-        let dst_desc = osd::BufferDescriptor::new(0, 3, 3);
+        let src_desc =
+            osd::BufferDescriptor::new(0, 3, 3).expect("Failed to create src descriptor");
+        let dst_desc =
+            osd::BufferDescriptor::new(0, 3, 3).expect("Failed to create dst descriptor");
 
         // launch the computation
         osd::cuda_evaluator::evaluate_stencils(

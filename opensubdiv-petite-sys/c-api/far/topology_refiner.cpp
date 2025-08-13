@@ -15,6 +15,11 @@ TopologyRefiner* TopologyRefinerFactory_TopologyDescriptor_Create(
     return OpenSubdiv::Far::TopologyRefinerFactory<TopologyDescriptor>::Create(*descriptor, options);
 }
 
+/// \brief Destroy a TopologyRefiner instance
+void TopologyRefiner_destroy(TopologyRefiner* refiner) {
+    delete refiner;
+}
+
 /// \brief Returns the number of refinement levels
 int TopologyRefiner_GetNumLevels(TopologyRefiner* refiner) {
     return refiner->GetNumLevels();

@@ -5,25 +5,29 @@ use crate::far::StencilTable;
 use opensubdiv_petite_sys as sys;
 
 use crate::Error;
+use std::marker::PhantomData;
 use std::ptr::NonNull;
-use std::rc::Rc;
 type Result<T, E = Error> = std::result::Result<T, E>;
 
 /// Safe wrapper for Metal compute encoder.
-#[derive(Debug, Clone)]
-pub struct MetalComputeEncoder {
-    ptr: Rc<NonNull<std::ffi::c_void>>,
+#[derive(Debug)]
+pub struct MetalComputeEncoder<'a> {
+    ptr: NonNull<std::ffi::c_void>,
+    _marker: PhantomData<&'a std::ffi::c_void>,
 }
 
-impl MetalComputeEncoder {
+impl<'a> MetalComputeEncoder<'a> {
     /// Create a new Metal compute encoder wrapper from a raw pointer.
     ///
     /// # Safety
     ///
     /// The caller must ensure that the pointer is valid and remains valid
-    /// for the lifetime of this wrapper.
-    pub unsafe fn from_ptr(ptr: *mut std::ffi::c_void) -> Option<Self> {
-        NonNull::new(ptr).map(|ptr| Self { ptr: Rc::new(ptr) })
+    /// for the lifetime 'a.
+    pub unsafe fn from_ptr(ptr: *mut std::ffi::c_void) -> Option<MetalComputeEncoder<'a>> {
+        NonNull::new(ptr).map(|ptr| MetalComputeEncoder {
+            ptr,
+            _marker: PhantomData,
+        })
     }
 
     /// Get the raw pointer for FFI calls.
@@ -37,15 +41,17 @@ impl MetalComputeEncoder {
 /// This function has a same signature as other device kernels have so that it
 /// can be called in the same way from OsdMesh template interface.
 ///
-/// * `srcBuffer` - Input primvar buffer. Must have GetMTLBuffer() method
-///   returning a Metal buffer for read
-/// * `srcDesc` - vertex buffer descriptor for the input buffer
-/// * `dstBuffer` -  Output primvar buffer must have GetMTLBuffer() method
-///   returning a Metal buffer for write
-/// * `dstDesc` - vertex buffer descriptor for the output buffer
-/// * `stencilTable` - [StencilTable] or equivalent
-/// * `commandBuffer` - Metal command buffer for execution
-/// * `computeEncoder` - Metal compute command encoder
+/// # Arguments
+///
+/// * `src_buffer` - Input primvar buffer. Must have GetMTLBuffer() method
+///   returning a Metal buffer for read.
+/// * `src_desc` - Vertex buffer descriptor for the input buffer.
+/// * `dst_buffer` - Output primvar buffer. Must have GetMTLBuffer() method
+///   returning a Metal buffer for write.
+/// * `dst_desc` - Vertex buffer descriptor for the output buffer.
+/// * `stencil_table` - StencilTable or equivalent.
+/// * `command_buffer` - Metal command buffer for execution.
+/// * `compute_encoder` - Metal compute command encoder.
 pub fn evaluate_stencils(
     src_buffer: &MetalVertexBuffer,
     src_desc: BufferDescriptor,
@@ -79,16 +85,18 @@ pub struct MetalStencilTable<'a> {
 
 impl<'a> MetalStencilTable<'a> {
     /// Create a new Metal stencil table from a Far stencil table.
-    pub fn new(st: &'a StencilTable, device: &MetalDevice) -> MetalStencilTable<'a> {
+    pub fn new(st: &'a StencilTable, device: &MetalDevice) -> Result<MetalStencilTable<'a>> {
         let ptr = unsafe { sys::osd::MTLStencilTable_Create(st.0, device.as_ptr() as *const _) };
         if ptr.is_null() {
-            panic!("Could not create MetalStencilTable");
+            return Err(Error::GpuBackend(
+                "Could not create MetalStencilTable".to_string(),
+            ));
         }
 
-        MetalStencilTable {
+        Ok(MetalStencilTable {
             ptr,
             st: std::marker::PhantomData,
-        }
+        })
     }
 }
 

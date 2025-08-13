@@ -95,6 +95,8 @@ extern "C" {
         descriptor: *const crate::OpenSubdiv_v3_6_1_Far_TopologyDescriptor,
         options: TopologyRefinerFactoryOptions,
     ) -> TopologyRefinerPtr;
+    /// \brief Destroy a TopologyRefiner instance
+    pub fn TopologyRefiner_destroy(refiner: TopologyRefinerPtr);
     /// \brief Returns true if uniform refinement has been applied
     pub fn TopologyRefiner_GetNumLevels(refiner: TopologyRefinerPtr) -> u32;
     /// \brief Returns the maximum vertex valence in all levels
