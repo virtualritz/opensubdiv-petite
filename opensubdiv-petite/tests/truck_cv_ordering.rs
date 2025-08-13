@@ -1,4 +1,4 @@
-mod test_utils;
+mod utils;
 
 #[cfg(feature = "truck")]
 #[test]

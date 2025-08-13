@@ -190,7 +190,6 @@ impl DirectoryEntry {
             entity_label: "".to_string(),
         }
     }
-
 }
 
 /// Export OpenSubdiv patches as B-spline surfaces to IGES format
@@ -223,13 +222,13 @@ pub fn export_patches_as_iges<W: Write>(
 
     // Process patches
     let mut _patch_global_idx = 0;
-    for array_idx in 0..patch_table.patch_arrays_len() {
+    for array_idx in 0..patch_table.patch_array_count() {
         if let Some(desc) = patch_table.patch_array_descriptor(array_idx) {
             if desc.patch_type() != PatchType::Regular {
                 continue;
             }
 
-            let num_patches = patch_table.patch_array_patches_len(array_idx);
+            let num_patches = patch_table.patch_array_patch_count(array_idx);
             if let Some(cv_indices) = patch_table.patch_array_vertices(array_idx) {
                 const REGULAR_PATCH_SIZE: usize = 16; // 4x4 control points
 
@@ -281,36 +280,15 @@ pub fn export_patches_as_iges<W: Write>(
 
                     // Control points X, Y, Z coordinates
                     // Control points are in row-major order (V varies fastest)
-                    // First all X coordinates
-                    for v in 0..4 {
-                        for u in 0..4 {
-                            let idx = v * 4 + u;
-                            let cv_idx = patch_cvs[idx].0 as usize;
+                    // Write X, Y, Z coordinates separately as required by IGES format
+                    for coord_idx in 0..3 {
+                        for cv in patch_cvs.iter().take(16) {
+                            let cv_idx = cv.0 as usize;
                             if cv_idx >= control_points.len() {
                                 return Err(IgesExportError::InvalidControlPoints);
                             }
                             let cp = &control_points[cv_idx];
-                            line.push_str(&format!("{:.6},", cp[0]));
-                        }
-                    }
-
-                    // Then all Y coordinates
-                    for v in 0..4 {
-                        for u in 0..4 {
-                            let idx = v * 4 + u;
-                            let cv_idx = patch_cvs[idx].0 as usize;
-                            let cp = &control_points[cv_idx];
-                            line.push_str(&format!("{:.6},", cp[1]));
-                        }
-                    }
-
-                    // Finally all Z coordinates
-                    for v in 0..4 {
-                        for u in 0..4 {
-                            let idx = v * 4 + u;
-                            let cv_idx = patch_cvs[idx].0 as usize;
-                            let cp = &control_points[cv_idx];
-                            line.push_str(&format!("{:.6},", cp[2]));
+                            line.push_str(&format!("{:.6},", cp[coord_idx]));
                         }
                     }
 
@@ -334,9 +312,10 @@ pub fn export_patches_as_iges<W: Write>(
                         DirectoryEntry::bspline_surface(param_pointer, param_lines.len() as i32);
 
                     directory_entries.push(entry);
+                    let param_lines_len = param_lines.len();
                     parameter_data.push(param_lines);
 
-                    p_count += parameter_data.last().unwrap().len() as i32;
+                    p_count += param_lines_len as i32;
                     d_count += 2; // Each directory entry takes 2 lines
 
                     _patch_global_idx += 1;

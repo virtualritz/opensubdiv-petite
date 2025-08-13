@@ -47,7 +47,7 @@
 //! tear apart the surface along the crease.  If you really want to displace a
 //! surface at a crease, it may be better to make the crease semi-sharp.
 use opensubdiv_petite_sys as sys;
-use std::{convert::TryInto, marker::PhantomData};
+use std::marker::PhantomData;
 
 /// A `TopologyDescriptor` holds references to raw topology data as flat index
 /// buffers.
@@ -57,7 +57,7 @@ use std::{convert::TryInto, marker::PhantomData};
 ///
 /// See the [module level documentation](crate::far::topology_descriptor) for
 /// an example.
-#[derive(Clone, Copy, Debug)]
+#[derive(Debug)]
 pub struct TopologyDescriptor<'a> {
     pub(crate) descriptor: sys::OpenSubdiv_v3_6_1_Far_TopologyDescriptor,
     // _marker needs to be invariant in 'a.
@@ -71,7 +71,8 @@ impl<'a> TopologyDescriptor<'a> {
     /// handedness.  This is fed into a
     /// [`TopologyRefiner`](crate::far::TopologyRefiner).
     ///
-    /// ## Parameters
+    /// # Arguments
+    ///
     /// * `vertices_len` - The number of vertices in the mesh.
     /// * `vertices_per_face` - A slice containing the number of vertices for
     ///   each face in the mesh. The length of this is the number of faces in
@@ -83,33 +84,36 @@ impl<'a> TopologyDescriptor<'a> {
         vertices_len: usize,
         vertices_per_face: &'a [u32],
         vertex_indices_per_face: &'a [u32],
-    ) -> TopologyDescriptor<'a> {
+    ) -> crate::Result<TopologyDescriptor<'a>> {
         let mut descriptor = unsafe { sys::OpenSubdiv_v3_6_1_Far_TopologyDescriptor::new() };
 
         #[cfg(feature = "topology_validation")]
         {
             if vertex_indices_per_face.len() != vertices_per_face.iter().sum::<u32>() as _ {
-                panic!("The number of vertex indices is not equal to the sum of face arties.")
+                return Err(crate::Error::InvalidTopology(
+                    "The number of vertex indices is not equal to the sum of face arities."
+                        .to_string(),
+                ));
             }
-            for index in vertex_indices_per_face.iter().enumerate() {
-                if vertices_len <= (*index.1 as usize) {
-                    panic!(
+            for (i, &vertex_index) in vertex_indices_per_face.iter().enumerate() {
+                if vertices_len <= (vertex_index as usize) {
+                    return Err(crate::Error::InvalidTopology(format!(
                         "Vertex index[{}] = {} is out of range (should be < {}).",
-                        index.0, *index.1, vertices_len
-                    );
+                        i, vertex_index, vertices_len
+                    )));
                 }
             }
         }
 
-        descriptor.numVertices = vertices_len.try_into().unwrap();
-        descriptor.numFaces = vertices_per_face.len().try_into().unwrap();
+        descriptor.numVertices = vertices_len.min(i32::MAX as usize) as i32;
+        descriptor.numFaces = vertices_per_face.len().min(i32::MAX as usize) as i32;
         descriptor.numVertsPerFace = vertices_per_face.as_ptr() as _;
         descriptor.vertIndicesPerFace = vertex_indices_per_face.as_ptr() as _;
 
-        TopologyDescriptor {
+        Ok(TopologyDescriptor {
             descriptor,
             _marker: PhantomData,
-        }
+        })
     }
 
     /// Add creases as vertex index pairs with corresponding sharpness.
@@ -120,17 +124,18 @@ impl<'a> TopologyDescriptor<'a> {
 
         #[cfg(feature = "topology_validation")]
         {
-            for crease in creases.iter().enumerate() {
-                if self.descriptor.numVertices as u32 <= *crease.1 {
+            for (i, &crease_vertex) in creases.iter().enumerate() {
+                if self.descriptor.numVertices as u32 <= crease_vertex {
+                    // In builder pattern, we can't return Result, so we panic with a clear message
                     panic!(
                         "Crease index[{}] = {} is out of range (should be < {}).",
-                        crease.0, *crease.1, self.descriptor.numVertices
+                        i, crease_vertex, self.descriptor.numVertices
                     );
                 }
             }
         }
 
-        self.descriptor.numCreases = sharpness.len().try_into().unwrap();
+        self.descriptor.numCreases = sharpness.len().min(i32::MAX as usize) as i32;
         self.descriptor.creaseVertexIndexPairs = creases.as_ptr() as _;
         self.descriptor.creaseWeights = sharpness.as_ptr();
         self
@@ -153,7 +158,7 @@ impl<'a> TopologyDescriptor<'a> {
             }
         }
 
-        self.descriptor.numCorners = sharpness.len().try_into().unwrap();
+        self.descriptor.numCorners = sharpness.len().min(i32::MAX as usize) as i32;
         self.descriptor.cornerVertexIndices = corners.as_ptr() as _;
         self.descriptor.cornerWeights = sharpness.as_ptr();
         self
@@ -174,7 +179,7 @@ impl<'a> TopologyDescriptor<'a> {
             }
         }
 
-        self.descriptor.numHoles = holes.len().try_into().unwrap();
+        self.descriptor.numHoles = holes.len().min(i32::MAX as usize) as i32;
         self.descriptor.holeIndices = holes.as_ptr() as _;
         self
     }

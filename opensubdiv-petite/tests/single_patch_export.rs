@@ -1,11 +1,11 @@
 //! Test for exporting a single patch from simple cube to STEP format
 
-mod test_utils;
+mod utils;
 
 #[cfg(feature = "truck")]
 mod tests {
-    use crate::test_utils::default_end_cap_type;
-    use crate::test_utils::{assert_file_matches, test_output_path};
+    use crate::utils::default_end_cap_type;
+    use crate::utils::{assert_file_matches, test_output_path};
     use opensubdiv_petite::far::{
         EndCapType, PatchTable, PatchTableOptions, PrimvarRefiner, TopologyDescriptor,
         TopologyRefiner, TopologyRefinerOptions,

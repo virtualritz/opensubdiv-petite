@@ -16,23 +16,23 @@ use truck_modeling::{
 use truck_modeling::{Curve, Edge, Vertex, Wire};
 
 /// Type alias for results in this module
-pub type Result<T> = std::result::Result<T, TruckIntegrationError>;
+pub type Result<T> = std::result::Result<T, TruckError>;
 
 /// Error type for truck integration
 #[derive(Debug, Clone, Error)]
-pub enum TruckIntegrationError {
+pub enum TruckError {
     /// Unsupported patch type
     #[error("Unsupported patch type: {0:?}")]
     UnsupportedPatchType(PatchType),
-    
+
     /// Invalid control point configuration
     #[error("Invalid control points configuration")]
     InvalidControlPoints,
-    
+
     /// Patch evaluation failed
     #[error("Patch evaluation failed")]
     EvaluationFailed,
-    
+
     /// Invalid knot vector
     #[error("Invalid knot vector")]
     InvalidKnotVector,
@@ -66,27 +66,27 @@ impl<'a> PatchRef<'a> {
     }
 
     /// Get patch array information
-    fn patch_info(&self) -> std::result::Result<(usize, usize, PatchType), TruckIntegrationError> {
+    fn patch_info(&self) -> std::result::Result<(usize, usize, PatchType), TruckError> {
         let mut current_index = self.patch_index;
 
-        for array_idx in 0..self.patch_table.patch_arrays_len() {
-            let array_size = self.patch_table.patch_array_patches_len(array_idx);
+        for array_idx in 0..self.patch_table.patch_array_count() {
+            let array_size = self.patch_table.patch_array_patch_count(array_idx);
             if current_index < array_size {
                 let desc = self
                     .patch_table
                     .patch_array_descriptor(array_idx)
-                    .ok_or(TruckIntegrationError::InvalidControlPoints)?;
+                    .ok_or(TruckError::InvalidControlPoints)?;
                 return Ok((array_idx, current_index, desc.patch_type()));
             }
             current_index -= array_size;
         }
 
         eprintln!("Failed to find patch {} in patch table", self.patch_index);
-        Err(TruckIntegrationError::InvalidControlPoints)
+        Err(TruckError::InvalidControlPoints)
     }
 
     /// Extract control points for this patch
-    fn control_points(&self) -> std::result::Result<Vec<Vec<Point3<f64>>>, TruckIntegrationError> {
+    fn control_points(&self) -> std::result::Result<Vec<Vec<Point3<f64>>>, TruckError> {
         let (array_index, local_index, patch_type) = self.patch_info()?;
 
         // AIDEV-NOTE: Gregory patch support
@@ -103,7 +103,7 @@ impl<'a> PatchRef<'a> {
             PatchType::GregoryTriangle => {
                 self.extract_gregory_triangle_patch_control_points(array_index, local_index)
             }
-            _ => Err(TruckIntegrationError::UnsupportedPatchType(patch_type)),
+            _ => Err(TruckError::UnsupportedPatchType(patch_type)),
         }
     }
 
@@ -112,36 +112,36 @@ impl<'a> PatchRef<'a> {
         &self,
         array_index: usize,
         local_index: usize,
-    ) -> std::result::Result<Vec<Vec<Point3<f64>>>, TruckIntegrationError> {
+    ) -> std::result::Result<Vec<Vec<Point3<f64>>>, TruckError> {
         const REGULAR_PATCH_SIZE: usize = 4;
         let desc = self
             .patch_table
             .patch_array_descriptor(array_index)
-            .ok_or(TruckIntegrationError::InvalidControlPoints)?;
+            .ok_or(TruckError::InvalidControlPoints)?;
 
-        if desc.control_vertices_len() != REGULAR_PATCH_SIZE * REGULAR_PATCH_SIZE {
-            return Err(TruckIntegrationError::InvalidControlPoints);
+        if desc.control_vertex_count() != REGULAR_PATCH_SIZE * REGULAR_PATCH_SIZE {
+            return Err(TruckError::InvalidControlPoints);
         }
 
         let cv_indices = self
             .patch_table
             .patch_array_vertices(array_index)
-            .ok_or(TruckIntegrationError::InvalidControlPoints)?;
+            .ok_or(TruckError::InvalidControlPoints)?;
 
-        let start = local_index * desc.control_vertices_len();
-        if start + desc.control_vertices_len() > cv_indices.len() {
+        let start = local_index * desc.control_vertex_count();
+        if start + desc.control_vertex_count() > cv_indices.len() {
             eprintln!(
                 "Patch {} (array {}, local {}): start={}, cvs_needed={}, available={}",
                 self.patch_index,
                 array_index,
                 local_index,
                 start,
-                desc.control_vertices_len(),
+                desc.control_vertex_count(),
                 cv_indices.len()
             );
-            return Err(TruckIntegrationError::InvalidControlPoints);
+            return Err(TruckError::InvalidControlPoints);
         }
-        let patch_cvs = &cv_indices[start..start + desc.control_vertices_len()];
+        let patch_cvs = &cv_indices[start..start + desc.control_vertex_count()];
 
         let mut control_matrix =
             vec![vec![Point3::origin(); REGULAR_PATCH_SIZE]; REGULAR_PATCH_SIZE];
@@ -158,7 +158,7 @@ impl<'a> PatchRef<'a> {
                     idx,
                     self.control_points.len() - 1
                 );
-                return Err(TruckIntegrationError::InvalidControlPoints);
+                return Err(TruckError::InvalidControlPoints);
             }
 
             let cp = &self.control_points[idx];
@@ -178,7 +178,7 @@ impl<'a> PatchRef<'a> {
         &self,
         _array_index: usize,
         _local_index: usize,
-    ) -> std::result::Result<Vec<Vec<Point3<f64>>>, TruckIntegrationError> {
+    ) -> std::result::Result<Vec<Vec<Point3<f64>>>, TruckError> {
         // AIDEV-NOTE: Gregory basis patch approximation
         // Gregory basis patches have 20 control points arranged in a special pattern.
         // For now, we evaluate the patch at a 4x4 grid to create an approximation.
@@ -206,7 +206,7 @@ impl<'a> PatchRef<'a> {
                         result.point[2] as f64,
                     );
                 } else {
-                    return Err(TruckIntegrationError::EvaluationFailed);
+                    return Err(TruckError::EvaluationFailed);
                 }
             }
         }
@@ -219,7 +219,7 @@ impl<'a> PatchRef<'a> {
         &self,
         _array_index: usize,
         _local_index: usize,
-    ) -> std::result::Result<Vec<Vec<Point3<f64>>>, TruckIntegrationError> {
+    ) -> std::result::Result<Vec<Vec<Point3<f64>>>, TruckError> {
         // AIDEV-NOTE: Gregory triangle patch approximation
         // Gregory triangle patches have 18 control points for triangular domains.
         // For now, we evaluate the patch at a 4x4 grid to create a quad approximation.
@@ -257,7 +257,7 @@ impl<'a> PatchRef<'a> {
                         result.point[2] as f64,
                     );
                 } else {
-                    return Err(TruckIntegrationError::EvaluationFailed);
+                    return Err(TruckError::EvaluationFailed);
                 }
             }
         }
@@ -268,7 +268,7 @@ impl<'a> PatchRef<'a> {
 
 /// Convert a regular B-spline patch to a truck BSplineSurface
 impl<'a> TryFrom<PatchRef<'a>> for BSplineSurface<Point3<f64>> {
-    type Error = TruckIntegrationError;
+    type Error = TruckError;
 
     fn try_from(patch: PatchRef<'a>) -> std::result::Result<Self, Self::Error> {
         let control_matrix = patch.control_points()?;
@@ -295,7 +295,7 @@ impl<'a> TryFrom<PatchRef<'a>> for BSplineSurface<Point3<f64>> {
 
 /// Convert all regular patches to B-spline surfaces
 impl<'a> TryFrom<PatchTableWithControlPointsRef<'a>> for Vec<BSplineSurface<Point3<f64>>> {
-    type Error = TruckIntegrationError;
+    type Error = TruckError;
 
     fn try_from(
         patches: PatchTableWithControlPointsRef<'a>,
@@ -303,7 +303,7 @@ impl<'a> TryFrom<PatchTableWithControlPointsRef<'a>> for Vec<BSplineSurface<Poin
         let mut surfaces = Vec::new();
         let mut patch_index = 0;
 
-        for array_idx in 0..patches.patch_table.patch_arrays_len() {
+        for array_idx in 0..patches.patch_table.patch_array_count() {
             if let Some(desc) = patches.patch_table.patch_array_descriptor(array_idx) {
                 let patch_type = desc.patch_type();
                 // Handle Regular, GregoryBasis, and GregoryTriangle patches
@@ -311,7 +311,7 @@ impl<'a> TryFrom<PatchTableWithControlPointsRef<'a>> for Vec<BSplineSurface<Poin
                     patch_type,
                     PatchType::Regular | PatchType::GregoryBasis | PatchType::GregoryTriangle
                 ) {
-                    for _ in 0..patches.patch_table.patch_array_patches_len(array_idx) {
+                    for _ in 0..patches.patch_table.patch_array_patch_count(array_idx) {
                         let patch =
                             PatchRef::new(patches.patch_table, patch_index, patches.control_points);
                         match BSplineSurface::try_from(patch) {
@@ -328,15 +328,15 @@ impl<'a> TryFrom<PatchTableWithControlPointsRef<'a>> for Vec<BSplineSurface<Poin
                         "Skipping patch array {} with type {:?} ({} patches)",
                         array_idx,
                         patch_type,
-                        patches.patch_table.patch_array_patches_len(array_idx)
+                        patches.patch_table.patch_array_patch_count(array_idx)
                     );
-                    patch_index += patches.patch_table.patch_array_patches_len(array_idx);
+                    patch_index += patches.patch_table.patch_array_patch_count(array_idx);
                 }
             }
         }
 
         if surfaces.is_empty() {
-            Err(TruckIntegrationError::InvalidControlPoints)
+            Err(TruckError::InvalidControlPoints)
         } else {
             Ok(surfaces)
         }
@@ -349,7 +349,7 @@ impl<'a> TryFrom<PatchTableWithControlPointsRef<'a>> for Vec<BSplineSurface<Poin
 /*
 /// Convert patches to a complete Shell with shared topology
 impl<'a> TryFrom<PatchTableWithControlPointsRef<'a>> for Shell {
-    type Error = TruckIntegrationError;
+    type Error = TruckError;
 
     fn try_from(patches: PatchTableWithControlPoints<'a>) -> std::result::Result<Self, Self::Error> {
         let surfaces: Vec<BSplineSurface<Point3<f64>>> = patches.try_into()?;
@@ -449,10 +449,14 @@ impl<'a> TryFrom<PatchTableWithControlPointsRef<'a>> for Shell {
 
         for (i, (surface, (v00, v10, v11, v01, p00, p10, p11, p01))) in surfaces.into_iter().zip(surface_corners).enumerate() {
             // Get the edges for this face
-            let bottom_edge = edge_map.get(&make_edge_key(p00, p10)).unwrap();
-            let right_edge = edge_map.get(&make_edge_key(p10, p11)).unwrap();
-            let top_edge = edge_map.get(&make_edge_key(p11, p01)).unwrap();
-            let left_edge = edge_map.get(&make_edge_key(p01, p00)).unwrap();
+            let bottom_edge = edge_map.get(&make_edge_key(p00, p10))
+                .ok_or(TruckError::InvalidControlPoints)?;
+            let right_edge = edge_map.get(&make_edge_key(p10, p11))
+                .ok_or(TruckError::InvalidControlPoints)?;
+            let top_edge = edge_map.get(&make_edge_key(p11, p01))
+                .ok_or(TruckError::InvalidControlPoints)?;
+            let left_edge = edge_map.get(&make_edge_key(p01, p00))
+                .ok_or(TruckError::InvalidControlPoints)?;
 
             // Calculate face normal at the center to determine proper orientation
             let center_u = 0.5;
@@ -525,7 +529,7 @@ impl<'a> TryFrom<PatchTableWithControlPointsRef<'a>> for Shell {
 
 /// Convert patches to a simple Shell with disconnected faces
 impl<'a> TryFrom<PatchTableWithControlPointsRef<'a>> for Shell {
-    type Error = TruckIntegrationError;
+    type Error = TruckError;
 
     fn try_from(
         patches: PatchTableWithControlPointsRef<'a>,
@@ -534,10 +538,10 @@ impl<'a> TryFrom<PatchTableWithControlPointsRef<'a>> for Shell {
         let mut faces = Vec::new();
         let mut patch_index = 0;
 
-        for array_idx in 0..patches.patch_table.patch_arrays_len() {
+        for array_idx in 0..patches.patch_table.patch_array_count() {
             if let Some(desc) = patches.patch_table.patch_array_descriptor(array_idx) {
                 let patch_type = desc.patch_type();
-                let num_patches = patches.patch_table.patch_array_patches_len(array_idx);
+                let num_patches = patches.patch_table.patch_array_patch_count(array_idx);
                 eprintln!(
                     "Shell conversion: Processing patch array {} with type {:?} ({} patches)",
                     array_idx, patch_type, num_patches
@@ -665,7 +669,7 @@ impl<'a> TryFrom<PatchTableWithControlPointsRef<'a>> for Shell {
                         "  Skipping {} patches of type {:?}",
                         num_patches, patch_type
                     );
-                    patch_index += patches.patch_table.patch_array_patches_len(array_idx);
+                    patch_index += patches.patch_table.patch_array_patch_count(array_idx);
                 }
             }
         }
@@ -677,7 +681,7 @@ impl<'a> TryFrom<PatchTableWithControlPointsRef<'a>> for Shell {
 
 /// Convert patches to a vector of individual Shells (one face per shell)
 impl<'a> TryFrom<PatchTableWithControlPointsRef<'a>> for Vec<Shell> {
-    type Error = TruckIntegrationError;
+    type Error = TruckError;
 
     fn try_from(
         patches: PatchTableWithControlPointsRef<'a>,
@@ -686,7 +690,7 @@ impl<'a> TryFrom<PatchTableWithControlPointsRef<'a>> for Vec<Shell> {
         let mut shells = Vec::new();
         let mut patch_index = 0;
 
-        for array_idx in 0..patches.patch_table.patch_arrays_len() {
+        for array_idx in 0..patches.patch_table.patch_array_count() {
             if let Some(desc) = patches.patch_table.patch_array_descriptor(array_idx) {
                 let patch_type = desc.patch_type();
                 // Handle Regular, GregoryBasis, and GregoryTriangle patches
@@ -694,7 +698,7 @@ impl<'a> TryFrom<PatchTableWithControlPointsRef<'a>> for Vec<Shell> {
                     patch_type,
                     PatchType::Regular | PatchType::GregoryBasis | PatchType::GregoryTriangle
                 ) {
-                    for _ in 0..patches.patch_table.patch_array_patches_len(array_idx) {
+                    for _ in 0..patches.patch_table.patch_array_patch_count(array_idx) {
                         let patch =
                             PatchRef::new(patches.patch_table, patch_index, patches.control_points);
 
@@ -790,7 +794,7 @@ impl<'a> TryFrom<PatchTableWithControlPointsRef<'a>> for Vec<Shell> {
                         patch_index += 1;
                     }
                 } else {
-                    patch_index += patches.patch_table.patch_array_patches_len(array_idx);
+                    patch_index += patches.patch_table.patch_array_patch_count(array_idx);
                 }
             }
         }

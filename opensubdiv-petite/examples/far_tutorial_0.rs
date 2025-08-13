@@ -20,11 +20,12 @@ fn main() {
     let crease_weights = [10., 10., 10., 10.];
 
     // Create a refiner from a descriptor.
+    let mut descriptor = far::TopologyDescriptor::new(num_vertices as _, &verts_per_face, &vert_indices)
+        .expect("Could not create TopologyDescriptor");
+    descriptor.creases(&creases, &crease_weights);
+    
     let mut refiner = far::TopologyRefiner::new(
-        // Populate the descriptor with our raw data.
-        far::TopologyDescriptor::new(num_vertices as _, &verts_per_face, &vert_indices)
-            .creases(&creases, &crease_weights)
-            .clone(),
+        descriptor,
         far::TopologyRefinerOptions {
             scheme: far::Scheme::CatmullClark,
             boundary_interpolation: Some(far::BoundaryInterpolation::EdgeOnly),
@@ -42,7 +43,7 @@ fn main() {
     });
 
     // Interpolate vertex primvar data.
-    let primvar_refiner = far::PrimvarRefiner::new(&refiner);
+    let primvar_refiner = far::PrimvarRefiner::new(&refiner).expect("Could not create PrimvarRefiner");
 
     // Create a vector holding all the subdivison levels.
     let mut refined_verts = Vec::with_capacity(max_level as _);

@@ -15,24 +15,53 @@ repository = "https://github.com/virtualritz/opensubdiv-petite/"
 
 [features]
 default = ["topology_validation"]
+
+## Integration with Bevy game engine.
 bevy = ["dep:bevy", "dep:smooth-bevy-cameras", "tri_mesh_buffers"]
+
+## Use CLEW for OpenCL runtime loading.
 clew = ["opensubdiv-petite-sys/clew"]
+
+## Enable CUDA GPU backend for NVIDIA GPUs.
 cuda = ["opensubdiv-petite-sys/cuda"]
+
+## Enable Metal GPU backend for Apple devices.
 metal = ["opensubdiv-petite-sys/metal"]
+
+## Enable OpenMP for CPU parallelization.
 omp = ["opensubdiv-petite-sys/omp"]
+
+## Enable OpenCL GPU backend for cross-platform GPU support.
 opencl = ["opensubdiv-petite-sys/opencl"]
+
+## Enable OpenMP for CPU parallelization (alias).
 openmp = ["opensubdiv-petite-sys/openmp"]
-parallel = ["rayon"]
+
+## Enable PTex texture support.
 ptex = ["opensubdiv-petite-sys/ptex"]
+
+## Enable parallel processing with `rayon`.
+rayon = ["dep:rayon"]
+
+## Enable triangle mesh buffer generation.
 tri_mesh_buffers = ["itertools", "ultraviolet", "slice-of-array"]
+
+## Enable topology validation for debugging (enabled by default).
 topology_validation = []
+
+## Enable `truck` CAD kernel integration for B-rep export.
 truck = ["truck-geometry", "truck-modeling"]
+
+## Export boundary curves when using `truck` integration.
 truck_export_boundary = ["truck"]
-# Use B-spline basis end caps instead of Gregory patches (legacy behavior)
+
+## Use B-spline basis end caps instead of Gregory patches (legacy behavior).
 b_spline_end_caps = []
 
 [dependencies]
+bytemuck = { version = "1.0", features = ["derive"] }
 derive_more = { version = "2", features = ["full"] }
+document-features = "0.2"
 opensubdiv-petite-sys = { version = "0.3.0", path = "../opensubdiv-petite-sys" }
 num_enum = "0.7"
 thiserror = "1.0"
@@ -60,16 +89,6 @@ glam = "0.30"
 path = "examples/osd_tutorial_0_cuda.rs"
 name = "osd_tutorial_0_cuda"
 required-features = [ "cuda" ]
-
-[[example]]
-path = "examples/osd_tutorial_0_metal.rs"
-name = "osd_tutorial_0_metal"
-required-features = [ "metal" ]
-
-[[example]]
-path = "examples/osd_tutorial_0_opencl.rs"
-name = "osd_tutorial_0_opencl"
-required-features = [ "opencl" ]
 
 [[example]]
 path = "examples/bevy.rs"

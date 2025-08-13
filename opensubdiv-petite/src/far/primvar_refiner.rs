@@ -32,7 +32,6 @@
 //! [`StencilTable`](crate::far::stencil_table::StencilTable), or `PatchTable`,
 //! to refine primvar data.
 use opensubdiv_petite_sys as sys;
-use std::convert::TryInto;
 
 use super::TopologyRefiner;
 
@@ -44,23 +43,33 @@ pub struct PrimvarRefiner<'a> {
 
 impl<'a> PrimvarRefiner<'a> {
     /// Create a new primvar refiner.
-    pub fn new(topology_refiner: &TopologyRefiner) -> PrimvarRefiner<'_> {
+    pub fn new(topology_refiner: &TopologyRefiner) -> crate::Result<PrimvarRefiner<'_>> {
         unsafe {
             let ptr = sys::far::PrimvarRefiner_create(topology_refiner.0);
             if ptr.is_null() {
-                panic!("PrimvarRefiner_create() returned null");
+                return Err(crate::Error::Ffi(
+                    "PrimvarRefiner_create() returned null".to_string(),
+                ));
             }
-            PrimvarRefiner {
+            Ok(PrimvarRefiner {
                 ptr,
                 topology_refiner,
-            }
+            })
         }
     }
 
     /// Apply vertex interpolation weights to a flat primvar buffer for a single
     /// level of refinement.
     ///
-    /// Returns a flat a [`Vec`] of interpolated values or [`None`] if the
+    /// # Arguments
+    ///
+    /// * `refinement_level` - The refinement level to interpolate to.
+    /// * `tuple_len` - The number of elements per vertex in the primvar data.
+    /// * `source` - The source primvar buffer to interpolate from.
+    ///
+    /// # Returns
+    ///
+    /// Returns a flat [`Vec`] of interpolated values or [`None`] if the
     /// `refinement_level` exceeds the
     /// [`max_level()`](TopologyRefiner::max_level())
     /// of the [`TopologyRefiner`] fed to [`PrimvarRefiner::new()`].
@@ -77,8 +86,8 @@ impl<'a> PrimvarRefiner<'a> {
                 unsafe {
                     sys::far::PrimvarRefiner_Interpolate(
                         self.ptr,
-                        tuple_len.try_into().unwrap(),
-                        refinement_level.try_into().unwrap(),
+                        tuple_len.min(i32::MAX as usize) as i32,
+                        refinement_level.min(i32::MAX as usize) as i32,
                         source.as_ptr(),
                         dest.as_mut_ptr(),
                     );
@@ -98,7 +107,15 @@ impl<'a> PrimvarRefiner<'a> {
     /// there are more face-varying values than vertices. Each face-varying
     /// channel is also independent in how its values relate to the vertices.
     ///
-    /// Returns a flat a [`Vec`] of interpolated values or [`None`] if the
+    /// # Arguments
+    ///
+    /// * `refinement_level` - The refinement level to interpolate to.
+    /// * `tuple_len` - The number of elements per face-varying value.
+    /// * `source` - The source face-varying primvar buffer.
+    ///
+    /// # Returns
+    ///
+    /// Returns a flat [`Vec`] of interpolated values or [`None`] if the
     /// `refinement_level` exceeds the
     /// [`max_level()`](TopologyRefiner::max_level())
     /// of the [`TopologyRefiner`] fed to [`PrimvarRefiner::new()`].
@@ -115,8 +132,8 @@ impl<'a> PrimvarRefiner<'a> {
                 unsafe {
                     sys::far::PrimvarRefiner_InterpolateFaceVarying(
                         self.ptr,
-                        tuple_len.try_into().unwrap(),
-                        refinement_level.try_into().unwrap(),
+                        tuple_len.min(i32::MAX as usize) as i32,
+                        refinement_level.min(i32::MAX as usize) as i32,
                         source.as_ptr(),
                         dest.as_mut_ptr(),
                     );
@@ -135,7 +152,15 @@ impl<'a> PrimvarRefiner<'a> {
     /// level to be the index of each face allows the propagation of the base
     /// face to primvar data for child faces in all levels.
     ///
-    /// Returns a flat a [`Vec`] of interpolated values or [`None`] if the
+    /// # Arguments
+    ///
+    /// * `refinement_level` - The refinement level to interpolate to.
+    /// * `tuple_len` - The number of elements per face in the primvar data.
+    /// * `source` - The source primvar buffer to interpolate from.
+    ///
+    /// # Returns
+    ///
+    /// Returns a flat [`Vec`] of interpolated values or [`None`] if the
     /// `refinement_level` exceeds the
     /// [`max_level()`](TopologyRefiner::max_level())
     /// of the [`TopologyRefiner`] fed to [`PrimvarRefiner::new()`].
@@ -152,8 +177,8 @@ impl<'a> PrimvarRefiner<'a> {
                 unsafe {
                     sys::far::PrimvarRefiner_InterpolateFaceUniform(
                         self.ptr,
-                        tuple_len.try_into().unwrap(),
-                        refinement_level.try_into().unwrap(),
+                        tuple_len.min(i32::MAX as usize) as i32,
+                        refinement_level.min(i32::MAX as usize) as i32,
                         source.as_ptr(),
                         dest.as_mut_ptr(),
                     );
@@ -171,7 +196,15 @@ impl<'a> PrimvarRefiner<'a> {
     /// This method can useful if the varying primvar data does not need to be
     /// re-computed over time.
     ///
-    /// Returns a flat a [`Vec`] of interpolated values or [`None`] if the
+    /// # Arguments
+    ///
+    /// * `refinement_level` - The refinement level to interpolate to.
+    /// * `tuple_len` - The number of elements per vertex in the primvar data.
+    /// * `source` - The source primvar buffer to interpolate from.
+    ///
+    /// # Returns
+    ///
+    /// Returns a flat [`Vec`] of interpolated values or [`None`] if the
     /// `refinement_level` exceeds the
     /// [`max_level()`](TopologyRefiner::max_level())
     /// of the [`TopologyRefiner`] fed to [`PrimvarRefiner::new()`].
@@ -188,8 +221,8 @@ impl<'a> PrimvarRefiner<'a> {
                 unsafe {
                     sys::far::PrimvarRefiner_InterpolateVarying(
                         self.ptr,
-                        tuple_len.try_into().unwrap(),
-                        refinement_level.try_into().unwrap(),
+                        tuple_len.min(i32::MAX as usize) as i32,
+                        refinement_level.min(i32::MAX as usize) as i32,
                         source.as_ptr(),
                         dest.as_mut_ptr(),
                     );

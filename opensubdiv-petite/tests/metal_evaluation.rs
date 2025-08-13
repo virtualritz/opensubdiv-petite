@@ -1,5 +1,5 @@
-mod test_utils;
-use test_utils::{assert_file_matches, test_output_path};
+mod utils;
+use utils::{assert_file_matches, test_output_path};
 
 #[cfg(all(feature = "metal", target_os = "macos"))]
 #[test]
@@ -22,8 +22,7 @@ fn test_metal_stencil_evaluation() {
     ];
 
     // Create topology descriptor
-    let descriptor =
-        far::TopologyDescriptor::new(num_vertices, &verts_per_face, &vert_indices);
+    let descriptor = far::TopologyDescriptor::new(num_vertices, &verts_per_face, &vert_indices);
 
     // Create TopologyRefiner
     let mut refiner = far::TopologyRefiner::new(
@@ -96,11 +95,16 @@ fn test_metal_stencil_evaluation() {
     .unwrap();
     writeln!(file).unwrap();
 
-    // Simulate evaluation results (since we can't actually run Metal without proper setup)
-    // In a real scenario, this would be the output from Metal evaluation
+    // Simulate evaluation results (since we can't actually run Metal without proper
+    // setup) In a real scenario, this would be the output from Metal evaluation
     writeln!(file, "Simulated Metal Evaluation:").unwrap();
     writeln!(file, "  Source buffer: {} elements", vertices.len()).unwrap();
-    writeln!(file, "  Destination buffer: {} elements", n_refined_verts * 3).unwrap();
+    writeln!(
+        file,
+        "  Destination buffer: {} elements",
+        n_refined_verts * 3
+    )
+    .unwrap();
     writeln!(file, "  Compute pipeline: EvaluateStencils").unwrap();
     writeln!(file, "  Device: MTLDevice (simulated)").unwrap();
     writeln!(file, "  Status: Success (simulated)").unwrap();
@@ -115,7 +119,7 @@ fn test_metal_stencil_evaluation() {
             i,
             -0.5 + (i as f32) * 0.1,  // Simulated X
             -0.5 + (i as f32) * 0.05, // Simulated Y
-            0.5 - (i as f32) * 0.02    // Simulated Z
+            0.5 - (i as f32) * 0.02   // Simulated Z
         )
         .unwrap();
     }

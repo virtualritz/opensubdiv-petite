@@ -1,10 +1,10 @@
 //! Test for complex polyhedron operations with STEP export via truck.
 
-mod test_utils;
+mod utils;
 
 #[cfg(feature = "truck")]
 mod tests {
-    use crate::test_utils::*;
+    use crate::utils::*;
     use opensubdiv_petite::far::{
         AdaptiveRefinementOptions, PatchTable, PatchTableOptions, PrimvarRefiner,
         TopologyDescriptor, TopologyRefiner, TopologyRefinerOptions,
@@ -207,23 +207,20 @@ mod tests {
 
         // Check if patch table has local points that need to be appended
         let num_local_points = patch_table.local_point_count();
-        
+
         // If there are local points, we need to evaluate them using the stencil table
         if num_local_points > 0 {
             if let Some(stencil_table) = patch_table.local_point_stencil_table() {
                 // Apply stencils to compute local points (3 floats per point)
                 let mut local_points = Vec::with_capacity(num_local_points);
-                
+
                 for dim in 0..3 {
                     // Extract just this dimension from source vertices
-                    let src_dim: Vec<f32> = all_vertices
-                        .iter()
-                        .map(|v| v[dim])
-                        .collect();
-                        
+                    let src_dim: Vec<f32> = all_vertices.iter().map(|v| v[dim]).collect();
+
                     // Apply stencils for this dimension
                     let dst_dim = stencil_table.update_values(&src_dim, None, None);
-                    
+
                     // Store results
                     for (i, &val) in dst_dim.iter().enumerate() {
                         if dim == 0 {
@@ -233,11 +230,15 @@ mod tests {
                         }
                     }
                 }
-                
+
                 // Append local points to the existing vertex buffer
                 all_vertices.extend_from_slice(&local_points);
-                
-                println!("Added {} local points, total vertices: {}", num_local_points, all_vertices.len());
+
+                println!(
+                    "Added {} local points, total vertices: {}",
+                    num_local_points,
+                    all_vertices.len()
+                );
             }
         }
 
@@ -264,7 +265,7 @@ mod tests {
         std::fs::write(&step_path, &step_string).expect("Failed to write STEP file");
 
         println!("Successfully generated {}", step_path.display());
-        
+
         // Compare with expected file
         assert_file_matches(&step_path, "complex_polyhedron_crease4.step");
 
