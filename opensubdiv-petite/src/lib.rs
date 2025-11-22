@@ -31,9 +31,9 @@
 //! * Be verbose consistently (the original API is quite verbose but does make
 //!   use of abbreviations in some suprising places).
 //! * Use canonical Rust naming  – (`num_vertices()` becomes `vertex_count()`).
-//! * Use canonically Rust constructs.  Most option/configuraion structs use the
-//!   [init struct pattern](https://xaeroxe.github.io/init-struct-pattern/). In
-//!   places where it’s not possible to easily map to a Rust struct, the builder
+//! * Use canonically Rust constructs.  Most option/configuraion `struct`s use the
+//!   [init-`struct` pattern](https://xaeroxe.github.io/init-struct-pattern/). In
+//!   places where it’s not possible to easily map to a Rust `struct`, the builder
 //!   pattern (or anti-pattern, depending whom you ask) is used.
 //! * Be brief when possible. Example: `StencilTable::numStencils()` in C++
 //!   becomes `StencilTable::len()` in Rust.
@@ -51,7 +51,7 @@
 //! For now crate versions reflect code maturity on the Rust side. They are not
 //! in any way related to the *OpenSubdiv* version that is wrapped.
 //!
-//! - `v0.3.x` – *OpenSubdiv* `v3.6.x`
+//! - `v0.3.x` – *OpenSubdiv* `v3.7.x`
 //! - `v0.2.x` – *OpenSubdiv* `v3.5.x`
 //! - `v0.1.x` – *OpenSubdiv* `v3.4.x`
 
