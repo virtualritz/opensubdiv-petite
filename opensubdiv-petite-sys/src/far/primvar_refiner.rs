@@ -1,7 +1,7 @@
-pub type PrimvarRefinerPtr = *mut crate::OpenSubdiv_v3_6_1_Far_PrimvarRefiner;
+pub type PrimvarRefinerPtr = *mut crate::OpenSubdiv_v3_7_0_Far_PrimvarRefiner;
 
 #[link(name = "osd-capi", kind = "static")]
-extern "C" {
+unsafe extern "C" {
     pub fn PrimvarRefiner_create(tr: crate::TopologyRefinerPtr) -> PrimvarRefinerPtr;
     pub fn PrimvarRefiner_destroy(pr: PrimvarRefinerPtr);
     pub fn PrimvarRefiner_GetTopologyRefiner(pr: PrimvarRefinerPtr);

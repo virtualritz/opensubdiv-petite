@@ -1,6 +1,7 @@
+use anyhow::Result;
 use opensubdiv_petite::{far, osd};
 
-fn main() {
+fn main() -> Result<()> {
     let vertices = [
         -0.5, -0.5, 0.5, 0.5, -0.5, 0.5, -0.5, 0.5, 0.5, 0.5, 0.5, 0.5, -0.5, 0.5, -0.5, 0.5, 0.5,
         -0.5, -0.5, -0.5, -0.5, 0.5, -0.5, -0.5,
@@ -15,14 +16,13 @@ fn main() {
 
     // instantiate a TopologyRefiner from a descriptor
     let mut refiner = far::TopologyRefiner::new(
-        far::TopologyDescriptor::new(num_vertices as _, &verts_per_face, &vert_indices),
+        far::TopologyDescriptor::new(num_vertices as _, &verts_per_face, &vert_indices)?,
         far::TopologyRefinerOptions {
             scheme: far::Scheme::CatmullClark,
             boundary_interpolation: Some(far::BoundaryInterpolation::EdgeOnly),
             ..Default::default()
         },
-    )
-    .expect("Could not create TopologyRefiner");
+    )?;
 
     refiner.refine_uniform(far::topology_refiner::UniformRefinementOptions {
         refinement_level: 2,
@@ -36,24 +36,25 @@ fn main() {
             generate_intermediate_levels: false,
             ..Default::default()
         },
-    );
+    )?;
 
-    let n_coarse_verts = refiner.level(0).unwrap().vertex_count();
+    let n_coarse_verts = refiner
+        .level(0)
+        .ok_or(anyhow::anyhow!("No level 0"))?
+        .vertex_count();
     let n_refined_verts = stencil_table.len();
 
     // set up a buffer for primvar data
-    let mut src_buffer = osd::CpuVertexBuffer::new(3, n_coarse_verts);
-    let mut dst_buffer = osd::CpuVertexBuffer::new(3, n_refined_verts);
+    let mut src_buffer = osd::CpuVertexBuffer::new(3, n_coarse_verts)?;
+    let mut dst_buffer = osd::CpuVertexBuffer::new(3, n_refined_verts)?;
 
     // execution phase (every frame)
     {
         // pack the control vertices at the start of the buffer
         src_buffer.update_data(&vertices, 0, n_coarse_verts);
 
-        let src_desc =
-            osd::BufferDescriptor::new(0, 3, 3).expect("Failed to create src descriptor");
-        let dst_desc =
-            osd::BufferDescriptor::new(0, 3, 3).expect("Failed to create dst descriptor");
+        let src_desc = osd::BufferDescriptor::new(0, 3, 3)?;
+        let dst_desc = osd::BufferDescriptor::new(0, 3, 3)?;
 
         // launch the computation
         osd::cpu_evaluator::evaluate_stencils(
@@ -62,15 +63,16 @@ fn main() {
             &mut dst_buffer,
             dst_desc,
             &stencil_table,
-        )
-        .expect("eval_stencils failed");
+        )?;
 
         // print the result as a MEL command to draw vertices as points
-        let refined_verts = dst_buffer.bind_cpu_buffer();
+        let refined_verts = dst_buffer.bind_cpu_buffer()?;
         println!("particle");
         for v in refined_verts.chunks(3) {
             println!("-p {} {} {}", v[0], v[1], v[2]);
         }
         println!("-c 1;");
     }
+
+    Ok(())
 }

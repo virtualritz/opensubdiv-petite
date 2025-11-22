@@ -108,38 +108,52 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         if let Some(stencil_table) = patch_table.local_point_stencil_table() {
             println!("Stencil table info:");
             println!("  Number of stencils: {}", stencil_table.len());
-            
+
             // Get the control vertex count - this should match our refined vertex buffer
             let control_vertex_count = stencil_table.control_vertex_count();
             println!("  Control vertex count: {}", control_vertex_count);
             println!("  Current vertex buffer size: {}", all_vertices.len());
 
             // The control_vertex_count being 0 indicates the stencil table was created
-            // for local points only and expects the refined vertices to be provided separately
+            // for local points only and expects the refined vertices to be provided
+            // separately
             if control_vertex_count == 0 {
                 println!("INFO: Stencil table appears to be for local points only");
-                println!("      It expects refined vertices as input (count: {})", all_vertices.len());
-                
+                println!(
+                    "      It expects refined vertices as input (count: {})",
+                    all_vertices.len()
+                );
+
                 // For local point stencils, the source should be the refined vertices
                 // and the output will be the local points
-                println!("\nApplying stencils to compute {} local points...", num_local_points);
-                
+                println!(
+                    "\nApplying stencils to compute {} local points...",
+                    num_local_points
+                );
+
                 // Flatten the vertex data for each dimension
                 for dim in 0..3 {
                     let dim_name = ["X", "Y", "Z"][dim];
                     let src_dim: Vec<f32> = all_vertices.iter().map(|v| v[dim]).collect();
-                    println!("  Processing dimension {} with {} source values", dim_name, src_dim.len());
-                    
+                    println!(
+                        "  Processing dimension {} with {} source values",
+                        dim_name,
+                        src_dim.len()
+                    );
+
                     // Apply stencils - this computes the local points from refined vertices
                     let dst_dim = stencil_table.update_values(&src_dim, None, None);
                     println!("    Generated {} local point values", dst_dim.len());
-                    
+
                     if dst_dim.len() != num_local_points {
-                        println!("    WARNING: Expected {} local points but got {}", 
-                                num_local_points, dst_dim.len());
+                        println!(
+                            "    WARNING: Expected {} local points but got {}",
+                            num_local_points,
+                            dst_dim.len()
+                        );
                     }
                 }
-                
+
                 println!("\nSuccessfully computed local points!");
             } else if control_vertex_count != all_vertices.len() {
                 println!(

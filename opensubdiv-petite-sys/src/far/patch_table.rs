@@ -75,7 +75,7 @@ pub enum TriangleSubdivision {
     Smooth = 1,
 }
 
-extern "C" {
+unsafe extern "C" {
     // PatchTableFactory functions
     pub fn PatchTableFactory_Create(
         refiner: *const TopologyRefiner,
@@ -168,7 +168,7 @@ pub struct PatchMap {
     _unused: [u8; 0],
 }
 
-extern "C" {
+unsafe extern "C" {
     // Patch evaluation functions
     pub fn PatchTable_EvaluateBasis(
         table: *const PatchTable,

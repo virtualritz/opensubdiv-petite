@@ -22,7 +22,7 @@ use rayon::prelude::*;
 ///
 /// All the faces are disconnected. I.e. points & normals are duplicated for
 /// each shared vertex.
-/// 
+///
 /// When the `rayon` feature is enabled, this function will use parallel
 /// iterators for improved performance on multi-core systems.
 pub fn to_triangle_mesh_buffers<'a>(
@@ -131,7 +131,7 @@ pub fn to_triangle_mesh_buffers<'a>(
 ///
 /// All the faces are disconnected. I.e. points & normals are duplicated for
 /// each shared vertex.
-/// 
+///
 /// This function uses rayon's parallel iterators for improved performance
 /// on multi-core systems.
 #[cfg(feature = "rayon")]
@@ -141,7 +141,7 @@ pub fn to_triangle_mesh_buffers_par<'a>(
 ) -> (Vec<u32>, Vec<[f32; 3]>, Vec<[f32; 3]>) {
     // Collect faces into a vector first for validation and indexing
     let faces: Vec<_> = face_vertices.collect();
-    
+
     #[cfg(feature = "topology_validation")]
     {
         faces.par_iter().for_each(|face| {
@@ -205,8 +205,8 @@ pub fn to_triangle_mesh_buffers_par<'a>(
                 .collect::<Vec<_>>()
         })
         .collect();
-    
-    let (points_nested, normals_nested): (Vec<[f32; 3]>, Vec<[f32; 3]>) = 
+
+    let (points_nested, normals_nested): (Vec<[f32; 3]>, Vec<[f32; 3]>) =
         face_results.into_iter().unzip();
 
     // Build a new face index sequentially (needs to maintain order)
@@ -236,11 +236,7 @@ pub fn to_triangle_mesh_buffers_par<'a>(
         })
         .collect();
 
-    (
-        triangle_face_index,
-        points_nested,
-        normals_nested,
-    )
+    (triangle_face_index, points_nested, normals_nested)
 }
 
 #[inline]

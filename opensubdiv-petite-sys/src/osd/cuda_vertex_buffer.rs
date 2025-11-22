@@ -8,7 +8,7 @@ pub struct CudaVertexBuffer_obj {
 pub type CudaVertexBufferPtr = *mut CudaVertexBuffer_obj;
 
 #[link(name = "osd-capi", kind = "static")]
-extern "C" {
+unsafe extern "C" {
     /// Creator. Returns NULL if error.
     pub fn CudaVertexBuffer_Create(
         num_elements: i32,

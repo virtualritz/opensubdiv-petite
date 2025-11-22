@@ -6,12 +6,13 @@
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 #![allow(improper_ctypes)]
+#![allow(unsafe_op_in_unsafe_fn)]
 //! You probably want the high level wrapper – [`opensubdiv-petite`](https://crates.io/crates/opensubdiv-petite).
 
 include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 
 // Manual type definitions for blocked types
-pub type OpenSubdiv_v3_6_1_Far_PatchTable_StencilTablePtr = *mut std::ffi::c_void;
+pub type OpenSubdiv_v3_7_0_Far_PatchTable_StencilTablePtr = *mut std::ffi::c_void;
 
 pub mod far;
 pub use far::*;
@@ -21,6 +22,8 @@ pub mod sdc;
 pub mod osd;
 
 pub mod vtr;
+
+pub mod bfr;
 
 // Disabled test for now.
 /*

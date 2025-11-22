@@ -114,7 +114,6 @@ pub fn main() {
         .include(&osd_inlude_path)
         .include("OpenSubdiv") // Add source directory for headers like patchBasis.h
         .cpp(true)
-        .static_flag(true)
         .flag("-std=c++14")
         .flag("-Wno-return-type-c-linkage")
         .file("c-api/far/primvar_refiner.cpp")
@@ -124,6 +123,7 @@ pub fn main() {
         .file("c-api/far/topology_level.cpp")
         .file("c-api/far/patch_table.cpp")
         .file("c-api/far/patch_evaluator.cpp")
+        .file("c-api/bfr/surface_factory.cpp")
         .file("c-api/osd/cpu_evaluator.cpp")
         .file("c-api/osd/cpu_vertex_buffer.cpp");
 
@@ -233,7 +233,7 @@ pub fn main() {
         // Make std types opaque
         .opaque_type("std::.*")
         // Make PatchTable opaque since it uses blocked types
-        .opaque_type("OpenSubdiv_v3_6_1_Far_PatchTable")
+        .opaque_type("OpenSubdiv_v3_7_0_Far_PatchTable")
         .derive_partialeq(true)
         .derive_eq(true)
         .derive_hash(true)

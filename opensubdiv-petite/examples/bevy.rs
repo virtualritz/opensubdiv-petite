@@ -159,11 +159,12 @@ fn subdivided_chamfered_tetrahedron() -> Mesh {
 
     // Create a refiner (a subdivider) from a topology descriptor.
     eprintln!("Creating TopologyDescriptor");
-    let mut descriptor = far::TopologyDescriptor::new(vertices.len() / 3, &face_arities, &face_vertices)
-        .expect("Could not create TopologyDescriptor");
+    let mut descriptor =
+        far::TopologyDescriptor::new(vertices.len() / 3, &face_arities, &face_vertices)
+            .expect("Could not create TopologyDescriptor");
     descriptor.creases(&creases, &crease_weights);
     descriptor.left_handed(true);
-    
+
     eprintln!("Creating TopologyRefiner");
     let mut refiner = far::TopologyRefiner::new(
         descriptor,
@@ -183,7 +184,8 @@ fn subdivided_chamfered_tetrahedron() -> Mesh {
 
     // Interpolate vertex primvar data.
     eprintln!("Creating PrimvarRefiner");
-    let primvar_refiner = far::PrimvarRefiner::new(&refiner).expect("Could not create PrimvarRefiner");
+    let primvar_refiner =
+        far::PrimvarRefiner::new(&refiner).expect("Could not create PrimvarRefiner");
 
     let mut refined_vertices = vertices.to_vec();
 
@@ -207,7 +209,10 @@ fn subdivided_chamfered_tetrahedron() -> Mesh {
         refiner.level(MAX_LEVEL).unwrap().face_vertices_iter(),
     );
 
-    let mut mesh = Mesh::new(PrimitiveTopology::TriangleList, RenderAssetUsages::default());
+    let mut mesh = Mesh::new(
+        PrimitiveTopology::TriangleList,
+        RenderAssetUsages::default(),
+    );
 
     mesh.insert_indices(Indices::U32(index));
     mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, points);

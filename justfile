@@ -21,23 +21,15 @@ test:
     cargo test
 
 # Run tests with clang-17 (recommended for Ubuntu/Debian)
-test-linux-clang17:
-    CC=clang-17 CXX=clang++-17 CXXFLAGS="-stdlib=libc++" RUSTFLAGS="-C link-arg=-stdlib=libc++ -C link-arg=-lc++abi" cargo test
-
-# Run tests with clang-17 and --nocapture for detailed output
-test-linux-clang17-nocapture:
-    CC=clang-17 CXX=clang++-17 CXXFLAGS="-stdlib=libc++" RUSTFLAGS="-C link-arg=-stdlib=libc++ -C link-arg=-lc++abi" cargo test -- --nocapture
-
-# Run tests with clang-17 without default features (faster, no topology validation)
-test-linux-clang17-no-default:
-    CC=clang-17 CXX=clang++-17 CXXFLAGS="-stdlib=libc++" RUSTFLAGS="-C link-arg=-stdlib=libc++ -C link-arg=-lc++abi" cargo test --no-default-features
-
-# Run specific test with clang-17
-test-linux-clang17-specific test_name:
+# Usage: just test-linux-clang17 [test_name]
+# If test_name is not specified, runs all tests
+test-linux-clang17 test_name="":
     CC=clang-17 CXX=clang++-17 CXXFLAGS="-stdlib=libc++" RUSTFLAGS="-C link-arg=-stdlib=libc++ -C link-arg=-lc++abi" cargo test {{test_name}}
 
-# Run specific test with clang-17 and --nocapture
-test-linux-clang17-specific-nocapture test_name:
+# Run tests with clang-17 and --nocapture for detailed output
+# Usage: just test-linux-clang17-nocapture [test_name]
+# If test_name is not specified, runs all tests with nocapture
+test-linux-clang17-nocapture test_name="":
     CC=clang-17 CXX=clang++-17 CXXFLAGS="-stdlib=libc++" RUSTFLAGS="-C link-arg=-stdlib=libc++ -C link-arg=-lc++abi" cargo test {{test_name}} -- --nocapture
 
 # Check code without building

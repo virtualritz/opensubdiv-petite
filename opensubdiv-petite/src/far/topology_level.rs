@@ -374,6 +374,18 @@ impl<'a> TopologyLevel<'a> {
     pub fn is_vertex_boundary(&self, vertex: Index) -> bool {
         unsafe { sys::far::TopologyLevel_IsVertexBoundary(self.ptr, vertex.into()) }
     }
+
+    /// Returns the sharpness assigned to an edge.
+    #[inline]
+    pub fn edge_sharpness(&self, edge: Index) -> f32 {
+        unsafe { sys::far::TopologyLevel_GetEdgeSharpness(self.ptr, edge.into()) }
+    }
+
+    /// Returns the sharpness assigned to a vertex.
+    #[inline]
+    pub fn vertex_sharpness(&self, vertex: Index) -> f32 {
+        unsafe { sys::far::TopologyLevel_GetVertexSharpness(self.ptr, vertex.into()) }
+    }
 }
 
 /// ### Methods to Inspect Face-Varying Data.
