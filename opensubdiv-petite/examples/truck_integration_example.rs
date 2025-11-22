@@ -5,22 +5,20 @@ use opensubdiv_petite::far::{
     TopologyRefinerOptions,
 };
 
-#[cfg(feature = "truck_integration")]
-use opensubdiv_petite::truck_integration::PatchTableExt;
-#[cfg(feature = "truck_integration")]
+#[cfg(feature = "truck")]
+use opensubdiv_petite::truck::PatchTableExt;
+#[cfg(feature = "truck")]
 use std::convert::TryInto;
 
 fn main() {
-    #[cfg(not(feature = "truck_integration"))]
+    #[cfg(not(feature = "truck"))]
     {
-        println!("This example requires the 'truck_integration' feature.");
-        println!(
-            "Run with: cargo run --example truck_integration_example --features truck_integration"
-        );
+        println!("This example requires the 'truck' feature.");
+        println!("Run with: cargo run --example truck_integration_example --features truck");
         return;
     }
 
-    #[cfg(feature = "truck_integration")]
+    #[cfg(feature = "truck")]
     {
         println!("OpenSubdiv to Truck Integration Example");
         println!("======================================\n");
@@ -48,9 +46,12 @@ fn main() {
         ];
 
         // Create topology descriptor
-        let descriptor =
-            TopologyDescriptor::new(face_vertex_counts.clone(), face_vertex_indices.clone())
-                .expect("Failed to create topology descriptor");
+        let descriptor = TopologyDescriptor::new(
+            vertex_positions.len(),
+            &face_vertex_counts,
+            &face_vertex_indices,
+        )
+        .expect("Failed to create topology descriptor");
 
         // Create topology refiner
         let refiner_options = TopologyRefinerOptions::default();

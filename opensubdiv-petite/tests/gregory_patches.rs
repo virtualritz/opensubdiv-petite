@@ -1,16 +1,16 @@
 mod utils;
 
+use anyhow::Result;
 use opensubdiv_petite::far::{
     AdaptiveRefinementOptions, PatchTable, PatchTableOptions, PrimvarRefiner, TopologyDescriptor,
     TopologyRefiner, TopologyRefinerOptions,
 };
-use opensubdiv_petite::Index;
 
 #[cfg(feature = "truck")]
 mod truck_tests {
     use super::*;
-    use utils::{assert_file_matches, test_output_path};
     use truck_stepio::out;
+    use utils::{assert_file_matches, test_output_path};
 
     /// Build complete vertex buffer including all refinement levels
     fn build_vertex_buffer(refiner: &TopologyRefiner, base_vertices: &[[f32; 3]]) -> Vec<[f32; 3]> {
@@ -140,7 +140,7 @@ mod truck_tests {
             PatchTable::new(&refiner, Some(patch_options)).expect("Failed to create patch table");
 
         // Check that we have patches
-        assert!(patch_table.patches_len() > 0, "Should have patches");
+        assert!(patch_table.patch_count() > 0, "Should have patches");
 
         // Count patch types
         let mut regular_count = 0;
@@ -149,9 +149,9 @@ mod truck_tests {
         let mut quads_count = 0;
         let mut other_count = 0;
 
-        for array_idx in 0..patch_table.patch_arrays_len() {
+        for array_idx in 0..patch_table.patch_array_count() {
             if let Some(desc) = patch_table.patch_array_descriptor(array_idx) {
-                let count = patch_table.patch_array_patches_len(array_idx);
+                let count = patch_table.patch_array_patch_count(array_idx);
                 match desc.patch_type() {
                     opensubdiv_petite::far::PatchType::Regular => regular_count += count,
                     opensubdiv_petite::far::PatchType::GregoryBasis => gregory_basis_count += count,
@@ -301,31 +301,32 @@ mod truck_tests {
 
 /// Test triangular mesh to trigger GregoryTriangle patches
 #[test]
-fn test_gregory_triangle_patches() {
-    // Create a simple tetrahedron (4 triangular faces)
+fn test_gregory_triangle_patches() -> Result<()> {
+    // Create a tetrahedron - simplest 3D shape with triangular faces
     let vertex_positions = vec![
-        [0.0, 0.0, 0.0],     // 0
-        [1.0, 0.0, 0.0],     // 1
-        [0.5, 0.866, 0.0],   // 2
-        [0.5, 0.289, 0.816], // 3
+        [1.0, 1.0, 1.0],   // 0
+        [-1.0, -1.0, 1.0], // 1
+        [-1.0, 1.0, -1.0], // 2
+        [1.0, -1.0, -1.0], // 3
     ];
 
     let face_vertex_counts = vec![3, 3, 3, 3];
     let face_vertex_indices = vec![
-        0, 1, 2, // base
-        0, 1, 3, // side 1
-        1, 2, 3, // side 2
-        2, 0, 3, // side 3
+        0, 1, 2, // face 0
+        0, 1, 3, // face 1
+        0, 2, 3, // face 2
+        1, 2, 3, // face 3
     ];
 
     let descriptor = TopologyDescriptor::new(
         vertex_positions.len(),
         &face_vertex_counts,
         &face_vertex_indices,
-    );
+    )?;
 
-    // Create topology refiner for triangular subdivision
-    let refiner_options = TopologyRefinerOptions::default();
+    // Create topology refiner for triangular subdivision using Loop scheme
+    let mut refiner_options = TopologyRefinerOptions::default();
+    refiner_options.scheme = opensubdiv_petite::far::Scheme::Loop;
     let mut refiner = TopologyRefiner::new(descriptor, refiner_options)
         .expect("Failed to create topology refiner");
 
@@ -342,18 +343,20 @@ fn test_gregory_triangle_patches() {
         PatchTable::new(&refiner, Some(patch_options)).expect("Failed to create patch table");
 
     // Check that we have patches
-    assert!(patch_table.patches_len() > 0, "Should have patches");
+    assert!(patch_table.patch_count() > 0, "Should have patches");
 
     // Count patch types
     let mut triangle_count = 0;
+    let mut loop_count = 0;
     let mut gregory_triangle_count = 0;
     let mut other_count = 0;
 
-    for array_idx in 0..patch_table.patch_arrays_len() {
+    for array_idx in 0..patch_table.patch_array_count() {
         if let Some(desc) = patch_table.patch_array_descriptor(array_idx) {
-            let count = patch_table.patch_array_patches_len(array_idx);
+            let count = patch_table.patch_array_patch_count(array_idx);
             match desc.patch_type() {
                 opensubdiv_petite::far::PatchType::Triangles => triangle_count += count,
+                opensubdiv_petite::far::PatchType::Loop => loop_count += count,
                 opensubdiv_petite::far::PatchType::GregoryTriangle => {
                     gregory_triangle_count += count
                 }
@@ -362,14 +365,12 @@ fn test_gregory_triangle_patches() {
         }
     }
 
-    println!("Triangle patch counts:");
-    println!("  Triangles: {}", triangle_count);
-    println!("  GregoryTriangle: {}", gregory_triangle_count);
-    println!("  Other: {}", other_count);
-
-    // We should have some patches (either triangular or Gregory triangular)
+    // We should have some triangle-based patches (Triangles, Loop, or
+    // GregoryTriangle)
     assert!(
-        triangle_count > 0 || gregory_triangle_count > 0,
-        "Should have triangular patches"
+        triangle_count > 0 || loop_count > 0 || gregory_triangle_count > 0,
+        "Should have triangle-based patches (Triangles, Loop, or GregoryTriangle)"
     );
+
+    Ok(())
 }

@@ -10,40 +10,42 @@ fn buffer_descriptor_creation() {
 }
 
 #[test]
-fn test_cpu_vertex_buffer() {
+fn test_cpu_vertex_buffer() -> Result<(), Box<dyn std::error::Error>> {
     let num_vertices = 8;
     let num_elements = 3;
 
-    let buffer = osd::CpuVertexBuffer::new(num_elements, num_vertices);
+    let buffer = osd::CpuVertexBuffer::new(num_elements, num_vertices)?;
 
     // Should be able to bind the buffer.
-    let data = buffer.bind_cpu_buffer();
+    let data = buffer.bind_cpu_buffer()?;
     assert_eq!(data.len(), num_vertices * num_elements);
+    Ok(())
 }
 
 #[test]
-fn test_cpu_vertex_buffer_update() {
+fn test_cpu_vertex_buffer_update() -> Result<(), Box<dyn std::error::Error>> {
     let num_vertices = 8;
     let num_elements = 3;
 
-    let mut buffer = osd::CpuVertexBuffer::new(num_elements, num_vertices);
+    let mut buffer = osd::CpuVertexBuffer::new(num_elements, num_vertices)?;
 
     let test_data = vec![1.0f32; num_vertices * num_elements];
 
     // Update the buffer with test data.
-    buffer.update_data(&test_data, 0, num_vertices);
+    buffer.update_data(&test_data, 0, num_vertices)?;
 
-    let data = buffer.bind_cpu_buffer();
+    let data = buffer.bind_cpu_buffer()?;
     assert_eq!(data.len(), test_data.len());
 
     // Verify the data was copied.
     for (i, &val) in data.iter().enumerate() {
         assert_eq!(val, test_data[i]);
     }
+    Ok(())
 }
 
 #[test]
-fn test_cpu_evaluator() {
+fn test_cpu_evaluator() -> Result<(), Box<dyn std::error::Error>> {
     // Create a simple topology.
     let vertices_per_face = [4, 4, 4, 4, 4, 4];
     let face_vertices = [
@@ -55,7 +57,7 @@ fn test_cpu_evaluator() {
         -0.5, -0.5, -0.5, -0.5, 0.5, -0.5, -0.5,
     ];
 
-    let descriptor = far::TopologyDescriptor::new(8, &vertices_per_face, &face_vertices);
+    let descriptor = far::TopologyDescriptor::new(8, &vertices_per_face, &face_vertices)?;
     let options = far::TopologyRefinerOptions::default();
 
     let mut refiner =
@@ -66,15 +68,15 @@ fn test_cpu_evaluator() {
         ..Default::default()
     });
 
-    let stencil_table = far::StencilTable::new(&refiner, far::StencilTableOptions::default());
+    let stencil_table = far::StencilTable::new(&refiner, far::StencilTableOptions::default())?;
 
     let n_coarse_verts = refiner.level(0).unwrap().vertex_count();
     let n_refined_verts = stencil_table.len();
 
-    let mut src_buffer = osd::CpuVertexBuffer::new(3, n_coarse_verts);
-    let mut dst_buffer = osd::CpuVertexBuffer::new(3, n_refined_verts);
+    let mut src_buffer = osd::CpuVertexBuffer::new(3, n_coarse_verts)?;
+    let mut dst_buffer = osd::CpuVertexBuffer::new(3, n_refined_verts)?;
 
-    src_buffer.update_data(&positions, 0, n_coarse_verts);
+    src_buffer.update_data(&positions, 0, n_coarse_verts)?;
 
     let src_desc = osd::BufferDescriptor::new(0, 3, 3).unwrap();
     let dst_desc = osd::BufferDescriptor::new(0, 3, 3).unwrap();
@@ -90,26 +92,28 @@ fn test_cpu_evaluator() {
     .expect("Failed to evaluate stencils");
 
     // Check that we got refined vertices.
-    let refined_data = dst_buffer.bind_cpu_buffer();
+    let refined_data = dst_buffer.bind_cpu_buffer()?;
     assert_eq!(refined_data.len(), n_refined_verts * 3);
+    Ok(())
 }
 
 #[cfg(feature = "cuda")]
 #[test]
-fn test_cuda_vertex_buffer() {
+fn test_cuda_vertex_buffer() -> Result<(), Box<dyn std::error::Error>> {
     let num_vertices = 8;
     let num_elements = 3;
 
-    let buffer = osd::CudaVertexBuffer::new(num_elements, num_vertices);
+    let buffer = osd::CudaVertexBuffer::new(num_elements, num_vertices)?;
 
     // Should be able to bind the buffer.
-    let data = buffer.bind_cuda_buffer();
+    let data = buffer.bind_cuda_buffer()?;
     assert_eq!(data.len(), num_vertices * num_elements);
+    Ok(())
 }
 
 #[cfg(feature = "cuda")]
 #[test]
-fn test_cuda_evaluator() {
+fn test_cuda_evaluator() -> Result<(), Box<dyn std::error::Error>> {
     // Create a simple topology.
     let vertices_per_face = [4, 4, 4, 4, 4, 4];
     let face_vertices = [
@@ -121,7 +125,7 @@ fn test_cuda_evaluator() {
         -0.5, -0.5, -0.5, -0.5, 0.5, -0.5, -0.5,
     ];
 
-    let descriptor = far::TopologyDescriptor::new(8, &vertices_per_face, &face_vertices);
+    let descriptor = far::TopologyDescriptor::new(8, &vertices_per_face, &face_vertices)?;
     let options = far::TopologyRefinerOptions::default();
 
     let mut refiner =
@@ -132,20 +136,20 @@ fn test_cuda_evaluator() {
         ..Default::default()
     });
 
-    let stencil_table = far::StencilTable::new(&refiner, far::StencilTableOptions::default());
+    let stencil_table = far::StencilTable::new(&refiner, far::StencilTableOptions::default())?;
 
     let n_coarse_verts = refiner.level(0).unwrap().vertex_count();
     let n_refined_verts = stencil_table.len();
 
-    let mut src_buffer = osd::CudaVertexBuffer::new(3, n_coarse_verts);
-    let mut dst_buffer = osd::CudaVertexBuffer::new(3, n_refined_verts);
+    let mut src_buffer = osd::CudaVertexBuffer::new(3, n_coarse_verts)?;
+    let mut dst_buffer = osd::CudaVertexBuffer::new(3, n_refined_verts)?;
 
-    src_buffer.update_data(&positions, 0, n_coarse_verts);
+    src_buffer.update_data(&positions, 0, n_coarse_verts)?;
 
     let src_desc = osd::BufferDescriptor::new(0, 3, 3).unwrap();
     let dst_desc = osd::BufferDescriptor::new(0, 3, 3).unwrap();
 
-    let cuda_stencil_table = osd::CudaStencilTable::new(&stencil_table);
+    let cuda_stencil_table = osd::CudaStencilTable::new(&stencil_table)?;
 
     // Evaluate stencils.
     osd::cuda_evaluator::evaluate_stencils(
@@ -158,6 +162,7 @@ fn test_cuda_evaluator() {
     .expect("Failed to evaluate stencils");
 
     // Check that we got refined vertices.
-    let refined_data = dst_buffer.bind_cuda_buffer();
+    let refined_data = dst_buffer.bind_cuda_buffer()?;
     assert_eq!(refined_data.len(), n_refined_verts * 3);
+    Ok(())
 }

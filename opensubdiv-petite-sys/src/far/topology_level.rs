@@ -1,9 +1,9 @@
 use crate::vtr::types::*;
 
-pub type TopologyLevelPtr = *mut crate::OpenSubdiv_v3_6_1_Far_TopologyLevel;
+pub type TopologyLevelPtr = *mut crate::OpenSubdiv_v3_7_0_Far_TopologyLevel;
 
 #[link(name = "osd-capi", kind = "static")]
-extern "C" {
+unsafe extern "C" {
     /// Return the number of vertices in this level
     pub fn TopologyLevel_GetNumVertices(tl: TopologyLevelPtr) -> u32;
     /// Return the number of faces in this level

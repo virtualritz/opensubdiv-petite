@@ -3,6 +3,7 @@ use opensubdiv_petite::far::{
     TopologyDescriptor, TopologyRefiner, TopologyRefinerOptions,
 };
 use opensubdiv_petite::truck_integration::PatchTableExt;
+use opensubdiv_petite::truck_integration::bfr_regular_surfaces;
 use truck_stepio::out::*;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -37,9 +38,42 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let refiner_options = TopologyRefinerOptions::default();
     let mut refiner = TopologyRefiner::new(descriptor, refiner_options)?;
     
+    // Selective adaptive refinement: only refine near extraordinary vertices,
+    // boundaries, or sharp edges so regular quad regions stay coarse.
+    let base_level = refiner
+        .level(0)
+        .expect("base level should exist before refinement");
+
+    let mut selected_faces = Vec::new();
+    for f in 0..base_level.face_count() {
+        let verts = base_level
+            .face_vertices(f as u32)
+            .expect("face should expose vertices");
+
+        let is_quad = verts.len() == 4;
+        let has_extraordinary = verts
+            .iter()
+            .any(|&v| base_level.vertex_edges(v).map_or(true, |edges| edges.len() != 4));
+
+        let (touches_boundary, has_sharp_edge) = base_level
+            .face_edges(f as u32)
+            .map(|edges| {
+                let boundary = edges.iter().any(|&e| base_level.is_edge_boundary(e));
+                let sharp = edges
+                    .iter()
+                    .any(|&e| base_level.edge_sharpness(e) > 0.0_f32);
+                (boundary, sharp)
+            })
+            .unwrap_or((true, false));
+
+        if !is_quad || has_extraordinary || touches_boundary || has_sharp_edge {
+            selected_faces.push(f as u32);
+        }
+    }
+
     let mut adaptive_options = AdaptiveRefinementOptions::default();
-    adaptive_options.isolation_level = 3;
-    refiner.refine_adaptive(adaptive_options, &[]);
+    adaptive_options.isolation_level = 1;
+    refiner.refine_adaptive(adaptive_options, &selected_faces);
     
     // Try with Gregory basis end cap
     let patch_options = PatchTableOptions::new()
@@ -117,6 +151,46 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
         Err(e) => println!("Gap-filling conversion failed: {:?}", e),
     }
-    
+
+    // Test BFR-based coarse export for regular faces
+    println!("Testing BFR regular surfaces...");
+    match bfr_regular_surfaces(&refiner, &all_vertices, 0, 0) {
+        Ok(surfaces) => {
+            let faces: Vec<truck_modeling::Face> = surfaces
+                .into_iter()
+                .map(|s| truck_modeling::Face::new(vec![], truck_modeling::Surface::BSplineSurface(s)))
+                .collect();
+            let shell = truck_modeling::Shell::from(faces);
+            let step_string = CompleteStepDisplay::new(
+                StepModel::from(&shell),
+                Default::default(),
+            )
+            .to_string();
+            std::fs::write("cube_bfr.step", step_string)?;
+            println!("Wrote cube_bfr.step");
+        }
+        Err(e) => println!("BFR conversion failed: {:?}", e),
+    }
+
+    // Mixed export: BFR for regular faces, PatchTable for irregular
+    println!("Testing BFR + PatchTable mixed surfaces...");
+    match patch_table.to_truck_surfaces_bfr_mixed(&refiner, &all_vertices, 0, 0) {
+        Ok(surfaces) => {
+            let faces: Vec<truck_modeling::Face> = surfaces
+                .into_iter()
+                .map(|s| truck_modeling::Face::new(vec![], truck_modeling::Surface::BSplineSurface(s)))
+                .collect();
+            let shell = truck_modeling::Shell::from(faces);
+            let step_string = CompleteStepDisplay::new(
+                StepModel::from(&shell),
+                Default::default(),
+            )
+            .to_string();
+            std::fs::write("cube_bfr_mixed.step", step_string)?;
+            println!("Wrote cube_bfr_mixed.step");
+        }
+        Err(e) => println!("BFR mixed conversion failed: {:?}", e),
+    }
+
     Ok(())
 }

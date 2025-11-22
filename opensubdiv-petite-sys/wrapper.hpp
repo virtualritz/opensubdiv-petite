@@ -9,3 +9,5 @@
 #include <opensubdiv/far/patchTableFactory.h>
 #include <opensubdiv/far/patchDescriptor.h>
 #include <opensubdiv/far/patchParam.h>
+#include <opensubdiv/bfr/refinerSurfaceFactory.h>
+#include <opensubdiv/bfr/surface.h>

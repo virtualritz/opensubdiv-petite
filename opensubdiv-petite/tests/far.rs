@@ -90,9 +90,9 @@ fn topology_refiner_creation() -> Result<()> {
 
     // Check initial state.
     assert_eq!(refiner.refinement_levels(), 1);
-    assert_eq!(refiner.vertex_total_count(), 8);
-    assert_eq!(refiner.face_total_count(), 6);
-    assert_eq!(refiner.edge_total_count(), 12);
+    assert_eq!(refiner.vertex_count_all_levels(), 8);
+    assert_eq!(refiner.face_count_all_levels(), 6);
+    assert_eq!(refiner.edge_count_all_levels(), 12);
     // A newly created refiner hasn't had uniform refinement applied yet
     // The is_uniform() state is implementation-defined until refinement is applied
     assert!(!refiner.has_holes());
@@ -106,8 +106,7 @@ fn topology_refiner_uniform_refinement() -> Result<()> {
         0, 1, 3, 2, 2, 3, 5, 4, 4, 5, 7, 6, 6, 7, 1, 0, 1, 7, 5, 3, 6, 0, 2, 4,
     ];
 
-    let descriptor = TopologyDescriptor::new(8, &vertices_per_face, &face_vertices)
-        .expect("Could not create TopologyDescriptor");
+    let descriptor = TopologyDescriptor::new(8, &vertices_per_face, &face_vertices)?;
     let options = TopologyRefinerOptions::default();
 
     let mut refiner =
@@ -128,6 +127,7 @@ fn topology_refiner_uniform_refinement() -> Result<()> {
     assert!(refiner.level(1).is_some());
     assert!(refiner.level(2).is_some());
     assert!(refiner.level(3).is_none());
+    Ok(())
 }
 
 #[test]
@@ -137,8 +137,7 @@ fn topology_level_access() -> Result<()> {
         0, 1, 3, 2, 2, 3, 5, 4, 4, 5, 7, 6, 6, 7, 1, 0, 1, 7, 5, 3, 6, 0, 2, 4,
     ];
 
-    let descriptor = TopologyDescriptor::new(8, &vertices_per_face, &face_vertices)
-        .expect("Could not create TopologyDescriptor");
+    let descriptor = TopologyDescriptor::new(8, &vertices_per_face, &face_vertices)?;
     let options = TopologyRefinerOptions::default();
 
     let refiner =
@@ -151,6 +150,7 @@ fn topology_level_access() -> Result<()> {
     assert_eq!(level0.face_count(), 6);
     assert_eq!(level0.edge_count(), 12);
     assert_eq!(level0.face_vertex_count(), 24); // 6 faces * 4 vertices each.
+    Ok(())
 }
 
 #[test]
@@ -160,8 +160,7 @@ fn topology_level_face_vertices() -> Result<()> {
         0, 1, 3, 2, 2, 3, 5, 4, 4, 5, 7, 6, 6, 7, 1, 0, 1, 7, 5, 3, 6, 0, 2, 4,
     ];
 
-    let descriptor = TopologyDescriptor::new(8, &vertices_per_face, &face_vertices)
-        .expect("Could not create TopologyDescriptor");
+    let descriptor = TopologyDescriptor::new(8, &vertices_per_face, &face_vertices)?;
     let options = TopologyRefinerOptions::default();
 
     let refiner =
@@ -181,6 +180,7 @@ fn topology_level_face_vertices() -> Result<()> {
 
     // Test invalid face index.
     assert!(level0.face_vertices(Index::from(99u32)).is_none());
+    Ok(())
 }
 
 #[test]
@@ -188,7 +188,7 @@ fn topology_level_relationships() -> Result<()> {
     let vertices_per_face = [3, 3]; // Two triangles sharing an edge.
     let face_vertices = [0, 1, 2, 1, 3, 2];
 
-    let descriptor = TopologyDescriptor::new(4, &vertices_per_face, &face_vertices);
+    let descriptor = TopologyDescriptor::new(4, &vertices_per_face, &face_vertices)?;
     let options = TopologyRefinerOptions::default();
 
     let refiner =
@@ -211,6 +211,7 @@ fn topology_level_relationships() -> Result<()> {
         .edge_faces(edge.unwrap())
         .expect("Edge should have adjacent faces");
     assert_eq!(edge_faces.len(), 2); // Shared by two triangles.
+    Ok(())
 }
 
 #[test]
@@ -232,8 +233,7 @@ fn primvar_refiner() -> Result<()> {
         0.5, -0.5, -0.5, // 7
     ];
 
-    let descriptor = TopologyDescriptor::new(8, &vertices_per_face, &face_vertices)
-        .expect("Could not create TopologyDescriptor");
+    let descriptor = TopologyDescriptor::new(8, &vertices_per_face, &face_vertices)?;
     let options = TopologyRefinerOptions::default();
 
     let mut refiner =
@@ -244,7 +244,7 @@ fn primvar_refiner() -> Result<()> {
         ..Default::default()
     });
 
-    let primvar_refiner = PrimvarRefiner::new(&refiner);
+    let primvar_refiner = PrimvarRefiner::new(&refiner)?;
 
     // Interpolate positions to level 1.
     let refined_positions = primvar_refiner
@@ -255,6 +255,7 @@ fn primvar_refiner() -> Result<()> {
     let level1_vertex_count = refiner.level(1).unwrap().vertex_count();
     assert!(level1_vertex_count > 8);
     assert_eq!(refined_positions.len(), level1_vertex_count * 3);
+    Ok(())
 }
 
 #[test]
@@ -264,8 +265,7 @@ fn stencil_table() -> Result<()> {
         0, 1, 3, 2, 2, 3, 5, 4, 4, 5, 7, 6, 6, 7, 1, 0, 1, 7, 5, 3, 6, 0, 2, 4,
     ];
 
-    let descriptor = TopologyDescriptor::new(8, &vertices_per_face, &face_vertices)
-        .expect("Could not create TopologyDescriptor");
+    let descriptor = TopologyDescriptor::new(8, &vertices_per_face, &face_vertices)?;
     let options = TopologyRefinerOptions::default();
 
     let mut refiner =
@@ -282,14 +282,14 @@ fn stencil_table() -> Result<()> {
         ..Default::default()
     };
 
-    let stencil_table = StencilTable::new(&refiner, stencil_options);
+    let stencil_table = StencilTable::new(&refiner, stencil_options)?;
 
     // Debug output
     let num_levels = refiner.refinement_levels();
     let level0_verts = refiner.level(0).unwrap().vertex_count();
     let level1_verts = refiner.level(1).unwrap().vertex_count();
     let level2_verts = refiner.level(2).unwrap().vertex_count();
-    let total_verts = refiner.vertex_total_count();
+    let total_verts = refiner.vertex_count_all_levels();
 
     println!("Debug StencilTable test:");
     println!("  Refinement levels: {num_levels}");
@@ -314,7 +314,7 @@ fn stencil_table() -> Result<()> {
     println!("  Stencil count: {}", stencil_count);
 
     // Try with default options too
-    let default_stencil_table = StencilTable::new(&refiner, StencilTableOptions::default());
+    let default_stencil_table = StencilTable::new(&refiner, StencilTableOptions::default())?;
     let default_count = default_stencil_table.len();
     println!("  Default stencil count: {}", default_count);
 
@@ -326,6 +326,7 @@ fn stencil_table() -> Result<()> {
         stencil_count, 98,
         "StencilTable should have 98 stencils for level 2 vertices only"
     );
+    Ok(())
 }
 
 #[test]
@@ -353,7 +354,7 @@ fn face_vertices_iter() -> Result<()> {
     let vertices_per_face = [4, 4, 4, 4, 4, 4];
     let face_vertices = [
         0, 1, 3, 2, // face 0
-        2, 3, 5, 4, // face 1  
+        2, 3, 5, 4, // face 1
         4, 5, 7, 6, // face 2
         6, 7, 1, 0, // face 3
         1, 7, 5, 3, // face 4
@@ -362,53 +363,56 @@ fn face_vertices_iter() -> Result<()> {
 
     let descriptor = TopologyDescriptor::new(8, &vertices_per_face, &face_vertices)?;
     let mut refiner = TopologyRefiner::new(descriptor, TopologyRefinerOptions::default())?;
-    
+
     // Refine uniformly to level 1.
     let mut options = UniformRefinementOptions::default();
     options.refinement_level = 1;
     refiner.refine_uniform(options);
-    
+
     // Get the base level.
     let level_0 = refiner.level(0).unwrap();
-    
+
     // Test the iterator.
     let mut face_count = 0;
     let mut total_vertices = 0;
-    
+
     for face_verts in level_0.face_vertices_iter() {
         assert_eq!(face_verts.len(), 4, "Cube faces should have 4 vertices");
         face_count += 1;
         total_vertices += face_verts.len();
     }
-    
+
     assert_eq!(face_count, 6, "Cube should have 6 faces");
     assert_eq!(total_vertices, 24, "Total vertices in faces should be 24");
-    
+
     // Verify iterator produces same results as direct access.
     let mut iter_results = Vec::new();
     for face_verts in level_0.face_vertices_iter() {
         iter_results.push(face_verts.to_vec());
     }
-    
+
     for (i, face_verts) in iter_results.iter().enumerate() {
         let direct_verts = level_0.face_vertices(i.into()).unwrap();
-        assert_eq!(face_verts, direct_verts, "Iterator should match direct access");
+        assert_eq!(
+            face_verts, direct_verts,
+            "Iterator should match direct access"
+        );
     }
-    
+
     Ok(())
 }
 
 #[cfg(feature = "rayon")]
-#[test] 
+#[test]
 fn face_vertices_par_iter() -> Result<()> {
     use rayon::prelude::*;
-    
+
     // Create a simple cube mesh.
     let vertices_per_face = [4, 4, 4, 4, 4, 4];
     let face_vertices = [
         0, 1, 3, 2, // face 0
         2, 3, 5, 4, // face 1
-        4, 5, 7, 6, // face 2  
+        4, 5, 7, 6, // face 2
         6, 7, 1, 0, // face 3
         1, 7, 5, 3, // face 4
         6, 0, 2, 4, // face 5
@@ -416,15 +420,15 @@ fn face_vertices_par_iter() -> Result<()> {
 
     let descriptor = TopologyDescriptor::new(8, &vertices_per_face, &face_vertices)?;
     let mut refiner = TopologyRefiner::new(descriptor, TopologyRefinerOptions::default())?;
-    
+
     // Refine uniformly to level 2 for more faces.
     let mut options = UniformRefinementOptions::default();
     options.refinement_level = 2;
     refiner.refine_uniform(options);
-    
+
     // Get refined level.
     let level_2 = refiner.level(2).unwrap();
-    
+
     // Test parallel iterator.
     let par_face_count: usize = level_2
         .face_vertices_par_iter()
@@ -433,27 +437,28 @@ fn face_vertices_par_iter() -> Result<()> {
             1
         })
         .sum();
-    
+
     // Should have 6 * 4^2 = 96 faces at level 2.
     assert_eq!(par_face_count, 96, "Level 2 should have 96 faces");
-    
+
     // Verify parallel iterator produces same results as sequential.
-    let mut seq_results: Vec<Vec<Index>> = level_2
-        .face_vertices_iter()
-        .map(|v| v.to_vec())
-        .collect();
-    
+    let mut seq_results: Vec<Vec<Index>> =
+        level_2.face_vertices_iter().map(|v| v.to_vec()).collect();
+
     let mut par_results: Vec<Vec<Index>> = level_2
         .face_vertices_par_iter()
         .map(|v| v.to_vec())
         .collect();
-    
+
     // Sort both since parallel order might differ.
     seq_results.sort();
     par_results.sort();
-    
-    assert_eq!(seq_results, par_results, "Parallel and sequential iterators should produce same faces");
-    
+
+    assert_eq!(
+        seq_results, par_results,
+        "Parallel and sequential iterators should produce same faces"
+    );
+
     Ok(())
 }
 
@@ -462,36 +467,28 @@ fn face_vertices_par_iter() -> Result<()> {
 fn face_vertices_par_iter_performance() -> Result<()> {
     use rayon::prelude::*;
     use std::time::Instant;
-    
+
     // Create a larger mesh for performance testing.
     let vertices_per_face = [4, 4, 4, 4, 4, 4];
     let face_vertices = [
-        0, 1, 3, 2,
-        2, 3, 5, 4,
-        4, 5, 7, 6,
-        6, 7, 1, 0,
-        1, 7, 5, 3,
-        6, 0, 2, 4,
+        0, 1, 3, 2, 2, 3, 5, 4, 4, 5, 7, 6, 6, 7, 1, 0, 1, 7, 5, 3, 6, 0, 2, 4,
     ];
 
     let descriptor = TopologyDescriptor::new(8, &vertices_per_face, &face_vertices)?;
     let mut refiner = TopologyRefiner::new(descriptor, TopologyRefinerOptions::default())?;
-    
+
     // Refine to level 4 for many faces.
     let mut options = UniformRefinementOptions::default();
     options.refinement_level = 4;
     refiner.refine_uniform(options);
-    
+
     let level_4 = refiner.level(4).unwrap();
-    
+
     // Time sequential iteration.
     let start = Instant::now();
-    let seq_sum: usize = level_4
-        .face_vertices_iter()
-        .map(|face| face.len())
-        .sum();
+    let seq_sum: usize = level_4.face_vertices_iter().map(|face| face.len()).sum();
     let seq_time = start.elapsed();
-    
+
     // Time parallel iteration.
     let start = Instant::now();
     let par_sum: usize = level_4
@@ -499,14 +496,20 @@ fn face_vertices_par_iter_performance() -> Result<()> {
         .map(|face| face.len())
         .sum();
     let par_time = start.elapsed();
-    
-    assert_eq!(seq_sum, par_sum, "Sequential and parallel should compute same sum");
-    
+
+    assert_eq!(
+        seq_sum, par_sum,
+        "Sequential and parallel should compute same sum"
+    );
+
     // Print timing info (won't fail test, just informational).
     println!("Sequential time: {:?}", seq_time);
     println!("Parallel time: {:?}", par_time);
-    println!("Speedup: {:.2}x", seq_time.as_secs_f64() / par_time.as_secs_f64());
-    
+    println!(
+        "Speedup: {:.2}x",
+        seq_time.as_secs_f64() / par_time.as_secs_f64()
+    );
+
     Ok(())
 }
 
@@ -517,8 +520,7 @@ fn deprecated_method_wrappers() -> Result<()> {
         0, 1, 3, 2, 2, 3, 5, 4, 4, 5, 7, 6, 6, 7, 1, 0, 1, 7, 5, 3, 6, 0, 2, 4,
     ];
 
-    let descriptor = TopologyDescriptor::new(8, &vertices_per_face, &face_vertices)
-        .expect("Could not create TopologyDescriptor");
+    let descriptor = TopologyDescriptor::new(8, &vertices_per_face, &face_vertices)?;
     let options = TopologyRefinerOptions::default();
 
     let refiner =
@@ -527,12 +529,15 @@ fn deprecated_method_wrappers() -> Result<()> {
     // Test deprecated methods still work.
     #[allow(deprecated)]
     {
-        assert_eq!(refiner.vertices_total_len(), refiner.vertex_total_count());
-        assert_eq!(refiner.edges_total_len(), refiner.edge_total_count());
-        assert_eq!(refiner.faces_total_len(), refiner.face_total_count());
+        assert_eq!(
+            refiner.vertices_total_len(),
+            refiner.vertex_count_all_levels()
+        );
+        assert_eq!(refiner.edges_total_len(), refiner.edge_count_all_levels());
+        assert_eq!(refiner.faces_total_len(), refiner.face_count_all_levels());
         assert_eq!(
             refiner.face_vertices_total_len(),
-            refiner.face_vertex_total_count()
+            refiner.face_vertex_count_all_levels()
         );
     }
 
@@ -545,4 +550,6 @@ fn deprecated_method_wrappers() -> Result<()> {
         assert_eq!(level0.edges_len(), level0.edge_count());
         assert_eq!(level0.face_vertices_len(), level0.face_vertex_count());
     }
+
+    Ok(())
 }

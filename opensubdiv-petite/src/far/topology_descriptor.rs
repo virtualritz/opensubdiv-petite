@@ -13,7 +13,8 @@
 //!     &[3; 4],
 //!     // Vertex indices for each triangle.
 //!     &[2, 1, 0, 3, 2, 0, 1, 3, 0, 2, 3, 1],
-//! );
+//! )
+//! .expect("Failed to create topology descriptor");
 //!
 //! // Make all edges creased with sharpness 8.0.
 //! tetrahedron.creases(&[0, 2, 0, 3, 1, 3, 0, 1, 2, 3, 1, 2], &[8.0; 6]);
@@ -59,7 +60,7 @@ use std::marker::PhantomData;
 /// an example.
 #[derive(Debug)]
 pub struct TopologyDescriptor<'a> {
-    pub(crate) descriptor: sys::OpenSubdiv_v3_6_1_Far_TopologyDescriptor,
+    pub(crate) descriptor: sys::OpenSubdiv_v3_7_0_Far_TopologyDescriptor,
     // _marker needs to be invariant in 'a.
     // See "Making a struct outlive a parameter given to a method of
     // that struct": https://stackoverflow.com/questions/62374326/
@@ -85,7 +86,7 @@ impl<'a> TopologyDescriptor<'a> {
         vertices_per_face: &'a [u32],
         vertex_indices_per_face: &'a [u32],
     ) -> crate::Result<TopologyDescriptor<'a>> {
-        let mut descriptor = unsafe { sys::OpenSubdiv_v3_6_1_Far_TopologyDescriptor::new() };
+        let mut descriptor = unsafe { sys::OpenSubdiv_v3_7_0_Far_TopologyDescriptor::new() };
 
         #[cfg(feature = "topology_validation")]
         {

@@ -55,6 +55,7 @@
 //! - `v0.2.x` – *OpenSubdiv* `v3.5.x`
 //! - `v0.1.x` – *OpenSubdiv* `v3.4.x`
 
+pub mod bfr;
 pub mod error;
 pub mod far;
 pub mod osd;

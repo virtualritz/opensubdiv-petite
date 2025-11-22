@@ -1,13 +1,14 @@
 mod utils;
+
+use anyhow::Result;
+use opensubdiv_petite::far;
+use std::fs::File;
+use std::io::Write;
 use utils::{assert_file_matches, test_output_path};
 
 #[cfg(feature = "opencl")]
 #[test]
-fn test_opencl_stencil_evaluation() {
-    use opensubdiv_petite::far;
-    use std::fs::File;
-    use std::io::Write;
-
+fn test_opencl_stencil_evaluation() -> Result<()> {
     // Create a simple cube topology
     let vertices = [
         -0.5, -0.5, 0.5, 0.5, -0.5, 0.5, -0.5, 0.5, 0.5, 0.5, 0.5, 0.5, -0.5, 0.5, -0.5, 0.5, 0.5,
@@ -22,7 +23,7 @@ fn test_opencl_stencil_evaluation() {
     ];
 
     // Create topology descriptor
-    let descriptor = far::TopologyDescriptor::new(num_vertices, &verts_per_face, &vert_indices);
+    let descriptor = far::TopologyDescriptor::new(num_vertices, &verts_per_face, &vert_indices)?;
 
     // Create TopologyRefiner
     let mut refiner = far::TopologyRefiner::new(
@@ -32,8 +33,7 @@ fn test_opencl_stencil_evaluation() {
             boundary_interpolation: Some(far::BoundaryInterpolation::EdgeOnly),
             ..Default::default()
         },
-    )
-    .expect("Could not create TopologyRefiner");
+    )?;
 
     // Refine uniformly to level 2
     refiner.refine_uniform(far::topology_refiner::UniformRefinementOptions {
@@ -49,7 +49,7 @@ fn test_opencl_stencil_evaluation() {
             generate_intermediate_levels: false,
             ..Default::default()
         },
-    );
+    )?;
 
     let n_coarse_verts = refiner.level(0).unwrap().vertex_count();
     let n_refined_verts = stencil_table.len();
@@ -126,6 +126,8 @@ fn test_opencl_stencil_evaluation() {
 
     // Compare with expected results
     assert_file_matches(&output_path, "opencl_stencil_evaluation.txt");
+
+    Ok(())
 }
 
 #[cfg(not(feature = "opencl"))]

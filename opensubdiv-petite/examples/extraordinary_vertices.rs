@@ -7,7 +7,7 @@ use opensubdiv_petite::far::{
 
 #[cfg(feature = "truck")]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    use opensubdiv_petite::truck_integration::PatchTableExt;
+    use opensubdiv_petite::truck::PatchTableExt;
 
     // Create a simple cube mesh - corners have valence 3 (extraordinary vertices)
     let vertex_positions = vec![
@@ -35,7 +35,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         vertex_positions.len(),
         &face_vertex_counts,
         &face_vertex_indices,
-    );
+    )?;
 
     // Create topology refiner
     let refiner_options = TopologyRefinerOptions::default();
@@ -77,9 +77,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let mut gregory_triangle_count = 0;
         let mut other_count = 0;
 
-        for array_idx in 0..patch_table.patch_arrays_len() {
+        for array_idx in 0..patch_table.patch_array_count() {
             if let Some(desc) = patch_table.patch_array_descriptor(array_idx) {
-                let count = patch_table.patch_array_patches_len(array_idx);
+                let count = patch_table.patch_array_patch_count(array_idx);
                 match desc.patch_type() {
                     opensubdiv_petite::far::PatchType::Regular => regular_count += count,
                     opensubdiv_petite::far::PatchType::GregoryBasis => gregory_basis_count += count,
@@ -98,8 +98,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("  Other: {}", other_count);
 
         // Build vertex buffer
-        let primvar_refiner = PrimvarRefiner::new(&refiner);
-        let mut all_vertices = Vec::with_capacity(refiner.vertex_total_count());
+        let primvar_refiner = PrimvarRefiner::new(&refiner)?;
+        let mut all_vertices = Vec::with_capacity(refiner.vertex_count_all_levels());
 
         // Add base vertices
         all_vertices.extend_from_slice(&vertex_positions);

@@ -2,15 +2,18 @@ mod utils;
 use utils::*;
 
 use opensubdiv_petite::far::{
-    AdaptiveRefinementOptions, EndCapType, PatchTable, PatchTableOptions, PrimvarRefiner,
-    TopologyDescriptor, TopologyRefiner, TopologyRefinerOptions,
+    AdaptiveRefinementOptions, PatchTable, PatchTableOptions, PrimvarRefiner, TopologyDescriptor,
+    TopologyRefiner, TopologyRefinerOptions,
 };
 use opensubdiv_petite::obj_bspline_export::PatchTableObjExt;
 
 /// Build complete vertex buffer including all refinement levels
-fn build_vertex_buffer(refiner: &TopologyRefiner, base_vertices: &[[f32; 3]]) -> Vec<[f32; 3]> {
-    let primvar_refiner = PrimvarRefiner::new(refiner);
-    let total_vertices = refiner.vertex_total_count();
+fn build_vertex_buffer(
+    refiner: &TopologyRefiner,
+    base_vertices: &[[f32; 3]],
+) -> Result<Vec<[f32; 3]>, Box<dyn std::error::Error>> {
+    let primvar_refiner = PrimvarRefiner::new(refiner)?;
+    let total_vertices = refiner.vertex_count_all_levels();
 
     let mut all_vertices = Vec::with_capacity(total_vertices);
 
@@ -44,11 +47,11 @@ fn build_vertex_buffer(refiner: &TopologyRefiner, base_vertices: &[[f32; 3]]) ->
         level_start += prev_level_count;
     }
 
-    all_vertices
+    Ok(all_vertices)
 }
 
 #[test]
-fn test_simple_plane_bspline_obj() {
+fn test_simple_plane_bspline_obj() -> Result<(), Box<dyn std::error::Error>> {
     // Create a 3x3 quad mesh (4x4 vertices)
     let mut vertex_positions = Vec::new();
     for y in 0..4 {
@@ -76,7 +79,7 @@ fn test_simple_plane_bspline_obj() {
         vertex_positions.len(),
         &face_vertex_counts,
         &face_vertex_indices,
-    );
+    )?;
 
     let refiner_options = TopologyRefinerOptions::default();
     let mut refiner = TopologyRefiner::new(descriptor, refiner_options)
@@ -88,16 +91,16 @@ fn test_simple_plane_bspline_obj() {
     refiner.refine_adaptive(adaptive_options, &[]);
 
     // Create patch table
-    let patch_options = PatchTableOptions::new().end_cap_type(default_end_cap_type());
+    let patch_options = PatchTableOptions::new();
     let patch_table =
         PatchTable::new(&refiner, Some(patch_options)).expect("Failed to create patch table");
 
     // Build vertex buffer
-    let all_vertices = build_vertex_buffer(&refiner, &vertex_positions);
+    let all_vertices = build_vertex_buffer(&refiner, &vertex_positions)?;
 
     println!(
         "Simple plane: {} patches, {} vertices",
-        patch_table.patches_len(),
+        patch_table.patch_count(),
         all_vertices.len()
     );
 
@@ -109,10 +112,11 @@ fn test_simple_plane_bspline_obj() {
 
     // Compare or update expected results
     assert_file_matches(&output_path, "simple_plane_bspline.obj");
+    Ok(())
 }
 
 #[test]
-fn test_simple_cube_bspline_obj() {
+fn test_simple_cube_bspline_obj() -> Result<(), Box<dyn std::error::Error>> {
     // Simple cube vertices
     let vertex_positions = vec![
         [-1.0, -1.0, -1.0],
@@ -139,7 +143,7 @@ fn test_simple_cube_bspline_obj() {
         vertex_positions.len(),
         &face_vertex_counts,
         &face_vertex_indices,
-    );
+    )?;
 
     let refiner_options = TopologyRefinerOptions::default();
     let mut refiner = TopologyRefiner::new(descriptor, refiner_options)
@@ -151,16 +155,16 @@ fn test_simple_cube_bspline_obj() {
     refiner.refine_adaptive(adaptive_options, &[]);
 
     // Create patch table
-    let patch_options = PatchTableOptions::new().end_cap_type(default_end_cap_type());
+    let patch_options = PatchTableOptions::new();
     let patch_table =
         PatchTable::new(&refiner, Some(patch_options)).expect("Failed to create patch table");
 
     // Build vertex buffer
-    let all_vertices = build_vertex_buffer(&refiner, &vertex_positions);
+    let all_vertices = build_vertex_buffer(&refiner, &vertex_positions)?;
 
     println!(
         "Simple cube: {} patches, {} vertices",
-        patch_table.patches_len(),
+        patch_table.patch_count(),
         all_vertices.len()
     );
 
@@ -172,10 +176,11 @@ fn test_simple_cube_bspline_obj() {
 
     // Compare or update expected results
     assert_file_matches(&output_path, "simple_cube_bspline.obj");
+    Ok(())
 }
 
 #[test]
-fn test_creased_cube_bspline_obj() {
+fn test_creased_cube_bspline_obj() -> Result<(), Box<dyn std::error::Error>> {
     // Creased cube vertices
     let vertex_positions = vec![
         [-0.5, -0.5, 0.5],
@@ -211,7 +216,7 @@ fn test_creased_cube_bspline_obj() {
         vertex_positions.len(),
         &face_vertex_counts,
         &face_vertex_indices,
-    );
+    )?;
     descriptor.creases(&crease_indices, &crease_weights);
 
     let refiner_options = TopologyRefinerOptions::default();
@@ -224,16 +229,16 @@ fn test_creased_cube_bspline_obj() {
     refiner.refine_adaptive(adaptive_options, &[]);
 
     // Create patch table
-    let patch_options = PatchTableOptions::new().end_cap_type(default_end_cap_type());
+    let patch_options = PatchTableOptions::new();
     let patch_table =
         PatchTable::new(&refiner, Some(patch_options)).expect("Failed to create patch table");
 
     // Build vertex buffer
-    let all_vertices = build_vertex_buffer(&refiner, &vertex_positions);
+    let all_vertices = build_vertex_buffer(&refiner, &vertex_positions)?;
 
     println!(
         "Creased cube: {} patches, {} vertices",
-        patch_table.patches_len(),
+        patch_table.patch_count(),
         all_vertices.len()
     );
 
@@ -245,10 +250,11 @@ fn test_creased_cube_bspline_obj() {
 
     // Compare or update expected results
     assert_file_matches(&output_path, "creased_cube_bspline.obj");
+    Ok(())
 }
 
 #[test]
-fn test_two_patches_bspline_obj() {
+fn test_two_patches_bspline_obj() -> Result<(), Box<dyn std::error::Error>> {
     // Simple cube - same as in truck.rs test
     let vertex_positions = vec![
         [-1.0, -1.0, -1.0],
@@ -275,7 +281,7 @@ fn test_two_patches_bspline_obj() {
         vertex_positions.len(),
         &face_vertex_counts,
         &face_vertex_indices,
-    );
+    )?;
 
     let refiner_options = TopologyRefinerOptions::default();
     let mut refiner = TopologyRefiner::new(descriptor, refiner_options)
@@ -287,16 +293,16 @@ fn test_two_patches_bspline_obj() {
     refiner.refine_adaptive(adaptive_options, &[]);
 
     // Create patch table
-    let patch_options = PatchTableOptions::new().end_cap_type(default_end_cap_type());
+    let patch_options = PatchTableOptions::new();
     let patch_table =
         PatchTable::new(&refiner, Some(patch_options)).expect("Failed to create patch table");
 
     // Build vertex buffer
-    let all_vertices = build_vertex_buffer(&refiner, &vertex_positions);
+    let all_vertices = build_vertex_buffer(&refiner, &vertex_positions)?;
 
     println!(
         "Cube for two patches: {} patches, {} vertices",
-        patch_table.patches_len(),
+        patch_table.patch_count(),
         all_vertices.len()
     );
 
@@ -322,7 +328,7 @@ fn test_two_patches_bspline_obj() {
 
     // Export only first two patches
     let mut patch_count = 0;
-    'outer: for array_idx in 0..patch_table.patch_arrays_len() {
+    'outer: for array_idx in 0..patch_table.patch_array_count() {
         if let Some(desc) = patch_table.patch_array_descriptor(array_idx) {
             if desc.patch_type() != opensubdiv_petite::far::PatchType::Regular {
                 continue;
@@ -331,7 +337,7 @@ fn test_two_patches_bspline_obj() {
             if let Some(cv_indices) = patch_table.patch_array_vertices(array_idx) {
                 const REGULAR_PATCH_SIZE: usize = 16;
 
-                for patch_idx in 0..patch_table.patch_array_patches_len(array_idx) {
+                for patch_idx in 0..patch_table.patch_array_patch_count(array_idx) {
                     if patch_count >= 2 {
                         break 'outer;
                     }
@@ -370,4 +376,5 @@ fn test_two_patches_bspline_obj() {
 
     // Compare or update expected results
     assert_file_matches(&output_path, "two_patches_bspline.obj");
+    Ok(())
 }

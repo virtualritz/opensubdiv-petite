@@ -1,5 +1,6 @@
 mod utils;
 
+use anyhow::Result;
 use opensubdiv_petite::far::{
     AdaptiveRefinementOptions, PatchTable, PatchTableOptions, PrimvarRefiner, TopologyDescriptor,
     TopologyRefiner, TopologyRefinerOptions,
@@ -8,9 +9,12 @@ use std::fs::File;
 use std::io::Write;
 
 /// Build complete vertex buffer including all refinement levels
-fn build_vertex_buffer(refiner: &TopologyRefiner, base_vertices: &[[f32; 3]]) -> Vec<[f32; 3]> {
-    let primvar_refiner = PrimvarRefiner::new(refiner);
-    let total_vertices = refiner.vertex_total_count();
+fn build_vertex_buffer(
+    refiner: &TopologyRefiner,
+    base_vertices: &[[f32; 3]],
+) -> Result<Vec<[f32; 3]>> {
+    let primvar_refiner = PrimvarRefiner::new(refiner)?;
+    let total_vertices = refiner.vertex_count_all_levels();
 
     println!("Building vertex buffer:");
     println!("  Total vertices across all levels: {}", total_vertices);
@@ -62,7 +66,7 @@ fn build_vertex_buffer(refiner: &TopologyRefiner, base_vertices: &[[f32; 3]]) ->
     }
 
     println!("  Final vertex buffer size: {}", all_vertices.len());
-    all_vertices
+    Ok(all_vertices)
 }
 
 /// Export patch control cages to OBJ format for visual inspection
@@ -74,15 +78,15 @@ fn export_patch_cages_to_obj(
     let mut file = File::create(filename)?;
 
     writeln!(file, "# OpenSubdiv Patch Control Cages")?;
-    writeln!(file, "# Number of patches: {}", patch_table.patches_len())?;
+    writeln!(file, "# Number of patches: {}", patch_table.patch_count())?;
     writeln!(file, "#")?;
 
     let mut vertex_offset = 1; // OBJ uses 1-based indexing
     let mut patch_global_idx = 0;
 
-    for array_idx in 0..patch_table.patch_arrays_len() {
+    for array_idx in 0..patch_table.patch_array_count() {
         if let Some(patch_vertices) = patch_table.patch_array_vertices(array_idx) {
-            let num_patches = patch_table.patch_array_patches_len(array_idx);
+            let num_patches = patch_table.patch_array_patch_count(array_idx);
 
             for patch_idx in 0..num_patches {
                 writeln!(
@@ -133,7 +137,7 @@ fn export_patch_cages_to_obj(
 }
 
 #[test]
-fn test_export_simple_plane_patches() {
+fn test_export_simple_plane_patches() -> Result<()> {
     // Create a 3x3 quad mesh (4x4 vertices)
     let mut vertex_positions = Vec::new();
     for y in 0..4 {
@@ -161,7 +165,7 @@ fn test_export_simple_plane_patches() {
         vertex_positions.len(),
         &face_vertex_counts,
         &face_vertex_indices,
-    );
+    )?;
 
     let refiner_options = TopologyRefinerOptions::default();
     let mut refiner = TopologyRefiner::new(descriptor, refiner_options)
@@ -179,7 +183,7 @@ fn test_export_simple_plane_patches() {
         PatchTable::new(&refiner, Some(patch_options)).expect("Failed to create patch table");
 
     // Build vertex buffer
-    let all_vertices = build_vertex_buffer(&refiner, &vertex_positions);
+    let all_vertices = build_vertex_buffer(&refiner, &vertex_positions)?;
 
     // Export to OBJ
     let output_path = utils::test_output_path("simple_plane_patches.obj");
@@ -189,10 +193,11 @@ fn test_export_simple_plane_patches() {
 
     // Compare or update expected results
     utils::assert_file_matches(&output_path, "simple_plane_patches.obj");
+    Ok(())
 }
 
 #[test]
-fn test_export_simple_cube_patches() {
+fn test_export_simple_cube_patches() -> Result<()> {
     // Simple cube vertices
     let vertex_positions = vec![
         [-0.5, -0.5, -0.5],
@@ -219,7 +224,7 @@ fn test_export_simple_cube_patches() {
         vertex_positions.len(),
         &face_vertex_counts,
         &face_vertex_indices,
-    );
+    )?;
 
     let refiner_options = TopologyRefinerOptions::default();
     let mut refiner = TopologyRefiner::new(descriptor, refiner_options)
@@ -237,7 +242,7 @@ fn test_export_simple_cube_patches() {
         PatchTable::new(&refiner, Some(patch_options)).expect("Failed to create patch table");
 
     // Build vertex buffer
-    let all_vertices = build_vertex_buffer(&refiner, &vertex_positions);
+    let all_vertices = build_vertex_buffer(&refiner, &vertex_positions)?;
 
     // Export to OBJ
     let output_path = utils::test_output_path("simple_cube_patches.obj");
@@ -247,10 +252,11 @@ fn test_export_simple_cube_patches() {
 
     // Compare or update expected results
     utils::assert_file_matches(&output_path, "simple_cube_patches.obj");
+    Ok(())
 }
 
 #[test]
-fn test_export_creased_cube_patches() {
+fn test_export_creased_cube_patches() -> Result<()> {
     // Creased cube vertices
     let vertex_positions = vec![
         [-0.5, -0.5, 0.5],
@@ -286,7 +292,7 @@ fn test_export_creased_cube_patches() {
         vertex_positions.len(),
         &face_vertex_counts,
         &face_vertex_indices,
-    );
+    )?;
     descriptor.creases(&crease_indices, &crease_weights);
 
     let refiner_options = TopologyRefinerOptions::default();
@@ -305,7 +311,7 @@ fn test_export_creased_cube_patches() {
         PatchTable::new(&refiner, Some(patch_options)).expect("Failed to create patch table");
 
     // Build vertex buffer
-    let all_vertices = build_vertex_buffer(&refiner, &vertex_positions);
+    let all_vertices = build_vertex_buffer(&refiner, &vertex_positions)?;
 
     // Export to OBJ
     let output_path = utils::test_output_path("creased_cube_patches.obj");
@@ -313,8 +319,9 @@ fn test_export_creased_cube_patches() {
     export_patch_cages_to_obj(output_path.to_str().unwrap(), &patch_table, &all_vertices)
         .expect("Failed to export OBJ");
 
-    println!("Number of patches: {}", patch_table.patches_len());
+    println!("Number of patches: {}", patch_table.patch_count());
 
     // Compare or update expected results
     utils::assert_file_matches(&output_path, "creased_cube_patches.obj");
+    Ok(())
 }
