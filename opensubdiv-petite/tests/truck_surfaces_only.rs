@@ -10,7 +10,7 @@ fn test_simple_plane_surfaces_only() {
         AdaptiveRefinementOptions, EndCapType, PatchTable, PatchTableOptions, PrimvarRefiner,
         TopologyDescriptor, TopologyRefiner, TopologyRefinerOptions,
     };
-    use opensubdiv_petite::truck_integration::PatchTableExt;
+    use opensubdiv_petite::truck::PatchTableExt;
     use truck_modeling::*;
     use truck_stepio::out;
 

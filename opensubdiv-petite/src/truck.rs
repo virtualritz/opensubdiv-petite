@@ -7,6 +7,7 @@
 use crate::bfr::SurfaceFactory as BfrSurfaceFactory;
 use crate::far::{PatchEvalResult, PatchTable, PatchType, TopologyRefiner};
 use std::convert::TryFrom;
+use std::collections::HashMap;
 use thiserror::Error;
 use truck_geometry::prelude::{BSplineSurface, KnotVec};
 use truck_modeling::{
@@ -975,6 +976,18 @@ pub trait PatchTableExt {
         approx_sharp: i32,
     ) -> Result<Vec<BSplineSurface<Point3<f64>>>>;
 
+    /// Build a shell using BFR for regular faces and PatchTable for irregular patches.
+    fn to_truck_shell_bfr_mixed(
+        &self,
+        refiner: &TopologyRefiner,
+        control_points: &[[f32; 3]],
+        approx_smooth: i32,
+        approx_sharp: i32,
+    ) -> Result<Shell>;
+
+    /// Build a stitched B-rep shell with shared vertices/edges between patches.
+    fn to_truck_shell_stitched(&self, control_points: &[[f32; 3]]) -> Result<Shell>;
+
     /// Convert patches to individual shells (one per patch) for disconnected
     /// export
     fn to_truck_shells(&self, control_points: &[[f32; 3]]) -> Result<Vec<Shell>>;
@@ -1110,6 +1123,202 @@ impl PatchTableExt for PatchTable {
         println!("Any remaining gaps would be at extraordinary vertices where > 4 patches meet.");
 
         Ok(shell)
+    }
+
+    fn to_truck_shell_bfr_mixed(
+        &self,
+        refiner: &TopologyRefiner,
+        control_points: &[[f32; 3]],
+        approx_smooth: i32,
+        approx_sharp: i32,
+    ) -> Result<Shell> {
+        let surfaces =
+            self.to_truck_surfaces_bfr_mixed(refiner, control_points, approx_smooth, approx_sharp)?;
+        let faces: Vec<Face> = surfaces
+            .into_iter()
+            .map(|s| Face::new(vec![], Surface::BSplineSurface(s)))
+            .collect();
+        Ok(Shell::from(faces))
+    }
+
+    fn to_truck_shell_stitched(&self, control_points: &[[f32; 3]]) -> Result<Shell> {
+        // Deduplicate vertices and share edges between adjacent patches.
+        let mut vertex_map: HashMap<[i64; 3], truck_modeling::Vertex> = HashMap::new();
+        let mut edge_map: HashMap<([i64; 3], [i64; 3]), truck_modeling::Edge> = HashMap::new();
+
+        const TOL: f64 = 1e-9;
+
+        let quantize = |p: Point3<f64>| -> [i64; 3] {
+            [
+                (p.x / TOL).round() as i64,
+                (p.y / TOL).round() as i64,
+                (p.z / TOL).round() as i64,
+            ]
+        };
+
+        let get_vertex = |map: &mut HashMap<[i64; 3], truck_modeling::Vertex>,
+                          key: [i64; 3],
+                          p: Point3<f64>|
+         -> truck_modeling::Vertex {
+            map.entry(key)
+                .or_insert_with(|| truck_modeling::Vertex::new(p))
+                .clone()
+        };
+
+        // Build surfaces with control matrices so we can extract boundary curves.
+        let wrapper = self.with_control_points(control_points);
+        let mut faces = Vec::new();
+        let mut patch_index = 0;
+
+        for array_idx in 0..wrapper.patch_table.patch_array_count() {
+            if let Some(desc) = wrapper.patch_table.patch_array_descriptor(array_idx) {
+                let patch_type = desc.patch_type();
+                if !matches!(
+                    patch_type,
+                    PatchType::Regular | PatchType::GregoryBasis | PatchType::GregoryTriangle
+                ) {
+                    patch_index += wrapper.patch_table.patch_array_patch_count(array_idx);
+                    continue;
+                }
+
+                let num_patches = wrapper.patch_table.patch_array_patch_count(array_idx);
+                for _ in 0..num_patches {
+                    let patch = PatchRef::new(wrapper.patch_table, patch_index, wrapper.control_points);
+                    let control_matrix = match patch.control_points() {
+                        Ok(cp) => cp,
+                        Err(_) => {
+                            patch_index += 1;
+                            continue;
+                        }
+                    };
+
+                    // Build surface
+                    let surface: BSplineSurface<Point3<f64>> = match patch.try_into() {
+                        Ok(s) => s,
+                        Err(_) => {
+                            patch_index += 1;
+                            continue;
+                        }
+                    };
+
+                    // Corner points
+                    let p00 = control_matrix[0][0];
+                    let p10 = control_matrix[0][3];
+                    let p11 = control_matrix[3][3];
+                    let p01 = control_matrix[3][0];
+
+                    let k00 = quantize(p00);
+                    let k10 = quantize(p10);
+                    let k11 = quantize(p11);
+                    let k01 = quantize(p01);
+
+                    let v00 = get_vertex(&mut vertex_map, k00, p00);
+                    let v10 = get_vertex(&mut vertex_map, k10, p10);
+                    let v11 = get_vertex(&mut vertex_map, k11, p11);
+                    let v01 = get_vertex(&mut vertex_map, k01, p01);
+
+                    // Edge keys are ordered to enable sharing.
+                    let edge_key = |a: [i64; 3], b: [i64; 3]| -> ([i64; 3], [i64; 3]) {
+                        if a <= b {
+                            (a, b)
+                        } else {
+                            (b, a)
+                        }
+                    };
+
+                    // Build boundary curves from control matrix (B-spline along edges).
+                    let edge_knots =
+                        KnotVec::from(vec![-3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0, 4.0]);
+
+                    let bottom_cps = vec![
+                        control_matrix[0][0],
+                        control_matrix[0][1],
+                        control_matrix[0][2],
+                        control_matrix[0][3],
+                    ];
+                    let right_cps = vec![
+                        control_matrix[0][3],
+                        control_matrix[1][3],
+                        control_matrix[2][3],
+                        control_matrix[3][3],
+                    ];
+                    let top_cps = vec![
+                        control_matrix[3][3],
+                        control_matrix[3][2],
+                        control_matrix[3][1],
+                        control_matrix[3][0],
+                    ];
+                    let left_cps = vec![
+                        control_matrix[3][0],
+                        control_matrix[2][0],
+                        control_matrix[1][0],
+                        control_matrix[0][0],
+                    ];
+
+                    let make_edge = |_: ([i64; 3], [i64; 3]),
+                                     v_start: &truck_modeling::Vertex,
+                                     v_end: &truck_modeling::Vertex,
+                                     cps: Vec<Point3<f64>>|
+                     -> truck_modeling::Edge {
+                        // Curve must align with vertex order.
+                        let curve = truck_modeling::Curve::BSplineCurve(
+                            truck_geometry::prelude::BSplineCurve::new(edge_knots.clone(), cps),
+                        );
+                        truck_modeling::Edge::new(v_start, v_end, curve)
+                    };
+
+                    let e0 = edge_map
+                        .entry(edge_key(k00, k10))
+                        .or_insert_with(|| make_edge(edge_key(k00, k10), &v00, &v10, bottom_cps.clone()))
+                        .clone();
+                    let e1 = edge_map
+                        .entry(edge_key(k10, k11))
+                        .or_insert_with(|| make_edge(edge_key(k10, k11), &v10, &v11, right_cps.clone()))
+                        .clone();
+                    let e2 = edge_map
+                        .entry(edge_key(k11, k01))
+                        .or_insert_with(|| make_edge(edge_key(k11, k01), &v11, &v01, top_cps.clone()))
+                        .clone();
+                    let e3 = edge_map
+                        .entry(edge_key(k01, k00))
+                        .or_insert_with(|| make_edge(edge_key(k01, k00), &v01, &v00, left_cps.clone()))
+                        .clone();
+
+                    // Ensure edge orientation matches face loop.
+                    let bottom = if quantize(e0.front().point()) == k00 {
+                        e0
+                    } else {
+                        e0.inverse()
+                    };
+                    let right = if quantize(e1.front().point()) == k10 {
+                        e1
+                    } else {
+                        e1.inverse()
+                    };
+                    let top = if quantize(e2.front().point()) == k11 {
+                        e2
+                    } else {
+                        e2.inverse()
+                    };
+                    let left = if quantize(e3.front().point()) == k01 {
+                        e3
+                    } else {
+                        e3.inverse()
+                    };
+
+                    let wire = truck_modeling::Wire::from(vec![bottom, right, top, left]);
+                    let face = Face::new(vec![wire], Surface::BSplineSurface(surface));
+                    faces.push(face);
+                    patch_index += 1;
+                }
+            }
+        }
+
+        if faces.is_empty() {
+            Err(TruckError::InvalidControlPoints)
+        } else {
+            Ok(Shell::from(faces))
+        }
     }
 }
 
