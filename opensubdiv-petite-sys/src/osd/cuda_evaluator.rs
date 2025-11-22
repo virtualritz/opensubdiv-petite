@@ -10,7 +10,7 @@ pub struct CudaStencilTable_obj {
 pub type CudaStencilTablePtr = *mut CudaStencilTable_obj;
 
 #[link(name = "osd-capi", kind = "static")]
-extern "C" {
+unsafe extern "C" {
     pub fn CudaStencilTable_Create(st: StencilTablePtr) -> CudaStencilTablePtr;
     // pub fn CudaStencilTable_CreateFromLimit(st: LimitStencilTablePtr) ->
     // CudaStencilTablePtr;
@@ -25,7 +25,7 @@ pub struct CudaEvaluator_obj {
 pub type CudaEvaluatorPtr = *mut CudaEvaluator_obj;
 
 #[link(name = "osd-capi", kind = "static")]
-extern "C" {
+unsafe extern "C" {
     pub fn CudaEvaluator_EvalStencils(
         src_buffer: CudaVertexBufferPtr,
         src_desc: BufferDescriptor,

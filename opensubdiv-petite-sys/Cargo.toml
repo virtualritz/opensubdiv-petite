@@ -2,7 +2,7 @@
 name = "opensubdiv-petite-sys"
 version = "0.3.0"
 authors = ["Anders Langlands <anderslanglands@gmail.com>", "Moritz Moeller <virtualritz@protonmail.com>"]
-edition = "2021"
+edition = "2024"
 keywords = ["graphics", "rendering", "3d", "subdivision-surface", "polygon-mesh"]
 categories = ["graphics", "rendering::graphics-api", "api-bindings"]
 license = "Apache-2.0"

@@ -4,7 +4,8 @@
 //! patches to truck's surface representations, enabling high-order surface
 //! export to STEP format.
 
-use crate::far::{PatchEvalResult, PatchTable, PatchType};
+use crate::bfr::SurfaceFactory as BfrSurfaceFactory;
+use crate::far::{PatchEvalResult, PatchTable, PatchType, TopologyRefiner};
 use std::convert::TryFrom;
 use thiserror::Error;
 use truck_geometry::prelude::{BSplineSurface, KnotVec};
@@ -24,6 +25,10 @@ pub enum TruckError {
     /// Unsupported patch type
     #[error("Unsupported patch type: {0:?}")]
     UnsupportedPatchType(PatchType),
+
+    /// BFR surface conversion failed
+    #[error("BFR conversion failed: {0}")]
+    BfrConversionFailed(String),
 
     /// Invalid control point configuration
     #[error("Invalid control points configuration")]
@@ -340,6 +345,58 @@ impl<'a> TryFrom<PatchTableWithControlPointsRef<'a>> for Vec<BSplineSurface<Poin
         } else {
             Ok(surfaces)
         }
+    }
+}
+
+/// Convert only non-regular patches to B-spline surfaces (skip regular to allow
+/// BFR substitution).
+pub fn patch_table_surfaces_non_regular(
+    patch_table: &PatchTable,
+    control_points: &[[f32; 3]],
+) -> Result<Vec<BSplineSurface<Point3<f64>>>> {
+    let mut surfaces = Vec::new();
+    let mut patch_index = 0;
+
+    for array_idx in 0..patch_table.patch_array_count() {
+        if let Some(desc) = patch_table.patch_array_descriptor(array_idx) {
+            let patch_type = desc.patch_type();
+            let num_patches = patch_table.patch_array_patch_count(array_idx);
+
+            if patch_type == PatchType::Regular {
+                patch_index += num_patches;
+                continue;
+            }
+
+            if matches!(
+                patch_type,
+                PatchType::GregoryBasis
+                    | PatchType::GregoryTriangle
+                    | PatchType::Gregory
+                    | PatchType::GregoryBoundary
+                    | PatchType::GregoryCorner
+            ) {
+                for _ in 0..num_patches {
+                    let patch = PatchRef::new(patch_table, patch_index, control_points);
+                    match BSplineSurface::try_from(patch) {
+                        Ok(surface) => surfaces.push(surface),
+                        Err(e) => eprintln!(
+                            "Failed to convert non-regular patch {} (type {:?}): {:?}",
+                            patch_index, patch_type, e
+                        ),
+                    }
+                    patch_index += 1;
+                }
+            } else {
+                // Unsupported types skipped
+                patch_index += num_patches;
+            }
+        }
+    }
+
+    if surfaces.is_empty() {
+        Err(TruckError::InvalidControlPoints)
+    } else {
+        Ok(surfaces)
     }
 }
 
@@ -819,6 +876,23 @@ pub fn array_to_vector3(v: &[f32; 3]) -> Vector3<f64> {
     Vector3::new(v[0] as f64, v[1] as f64, v[2] as f64)
 }
 
+/// Build B-spline surfaces for regular faces using BFR (avoids
+/// over-refinement). Irregular faces are skipped.
+pub fn bfr_regular_surfaces(
+    refiner: &crate::far::TopologyRefiner,
+    control_points: &[[f32; 3]],
+    approx_smooth: i32,
+    approx_sharp: i32,
+) -> Result<Vec<BSplineSurface<Point3<f64>>>> {
+    let factory = BfrSurfaceFactory::new(refiner, approx_smooth, approx_sharp).map_err(|e| {
+        TruckError::BfrConversionFailed(format!("factory creation failed: {:?}", e))
+    })?;
+
+    factory
+        .build_regular_surfaces(refiner, control_points)
+        .map_err(|e| TruckError::BfrConversionFailed(format!("{:?}", e)))
+}
+
 /// Create a triangular patch as a degenerate quad B-spline surface
 /// This is used to fill gaps near extraordinary vertices
 pub fn create_triangular_patch(
@@ -891,6 +965,16 @@ pub trait PatchTableExt {
         control_points: &[[f32; 3]],
     ) -> Result<Vec<BSplineSurface<Point3<f64>>>>;
 
+    /// Prefer BFR for regular faces and fall back to PatchTable for non-regular
+    /// patches.
+    fn to_truck_surfaces_bfr_mixed(
+        &self,
+        refiner: &TopologyRefiner,
+        control_points: &[[f32; 3]],
+        approx_smooth: i32,
+        approx_sharp: i32,
+    ) -> Result<Vec<BSplineSurface<Point3<f64>>>>;
+
     /// Convert patches to individual shells (one per patch) for disconnected
     /// export
     fn to_truck_shells(&self, control_points: &[[f32; 3]]) -> Result<Vec<Shell>>;
@@ -925,6 +1009,30 @@ impl PatchTableExt for PatchTable {
     ) -> Result<Vec<BSplineSurface<Point3<f64>>>> {
         let wrapper = self.with_control_points(control_points);
         Vec::<BSplineSurface<Point3<f64>>>::try_from(wrapper)
+    }
+
+    /// Prefer BFR for regular faces and fall back to PatchTable for non-regular
+    /// patches. BFR approximation levels control how far sharp/smooth
+    /// features refine; use 0/0 to keep base quads coarse.
+    fn to_truck_surfaces_bfr_mixed(
+        &self,
+        refiner: &TopologyRefiner,
+        control_points: &[[f32; 3]],
+        approx_smooth: i32,
+        approx_sharp: i32,
+    ) -> Result<Vec<BSplineSurface<Point3<f64>>>> {
+        let mut surfaces =
+            bfr_regular_surfaces(refiner, control_points, approx_smooth, approx_sharp)
+                .unwrap_or_default();
+
+        let mut fallback = patch_table_surfaces_non_regular(self, control_points)?;
+        surfaces.append(&mut fallback);
+
+        if surfaces.is_empty() {
+            Err(TruckError::InvalidControlPoints)
+        } else {
+            Ok(surfaces)
+        }
     }
 
     fn to_truck_shells(&self, control_points: &[[f32; 3]]) -> Result<Vec<Shell>> {

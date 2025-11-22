@@ -18,6 +18,13 @@ pub fn default_end_cap_type() -> EndCapType {
     }
 }
 
+/// Get the default EndCapType for non-truck builds
+#[cfg(not(feature = "truck"))]
+#[allow(dead_code)]
+pub fn default_end_cap_type() -> opensubdiv_petite::far::EndCapType {
+    opensubdiv_petite::far::EndCapType::GregoryBasis
+}
+
 /// Check if tests should update expected results
 pub fn should_update_expected() -> bool {
     // Check for RUST_UPDATE_EXPECTED_TEST_RESULTS environment variable
@@ -49,6 +56,7 @@ pub fn test_output_dir() -> PathBuf {
 }
 
 /// Compare or update a test result file
+#[allow(dead_code)]
 pub fn assert_file_matches(actual_path: &Path, expected_filename: &str) {
     let expected_path = expected_results_dir().join(expected_filename);
 
@@ -179,6 +187,7 @@ pub fn assert_content_matches(actual_content: &str, expected_filename: &str) {
 }
 
 /// Helper to create a test-specific output path
+#[allow(dead_code)]
 pub fn test_output_path(filename: &str) -> PathBuf {
     test_output_dir().join(filename)
 }

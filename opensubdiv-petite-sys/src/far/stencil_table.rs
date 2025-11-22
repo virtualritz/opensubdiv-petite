@@ -98,14 +98,14 @@ impl StencilTableOptions {
     }
 }
 
-pub type Stencil = crate::OpenSubdiv_v3_6_1_Far_Stencil;
-pub type StencilTable = crate::OpenSubdiv_v3_6_1_Far_StencilTable;
+pub type Stencil = crate::OpenSubdiv_v3_7_0_Far_Stencil;
+pub type StencilTable = crate::OpenSubdiv_v3_7_0_Far_StencilTable;
 pub type StencilTablePtr = *mut StencilTable;
 
 #[link(name = "osd-capi", kind = "static")]
-extern "C" {
+unsafe extern "C" {
     pub fn StencilTableFactory_Create(
-        refiner: *mut crate::OpenSubdiv_v3_6_1_Far_TopologyRefiner,
+        refiner: *mut crate::OpenSubdiv_v3_7_0_Far_TopologyRefiner,
         options: StencilTableOptions,
     ) -> StencilTablePtr;
 

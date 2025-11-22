@@ -36,7 +36,8 @@ fn main() {
         vertex_positions.len() / 3,
         &face_vertex_counts,
         &face_vertex_indices,
-    );
+    )
+    .expect("Failed to create topology descriptor");
 
     println!("Created topology descriptor for a cube:");
     println!("  {} vertices", vertex_positions.len() / 3);
@@ -66,12 +67,12 @@ fn main() {
     println!("\nPatch Table Statistics:");
     println!(
         "  Number of patch arrays: {}",
-        patch_table.patch_arrays_len()
+        patch_table.patch_array_count()
     );
-    println!("  Total number of patches: {}", patch_table.patches_len());
+    println!("  Total number of patches: {}", patch_table.patch_count());
     println!(
         "  Number of control vertices: {}",
-        patch_table.control_vertices_len()
+        patch_table.control_vertex_count()
     );
     println!("  Maximum valence: {}", patch_table.max_valence());
 
@@ -79,13 +80,13 @@ fn main() {
     println!("\nPatch Arrays:");
     for i in 0..patch_table.patch_arrays_len() {
         if let Some(desc) = patch_table.patch_array_descriptor(i) {
-            let num_patches = patch_table.patch_array_patches_len(i);
+            let num_patches = patch_table.patch_array_patch_count(i);
             println!(
                 "  Array {}: {} patches of type {:?} ({} control vertices each)",
                 i,
                 num_patches,
                 desc.patch_type(),
-                desc.control_vertices_len()
+                desc.control_vertex_count()
             );
 
             // Check if these are regular B-spline patches

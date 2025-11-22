@@ -1,11 +1,11 @@
 // Minimal wrapper for patch table functionality
 extern "C" {
     // Forward declarations for opaque types
-    typedef struct OpenSubdiv__v3_6_1__Far__PatchTable PatchTable;
-    typedef struct OpenSubdiv__v3_6_1__Far__TopologyRefiner TopologyRefiner;
-    typedef struct OpenSubdiv__v3_6_1__Far__PatchTableFactory__Options PatchTableFactoryOptions;
-    typedef struct OpenSubdiv__v3_6_1__Far__PatchDescriptor PatchDescriptor;
-    typedef struct OpenSubdiv__v3_6_1__Far__PatchParam PatchParam;
+    typedef struct OpenSubdiv__v3_7_0__Far__PatchTable PatchTable;
+    typedef struct OpenSubdiv__v3_7_0__Far__TopologyRefiner TopologyRefiner;
+    typedef struct OpenSubdiv__v3_7_0__Far__PatchTableFactory__Options PatchTableFactoryOptions;
+    typedef struct OpenSubdiv__v3_7_0__Far__PatchDescriptor PatchDescriptor;
+    typedef struct OpenSubdiv__v3_7_0__Far__PatchParam PatchParam;
 
     // PatchTableFactory functions
     PatchTable* PatchTableFactory_Create(TopologyRefiner* refiner, PatchTableFactoryOptions* options);

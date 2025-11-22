@@ -5,7 +5,7 @@ use opensubdiv_petite::far::{
 
 #[cfg(feature = "truck")]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    use opensubdiv_petite::truck_integration::PatchTableExt;
+    use opensubdiv_petite::truck::PatchTableExt;
     use truck_stepio::out::*;
 
     // Create a simple cube mesh
@@ -34,7 +34,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         vertex_positions.len(),
         &face_vertex_counts,
         &face_vertex_indices,
-    );
+    )?;
 
     let refiner_options = TopologyRefinerOptions::default();
     let mut refiner = TopologyRefiner::new(descriptor, refiner_options)?;
@@ -51,8 +51,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let patch_table = PatchTable::new(&refiner, Some(patch_options))?;
 
     // Build vertex buffer
-    let primvar_refiner = PrimvarRefiner::new(&refiner);
-    let mut all_vertices = Vec::with_capacity(refiner.vertex_total_count());
+    let primvar_refiner = PrimvarRefiner::new(&refiner)?;
+    let mut all_vertices = Vec::with_capacity(refiner.vertex_count_all_levels());
     all_vertices.extend_from_slice(&vertex_positions);
 
     for level in 1..refiner.refinement_levels() {

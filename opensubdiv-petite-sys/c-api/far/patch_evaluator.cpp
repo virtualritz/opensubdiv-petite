@@ -63,9 +63,7 @@ bool PatchTable_EvaluateBasis(
     
     if (desc.GetType() == Descriptor::REGULAR) {
         // Regular B-spline patch - cubic B-spline basis
-        float uu = 1.0f - u;
-        float vv = 1.0f - v;
-        
+
         // Simplified cubic B-spline basis evaluation
         // This is a placeholder - proper implementation would use OpenSubdiv's basis functions
         if (wP) {
@@ -122,8 +120,7 @@ bool PatchTable_EvaluatePoint(
     // Find which array this patch belongs to
     int patchArray = 0;
     int localPatchIndex = patchIndex;
-    int cvOffset = 0;
-    
+
     for (int i = 0; i < table->GetNumPatchArrays(); ++i) {
         int numPatches = table->GetNumPatches(i);
         if (localPatchIndex < numPatches) {
@@ -131,7 +128,6 @@ bool PatchTable_EvaluatePoint(
             break;
         }
         localPatchIndex -= numPatches;
-        cvOffset += numPatches * table->GetPatchArrayDescriptor(i).GetNumControlVertices();
     }
     
     // Get patch info
