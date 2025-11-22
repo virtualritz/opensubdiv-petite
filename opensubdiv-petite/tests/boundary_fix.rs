@@ -6,7 +6,7 @@ mod tests {
         AdaptiveRefinementOptions, EndCapType, PatchTable, PatchTableOptions, PrimvarRefiner,
         TopologyDescriptor, TopologyRefiner, TopologyRefinerOptions,
     };
-    use opensubdiv_petite::truck_integration::PatchTableExt;
+    use opensubdiv_petite::truck::PatchTableExt;
     use std::fs;
     use truck_modeling::Shell;
     use truck_stepio::out::{CompleteStepDisplay, StepHeaderDescriptor, StepModel};

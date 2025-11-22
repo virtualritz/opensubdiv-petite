@@ -6,10 +6,10 @@ use utils::*;
 #[cfg(feature = "truck")]
 #[test]
 fn test_truck_integration_compiles() {
-    use opensubdiv_petite::truck_integration::TruckIntegrationError;
+    use opensubdiv_petite::truck::TruckError;
 
     // Just verify the module compiles and types are accessible
-    let _error: TruckIntegrationError = TruckIntegrationError::InvalidControlPoints;
+    let _error: TruckError = TruckError::InvalidControlPoints;
 
     // This test passes if it compiles
     assert!(true);
@@ -51,7 +51,7 @@ fn test_simple_plane_to_step() {
         vertex_positions.len(),
         &face_vertex_counts,
         &face_vertex_indices,
-    );
+    ).expect("Failed to create topology descriptor");
 
     let refiner_options = TopologyRefinerOptions::default();
     let mut refiner = TopologyRefiner::new(descriptor, refiner_options)
@@ -68,8 +68,8 @@ fn test_simple_plane_to_step() {
         PatchTable::new(&refiner, Some(patch_options)).expect("Failed to create patch table");
 
     // Build vertex buffer
-    let primvar_refiner = PrimvarRefiner::new(&refiner);
-    let total_vertices = refiner.vertex_total_count();
+    let primvar_refiner = PrimvarRefiner::new(&refiner).expect("Failed to create primvar refiner");
+    let total_vertices = refiner.vertex_count_all_levels();
 
     let mut all_vertices = Vec::with_capacity(total_vertices);
 
@@ -136,7 +136,7 @@ fn test_simple_plane_to_step() {
     }
 
     // Convert patches to truck shell
-    use opensubdiv_petite::truck_integration::PatchTableExt;
+    use opensubdiv_petite::truck::PatchTableExt;
 
     let shell = patch_table
         .to_truck_shell(&all_vertices)
@@ -198,7 +198,7 @@ fn test_simple_cube_to_step() {
         vertex_positions.len(),
         &face_vertex_counts,
         &face_vertex_indices,
-    );
+    ).expect("Failed to create topology descriptor");
 
     let refiner_options = TopologyRefinerOptions::default();
     let mut refiner = TopologyRefiner::new(descriptor, refiner_options)
@@ -215,8 +215,8 @@ fn test_simple_cube_to_step() {
         PatchTable::new(&refiner, Some(patch_options)).expect("Failed to create patch table");
 
     // Build vertex buffer
-    let primvar_refiner = PrimvarRefiner::new(&refiner);
-    let total_vertices = refiner.vertex_total_count();
+    let primvar_refiner = PrimvarRefiner::new(&refiner).expect("Failed to create primvar refiner");
+    let total_vertices = refiner.vertex_count_all_levels();
 
     let mut all_vertices = Vec::with_capacity(total_vertices);
 
@@ -283,7 +283,7 @@ fn test_simple_cube_to_step() {
     }
 
     // Convert patches to truck shell
-    use opensubdiv_petite::truck_integration::PatchTableExt;
+    use opensubdiv_petite::truck::PatchTableExt;
 
     let shell = patch_table
         .to_truck_shell(&all_vertices)
@@ -354,7 +354,7 @@ fn test_creased_cube_to_step() {
         vertex_positions.len(), // Number of vertices, not faces
         &face_vertex_counts,
         &face_vertex_indices,
-    );
+    ).expect("Failed to create topology descriptor");
     descriptor.creases(&crease_indices, &crease_weights);
 
     // Create topology refiner
@@ -380,8 +380,8 @@ fn test_creased_cube_to_step() {
 
     // Build complete vertex buffer including all refinement levels
     use opensubdiv_petite::far::PrimvarRefiner;
-    let primvar_refiner = PrimvarRefiner::new(&refiner);
-    let total_vertices = refiner.vertex_total_count();
+    let primvar_refiner = PrimvarRefiner::new(&refiner).expect("Failed to create primvar refiner");
+    let total_vertices = refiner.vertex_count_all_levels();
 
     let mut all_vertices = Vec::with_capacity(total_vertices);
 
@@ -448,7 +448,7 @@ fn test_creased_cube_to_step() {
     }
 
     // Convert patches to truck shell
-    use opensubdiv_petite::truck_integration::PatchTableExt;
+    use opensubdiv_petite::truck::PatchTableExt;
 
     let shell = patch_table
         .to_truck_shell(&all_vertices)
