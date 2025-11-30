@@ -51,7 +51,8 @@ fn test_simple_plane_to_step() {
         vertex_positions.len(),
         &face_vertex_counts,
         &face_vertex_indices,
-    ).expect("Failed to create topology descriptor");
+    )
+    .expect("Failed to create topology descriptor");
 
     let refiner_options = TopologyRefinerOptions::default();
     let mut refiner = TopologyRefiner::new(descriptor, refiner_options)
@@ -198,7 +199,8 @@ fn test_simple_cube_to_step() {
         vertex_positions.len(),
         &face_vertex_counts,
         &face_vertex_indices,
-    ).expect("Failed to create topology descriptor");
+    )
+    .expect("Failed to create topology descriptor");
 
     let refiner_options = TopologyRefinerOptions::default();
     let mut refiner = TopologyRefiner::new(descriptor, refiner_options)
@@ -354,7 +356,8 @@ fn test_creased_cube_to_step() {
         vertex_positions.len(), // Number of vertices, not faces
         &face_vertex_counts,
         &face_vertex_indices,
-    ).expect("Failed to create topology descriptor");
+    )
+    .expect("Failed to create topology descriptor");
     descriptor.creases(&crease_indices, &crease_weights);
 
     // Create topology refiner

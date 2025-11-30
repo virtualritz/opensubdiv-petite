@@ -1,21 +1,22 @@
-//! Example demonstrating OpenSubdiv to truck CAD kernel integration
+//! Example demonstrating OpenSubdiv to truck CAD kernel integration.
 
+use anyhow::Result;
 use opensubdiv_petite::far::{
-    EndCapType, PatchTable, PatchTableOptions, TopologyDescriptor, TopologyRefiner,
-    TopologyRefinerOptions,
+    EndCapType, PatchTable, PatchTableOptions, PrimvarRefiner, TopologyDescriptor, TopologyRefiner,
+    TopologyRefinerOptions, UniformRefinementOptions,
 };
+#[cfg(feature = "truck")]
+use opensubdiv_petite::truck::{bfr_regular_surfaces, PatchTableExt};
 
 #[cfg(feature = "truck")]
-use opensubdiv_petite::truck::PatchTableExt;
-#[cfg(feature = "truck")]
-use std::convert::TryInto;
+use truck_stepio::out::{CompleteStepDisplay, StepModel};
 
-fn main() {
+fn main() -> Result<()> {
     #[cfg(not(feature = "truck"))]
     {
         println!("This example requires the 'truck' feature.");
         println!("Run with: cargo run --example truck_integration_example --features truck");
-        return;
+        return Ok(());
     }
 
     #[cfg(feature = "truck")]
@@ -23,8 +24,8 @@ fn main() {
         println!("OpenSubdiv to Truck Integration Example");
         println!("======================================\n");
 
-        // Create a simple cube topology
-        let face_vertex_counts = vec![4, 4, 4, 4, 4, 4]; // 6 faces with 4 vertices each
+        // Cube topology
+        let face_vertex_counts = vec![4, 4, 4, 4, 4, 4];
         let face_vertex_indices = vec![
             0, 1, 3, 2, // bottom
             2, 3, 5, 4, // front
@@ -45,119 +46,80 @@ fn main() {
             [1.0, 1.0, -1.0],   // 7
         ];
 
-        // Create topology descriptor
+        // Topology setup
         let descriptor = TopologyDescriptor::new(
             vertex_positions.len(),
             &face_vertex_counts,
             &face_vertex_indices,
-        )
-        .expect("Failed to create topology descriptor");
+        )?;
 
-        // Create topology refiner
         let refiner_options = TopologyRefinerOptions::default();
-        let mut refiner = TopologyRefiner::new(descriptor, refiner_options)
-            .expect("Failed to create topology refiner");
+        let mut refiner = TopologyRefiner::new(descriptor, refiner_options)?;
 
-        // Refine uniformly to level 2 for smooth surfaces
-        refiner.refine_uniform(2);
-        println!("Refined mesh to level 2");
+        // Uniform refinement to level 2
+        let mut uniform_options = UniformRefinementOptions::default();
+        uniform_options.refinement_level = 2;
+        refiner.refine_uniform(uniform_options);
+        println!("Refined mesh to level {}", uniform_options.refinement_level);
 
-        // Get refined vertex positions
-        let level = refiner.level(2).expect("Failed to get refinement level");
-        let num_vertices = level.vertex_count();
+        // Build primvars across levels
+        let primvar_refiner = PrimvarRefiner::new(&refiner)?;
+        let mut all_vertices = Vec::with_capacity(refiner.vertex_count_all_levels());
+        all_vertices.extend_from_slice(&vertex_positions);
 
-        // For this example, we'll use placeholder positions
-        // In a real application, you would use PrimvarRefiner to refine the positions
-        let mut refined_positions = vec![[0.0f32; 3]; num_vertices];
+        for level in 1..refiner.refinement_levels() {
+            let prev_count = refiner
+                .level(level - 1)
+                .map(|l| l.vertex_count())
+                .unwrap_or(0);
+            let start = all_vertices.len() - prev_count;
+            let src_data: Vec<f32> = all_vertices[start..start + prev_count]
+                .iter()
+                .flat_map(|v| v.iter().copied())
+                .collect();
 
-        // Copy base level positions
-        for (i, pos) in vertex_positions.iter().enumerate() {
-            if i < refined_positions.len() {
-                refined_positions[i] = *pos;
+            if let Some(refined) = primvar_refiner.interpolate(level, 3, &src_data) {
+                let level_vertices: Vec<[f32; 3]> = refined
+                    .chunks_exact(3)
+                    .map(|chunk| [chunk[0], chunk[1], chunk[2]])
+                    .collect();
+                all_vertices.extend_from_slice(&level_vertices);
             }
         }
 
-        // Create patch table with B-spline end caps
+        // Build patch table with B-spline end caps
         let patch_options = PatchTableOptions::new().end_cap_type(EndCapType::BSplineBasis);
+        let patch_table = PatchTable::new(&refiner, Some(patch_options))?;
 
-        let patch_table =
-            PatchTable::new(&refiner, Some(patch_options)).expect("Failed to create patch table");
+        println!(
+            "\nPatch Table created: {} arrays, {} patches",
+            patch_table.patch_array_count(),
+            patch_table.patch_count()
+        );
 
-        println!("\nPatch Table created:");
-        println!("  {} patch arrays", patch_table.patch_arrays_len());
-        println!("  {} total patches", patch_table.patches_len());
+        // BFR regular faces (keeps coarse quads)
+        let bfr_surfaces = bfr_regular_surfaces(&refiner, &all_vertices, 0, 0)
+            .map(|s| s.len())
+            .unwrap_or(0);
+        println!("BFR produced {} coarse B-spline surfaces", bfr_surfaces);
 
-        // Convert patches to truck surfaces using the trait-based API
-        use truck_geometry::prelude::*;
-        use truck_modeling::*;
+        // Convert all patches to B-spline surfaces (PatchTable + BFR mixed)
+        let surfaces = patch_table.to_truck_surfaces_bfr_mixed(&refiner, &all_vertices, 0, 0)?;
+        println!(
+            "Converted {} patches to B-spline surfaces (mixed BFR/PatchTable)",
+            surfaces.len()
+        );
 
-        // Convert all patches to B-spline surfaces
-        let surfaces_result: Result<Vec<BSplineSurface<Point3>>, _> = patch_table
-            .with_control_points(&refined_positions)
-            .try_into();
-
-        match surfaces_result {
-            Ok(surfaces) => {
-                println!(
-                    "\nSuccessfully converted {} patches to B-spline surfaces",
-                    surfaces.len()
-                );
-
-                // Print information about each surface
-                for (i, surface) in surfaces.iter().enumerate() {
-                    let (u_range, v_range) = surface.parameter_range();
-                    println!(
-                        "  Surface {}: u=[{:.2}, {:.2}], v=[{:.2}, {:.2}]",
-                        i, u_range.start, u_range.end, v_range.start, v_range.end
-                    );
-                }
-
-                // Example: Convert a single patch
-                if patch_table.patches_len() > 0 {
-                    let single_surface: Result<BSplineSurface<Point3>, _> =
-                        patch_table.patch(0, &refined_positions).try_into();
-
-                    if let Ok(surface) = single_surface {
-                        println!("\nSuccessfully converted single patch to B-spline surface");
-                        let point = surface.subs(0.5, 0.5);
-                        println!(
-                            "  Point at (0.5, 0.5): ({:.3}, {:.3}, {:.3})",
-                            point.x, point.y, point.z
-                        );
-                    }
-                }
-            }
-            Err(e) => {
-                println!("Error converting patches: {}", e);
-            }
-        }
-
-        // Try to create a shell (collection of connected surfaces)
-        let shell_result: Result<Shell<Point3, Curve, Surface>, _> = patch_table
-            .with_control_points(&refined_positions)
-            .try_into();
-
-        match shell_result {
-            Ok(shell) => {
-                println!(
-                    "\nSuccessfully created a shell with {} faces",
-                    shell.face_iter().count()
-                );
-
-                // The shell can now be used for:
-                // - Boolean operations
-                // - STEP export
-                // - Further CAD operations
-
-                // Example: Export to STEP format (requires additional truck
-                // modules) let step_string =
-                // truck_stepio::out::shell_to_string(&shell);
-            }
-            Err(e) => {
-                println!("Error creating shell: {}", e);
-            }
-        }
+        // Build stitched shell and export STEP
+        let shell = patch_table.to_truck_shell_stitched(&all_vertices)?;
+        let compressed = shell.compress();
+        let step_string =
+            CompleteStepDisplay::new(StepModel::from(&compressed), Default::default()).to_string();
+        std::fs::write("truck_integration.step", step_string)?;
+        println!("Wrote truck_integration.step");
 
         println!("\nTruck integration example completed!");
     }
+
+    Ok(())
 }
