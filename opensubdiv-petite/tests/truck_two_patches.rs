@@ -5,12 +5,12 @@ use utils::*;
 
 #[cfg(feature = "truck")]
 #[test]
-fn test_two_patches_surfaces_only() {
+fn test_two_patches_surfaces_only() -> anyhow::Result<()> {
     use opensubdiv_petite::far::{
         AdaptiveRefinementOptions, EndCapType, PatchTable, PatchTableOptions, PrimvarRefiner,
         TopologyDescriptor, TopologyRefiner, TopologyRefinerOptions,
     };
-    use opensubdiv_petite::truck_integration::PatchTableExt;
+    use opensubdiv_petite::truck::PatchTableExt;
     use truck_modeling::*;
 
     // Simple cube - same as in truck.rs test
@@ -39,11 +39,10 @@ fn test_two_patches_surfaces_only() {
         vertex_positions.len(),
         &face_vertex_counts,
         &face_vertex_indices,
-    );
+    )?;
 
     let refiner_options = TopologyRefinerOptions::default();
-    let mut refiner = TopologyRefiner::new(descriptor, refiner_options)
-        .expect("Failed to create topology refiner");
+    let mut refiner = TopologyRefiner::new(descriptor, refiner_options)?;
 
     // Use adaptive refinement with isolation level 3 to get regular patches
     let mut adaptive_options = AdaptiveRefinementOptions::default();
@@ -56,7 +55,7 @@ fn test_two_patches_surfaces_only() {
         PatchTable::new(&refiner, Some(patch_options)).expect("Failed to create patch table");
 
     // Build vertex buffer
-    let primvar_refiner = PrimvarRefiner::new(&refiner);
+    let primvar_refiner = PrimvarRefiner::new(&refiner)?;
     let total_vertices = refiner.vertex_total_count();
 
     let mut all_vertices = Vec::with_capacity(total_vertices);
@@ -108,13 +107,11 @@ fn test_two_patches_surfaces_only() {
     // If no Regular patches, try to get Quads patches
     if patch_table.patches_len() == 0 {
         println!("No patches generated! Check refinement settings.");
-        return;
+        return Ok(());
     }
 
     // Convert patches to truck shell - same approach as simple_plane test
-    let shell = patch_table
-        .to_truck_shell(&all_vertices)
-        .expect("Failed to convert to truck shell");
+    let shell = patch_table.to_truck_shell(&all_vertices)?;
 
     // Compress and export the shell as STEP - same as simple plane
     let compressed = shell.compress();
@@ -132,10 +129,11 @@ fn test_two_patches_surfaces_only() {
 
     // Write STEP file to test output directory
     let step_path = test_output_path("two_patches_surfaces_only.step");
-    std::fs::write(&step_path, &step_string).expect("Failed to write STEP file");
+    std::fs::write(&step_path, &step_string)?;
 
     println!("\nWrote STEP file to: {}", step_path.display());
 
     // Compare or update expected results
     assert_file_matches(&step_path, "two_patches_surfaces_only.step");
+    Ok(())
 }

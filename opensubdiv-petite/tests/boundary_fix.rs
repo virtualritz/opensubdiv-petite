@@ -2,6 +2,7 @@
 
 #[cfg(feature = "truck")]
 mod tests {
+    use anyhow::Result;
     use opensubdiv_petite::far::{
         AdaptiveRefinementOptions, EndCapType, PatchTable, PatchTableOptions, PrimvarRefiner,
         TopologyDescriptor, TopologyRefiner, TopologyRefinerOptions,
@@ -12,7 +13,7 @@ mod tests {
     use truck_stepio::out::{CompleteStepDisplay, StepHeaderDescriptor, StepModel};
 
     #[test]
-    fn test_cube_boundary_fix() {
+    fn test_cube_boundary_fix() -> Result<()> {
         // Create a simple cube mesh
         let vertex_positions = vec![
             [-0.5, -0.5, -0.5], // 0
@@ -39,12 +40,11 @@ mod tests {
             vertex_positions.len(),
             &face_vertex_counts,
             &face_vertex_indices,
-        );
+        )?;
 
         // Create topology refiner
         let refiner_options = TopologyRefinerOptions::default();
-        let mut refiner = TopologyRefiner::new(descriptor, refiner_options)
-            .expect("Failed to create topology refiner");
+        let mut refiner = TopologyRefiner::new(descriptor, refiner_options)?;
 
         // Refine adaptively
         let mut adaptive_options = AdaptiveRefinementOptions::default();
@@ -58,7 +58,7 @@ mod tests {
             PatchTable::new(&refiner, Some(patch_options)).expect("Failed to create patch table");
 
         // Build complete vertex buffer
-        let primvar_refiner = PrimvarRefiner::new(&refiner);
+        let primvar_refiner = PrimvarRefiner::new(&refiner)?;
         let mut all_vertices = Vec::with_capacity(refiner.vertex_total_count());
 
         // Add base vertices
@@ -104,9 +104,7 @@ mod tests {
         }
 
         // Convert to truck shell
-        let shell = patch_table
-            .to_truck_shell(&all_vertices)
-            .expect("Failed to convert to truck shell");
+        let shell = patch_table.to_truck_shell(&all_vertices)?;
 
         // Export to STEP
         let compressed = shell.compress();
@@ -121,11 +119,12 @@ mod tests {
 
         // Write STEP file
         let output_path = std::env::temp_dir().join("cube_boundary_fix.step");
-        fs::write(&output_path, step_string).expect("Failed to write STEP file");
+        fs::write(&output_path, step_string)?;
 
         println!("STEP file written to: {:?}", output_path);
 
         // The test passes if we can create a valid shell without gaps
         // In a real test, we would verify the shell is watertight
+        Ok(())
     }
 }

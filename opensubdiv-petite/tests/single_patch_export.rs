@@ -12,8 +12,8 @@ mod tests {
     };
 
     #[test]
-    fn test_simple_cube_single_patch() {
-        use opensubdiv_petite::truck_integration::PatchTableExt;
+    fn test_simple_cube_single_patch() -> anyhow::Result<()> {
+        use opensubdiv_petite::truck::PatchTableExt;
         use truck_stepio::out;
 
         // Define simple cube vertices
@@ -51,12 +51,11 @@ mod tests {
             vertex_positions.len(),
             &num_face_vertices, // vertices_per_face (counts)
             &face_indices_u32,  // vertex_indices_per_face (flattened indices)
-        );
+        )?;
 
         // Create topology refiner
         let refiner_options = TopologyRefinerOptions::default();
-        let mut refiner = TopologyRefiner::new(descriptor, refiner_options)
-            .expect("Failed to create topology refiner");
+        let mut refiner = TopologyRefiner::new(descriptor, refiner_options)?;
 
         // Use adaptive refinement to get Regular patches
         use opensubdiv_petite::far::AdaptiveRefinementOptions;
@@ -65,7 +64,7 @@ mod tests {
         refiner.refine_adaptive(adaptive_options, &[]);
 
         // Build complete vertex buffer
-        let primvar_refiner = PrimvarRefiner::new(&refiner);
+        let primvar_refiner = PrimvarRefiner::new(&refiner)?;
         let total_vertices = refiner.vertex_total_count();
 
         let mut all_vertices = Vec::with_capacity(total_vertices);
@@ -102,13 +101,10 @@ mod tests {
         // Create patch table
         let patch_options = PatchTableOptions::new().end_cap_type(default_end_cap_type());
 
-        let patch_table =
-            PatchTable::new(&refiner, Some(patch_options)).expect("Failed to create patch table");
+        let patch_table = PatchTable::new(&refiner, Some(patch_options))?;
 
         // Convert just the first patch to a B-spline surface
-        let surfaces = patch_table
-            .to_truck_surfaces(&all_vertices)
-            .expect("Failed to convert to truck surfaces");
+        let surfaces = patch_table.to_truck_surfaces(&all_vertices)?;
 
         if surfaces.is_empty() {
             panic!("No surfaces created!");
@@ -179,9 +175,10 @@ mod tests {
 
         // Write STEP file
         let step_path = test_output_path("simple_cube_single_patch.step");
-        std::fs::write(&step_path, &step_string).expect("Failed to write STEP file");
+        std::fs::write(&step_path, &step_string)?;
 
         // Compare or update expected results
         assert_file_matches(&step_path, "simple_cube_single_patch.step");
+        Ok(())
     }
 }

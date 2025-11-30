@@ -2,7 +2,8 @@ mod utils;
 
 #[cfg(feature = "truck")]
 #[test]
-fn test_simple_plane_cv_ordering() {
+fn test_simple_plane_cv_ordering() -> anyhow::Result<()> {
+    use crate::utils::default_end_cap_type;
     use opensubdiv_petite::far::{
         EndCapType, PatchTable, PatchTableOptions, TopologyDescriptor, TopologyRefiner,
         TopologyRefinerOptions, UniformRefinementOptions,
@@ -37,11 +38,10 @@ fn test_simple_plane_cv_ordering() {
         vertex_positions.len(),
         &face_vertex_counts,
         &face_vertex_indices,
-    );
+    )?;
 
     let refiner_options = TopologyRefinerOptions::default();
-    let mut refiner = TopologyRefiner::new(descriptor, refiner_options)
-        .expect("Failed to create topology refiner");
+    let mut refiner = TopologyRefiner::new(descriptor, refiner_options)?;
 
     // Use adaptive refinement
     use opensubdiv_petite::far::AdaptiveRefinementOptions;
@@ -51,12 +51,11 @@ fn test_simple_plane_cv_ordering() {
 
     // Create patch table
     let patch_options = PatchTableOptions::new().end_cap_type(default_end_cap_type());
-    let patch_table =
-        PatchTable::new(&refiner, Some(patch_options)).expect("Failed to create patch table");
+    let patch_table = PatchTable::new(&refiner, Some(patch_options))?;
 
     // Build vertex buffer with all refinement levels
     use opensubdiv_petite::far::PrimvarRefiner;
-    let primvar_refiner = PrimvarRefiner::new(&refiner);
+    let primvar_refiner = PrimvarRefiner::new(&refiner)?;
     let total_vertices = refiner.vertex_total_count();
 
     let flat_positions: Vec<f32> = vertex_positions
@@ -183,4 +182,5 @@ fn test_simple_plane_cv_ordering() {
     }
 
     println!("\n=== END SIMPLE PLANE TEST ===\n");
+    Ok(())
 }

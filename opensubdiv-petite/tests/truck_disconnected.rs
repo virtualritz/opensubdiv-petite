@@ -9,6 +9,7 @@ mod tests {
         EndCapType, PatchTable, PatchTableOptions, PrimvarRefiner, TopologyDescriptor,
         TopologyRefiner, TopologyRefinerOptions, UniformRefinementOptions,
     };
+    use opensubdiv_petite::truck::PatchTableExt;
     use opensubdiv_petite::Index;
     use std::path::PathBuf;
 
@@ -62,19 +63,12 @@ mod tests {
                 .flat_map(|v| v.iter().copied())
                 .collect();
 
-            // Build flat destination data
-            let mut dst_data = vec![0.0f32; level_count * 3];
-
-            // Create a primvar refiner and interpolate
-            let primvar_refiner = PrimvarRefiner::new(&refiner);
-            primvar_refiner.interpolate(
-                level,
-                &src_data,
-                &mut dst_data,
-                0, // channel
-                prev_level_count,
-                level_count,
-            );
+            // Interpolate
+            let primvar_refiner =
+                PrimvarRefiner::new(&refiner).expect("Failed to create primvar refiner");
+            let dst_data = primvar_refiner
+                .interpolate(level, 3, &src_data)
+                .expect("Failed to interpolate primvars");
 
             // Convert back to vertex array
             for (i, vertex) in level_vertices.iter_mut().enumerate() {
@@ -97,8 +91,8 @@ mod tests {
     // TODO: Fix this test - API has changed
     // #[test]
     #[allow(dead_code)]
-    fn test_simple_cube_disconnected_patches() {
-        use opensubdiv_petite::truck_integration::PatchTableExt;
+    fn test_simple_cube_disconnected_patches() -> anyhow::Result<()> {
+        use opensubdiv_petite::truck::PatchTableExt;
         use truck_stepio::out;
 
         // Define simple cube vertices
@@ -135,15 +129,23 @@ mod tests {
             .collect::<Vec<_>>();
 
         // Create topology descriptor
-        let descriptor =
-            TopologyDescriptor::new(vertex_positions.len(), face_indices, num_face_vertices);
+        let face_indices_u32: Vec<u32> = face_indices.iter().map(|idx| u32::from(*idx)).collect();
+        let descriptor = TopologyDescriptor::new(
+            vertex_positions.len(),
+            &num_face_vertices,
+            &face_indices_u32,
+        )
+        .expect("Failed to build topology descriptor");
 
         // Create topology refiner with uniform refinement
-        let uniform_options = UniformRefinementOptions::new(3);
-        let refiner_options = TopologyRefinerOptions::new_uniform(uniform_options);
+        let uniform_options = UniformRefinementOptions {
+            refinement_level: 3,
+            ..Default::default()
+        };
+        let refiner_options = TopologyRefinerOptions::default();
 
-        let refiner = TopologyRefiner::new(descriptor, refiner_options)
-            .expect("Failed to create topology refiner");
+        let mut refiner = TopologyRefiner::new(descriptor, refiner_options)?;
+        refiner.refine_uniform(uniform_options);
 
         // Build complete vertex buffer
         let all_vertices = build_vertex_buffer(&refiner, &vertex_positions);
@@ -151,15 +153,12 @@ mod tests {
         // Create patch table
         let patch_options = PatchTableOptions::new().end_cap_type(default_end_cap_type());
 
-        let patch_table =
-            PatchTable::new(&refiner, Some(patch_options)).expect("Failed to create patch table");
+        let patch_table = PatchTable::new(&refiner, Some(patch_options))?;
 
         println!("Number of patches: {}", patch_table.patches_len());
 
         // Convert patches to individual shells
-        let shells = patch_table
-            .to_truck_shells(&all_vertices)
-            .expect("Failed to convert to truck shells");
+        let shells = patch_table.to_truck_shells(&all_vertices)?;
 
         println!("Created {} individual shells", shells.len());
 
@@ -202,8 +201,9 @@ mod tests {
 
         // Write STEP file
         let step_path = test_output_path("simple_cube_disconnected.step");
-        std::fs::write(&step_path, &step_string).expect("Failed to write STEP file");
+        std::fs::write(&step_path, &step_string)?;
 
         println!("Successfully generated {}", step_path.display());
+        Ok(())
     }
 }
