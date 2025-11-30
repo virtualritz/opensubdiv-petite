@@ -9,12 +9,15 @@ use opensubdiv_petite::far::{
 #[cfg(feature = "truck")]
 mod truck_tests {
     use super::*;
+    use opensubdiv_petite::truck::{PatchTableExt, PatchTableWithControlPointsRef};
+    use opensubdiv_petite::Index;
     use truck_stepio::out;
     use utils::{assert_file_matches, test_output_path};
 
     /// Build complete vertex buffer including all refinement levels
     fn build_vertex_buffer(refiner: &TopologyRefiner, base_vertices: &[[f32; 3]]) -> Vec<[f32; 3]> {
-        let primvar_refiner = PrimvarRefiner::new(refiner);
+        let primvar_refiner =
+            PrimvarRefiner::new(refiner).expect("Failed to create primvar refiner");
         let total_vertices = refiner.vertex_total_count();
 
         let mut all_vertices = Vec::with_capacity(total_vertices);
@@ -56,7 +59,7 @@ mod truck_tests {
 
     /// Test that Gregory patches are generated for extraordinary vertices
     #[test]
-    fn test_gregory_patches_cube() {
+    fn test_gregory_patches_cube() -> Result<()> {
         // Create a simple cube mesh - corners have valence 3 (extraordinary vertices)
         let vertex_positions = vec![
             [-0.5, -0.5, -0.5], // 0
@@ -83,12 +86,12 @@ mod truck_tests {
             vertex_positions.len(),
             &face_vertex_counts,
             &face_vertex_indices,
-        );
+        )
+        .expect("Failed to build topology descriptor");
 
         // Create topology refiner
         let refiner_options = TopologyRefinerOptions::default();
-        let mut refiner = TopologyRefiner::new(descriptor, refiner_options)
-            .expect("Failed to create topology refiner");
+        let mut refiner = TopologyRefiner::new(descriptor, refiner_options)?;
 
         // Debug: check vertex valences at base level
         if let Some(level0) = refiner.level(0) {
@@ -136,8 +139,7 @@ mod truck_tests {
             .use_inf_sharp_patch(false);
 
         eprintln!("Creating patch table with end cap type: GregoryBasis");
-        let patch_table =
-            PatchTable::new(&refiner, Some(patch_options)).expect("Failed to create patch table");
+        let patch_table = PatchTable::new(&refiner, Some(patch_options))?;
 
         // Check that we have patches
         assert!(patch_table.patch_count() > 0, "Should have patches");
@@ -179,7 +181,7 @@ mod truck_tests {
         // at extraordinary vertices"); }
 
         // Export to STEP file
-        use opensubdiv_petite::truck_integration::PatchTableWithControlPointsRef;
+        use opensubdiv_petite::truck::PatchTableWithControlPointsRef;
         use std::convert::TryFrom;
         use truck_modeling::Shell;
 

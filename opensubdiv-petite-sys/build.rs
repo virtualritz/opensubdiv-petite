@@ -45,10 +45,12 @@ pub fn main() {
             .output()
             .is_ok()
         {
-            // Use GCC 12 as the host compiler for CUDA
-            open_subdiv.define("OSD_CUDA_NVCC_FLAGS", "-ccbin gcc-12");
-            env::set_var("NVCC_PREPEND_FLAGS", "-ccbin /usr/bin/g++-12");
-            env::set_var("CUDAHOSTCXX", "/usr/bin/g++-12");
+            // Use GCC 12 as the host compiler for CUDA.
+            // Pass env vars to the cmake subprocess only, not modifying this process.
+            open_subdiv
+                .define("OSD_CUDA_NVCC_FLAGS", "-ccbin gcc-12")
+                .env("NVCC_PREPEND_FLAGS", "-ccbin /usr/bin/g++-12")
+                .env("CUDAHOSTCXX", "/usr/bin/g++-12");
         } else {
             // Fallback: Define the _Float types to work around the incompatibility
             // This is less ideal but works when GCC 12 is not available
@@ -104,10 +106,10 @@ pub fn main() {
     let mut osd_capi = cc::Build::new();
 
     // Check if CXXFLAGS contains stdlib setting and apply it
-    if let Ok(cxxflags) = env::var("CXXFLAGS") {
-        if cxxflags.contains("-stdlib=libc++") {
-            osd_capi.flag("-stdlib=libc++");
-        }
+    if let Ok(cxxflags) = env::var("CXXFLAGS")
+        && cxxflags.contains("-stdlib=libc++")
+    {
+        osd_capi.flag("-stdlib=libc++");
     }
 
     osd_capi
@@ -244,10 +246,10 @@ pub fn main() {
     let mut bindings = bindings.clang_arg("-xc++").clang_arg("-std=c++14");
 
     // Add stdlib flag if CXXFLAGS contains it
-    if let Ok(cxxflags) = env::var("CXXFLAGS") {
-        if cxxflags.contains("-stdlib=libc++") {
-            bindings = bindings.clang_arg("-stdlib=libc++");
-        }
+    if let Ok(cxxflags) = env::var("CXXFLAGS")
+        && cxxflags.contains("-stdlib=libc++")
+    {
+        bindings = bindings.clang_arg("-stdlib=libc++");
     }
 
     let out_path = PathBuf::from(env::var_os("OUT_DIR").unwrap());

@@ -1,43 +1,42 @@
+use anyhow::Result;
 use opensubdiv_petite::far::{
-    AdaptiveRefinementOptions, EndCapType, PatchTableOptions, PrimvarRefiner,
-    TopologyDescriptor, TopologyRefiner, TopologyRefinerOptions,
+    AdaptiveRefinementOptions, EndCapType, PatchTableOptions, PrimvarRefiner, TopologyDescriptor,
+    TopologyRefiner, TopologyRefinerOptions,
 };
-use opensubdiv_petite::truck_integration::PatchTableExt;
-use opensubdiv_petite::truck_integration::bfr_regular_surfaces;
-use truck_stepio::out::*;
+use opensubdiv_petite::truck::{bfr_regular_surfaces, PatchTableExt};
+use truck_stepio::out::{CompleteStepDisplay, StepModel};
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn main() -> Result<()> {
     // Create a simple cube mesh
     let vertex_positions = vec![
         [-0.5, -0.5, -0.5], // 0
-        [ 0.5, -0.5, -0.5], // 1
-        [-0.5,  0.5, -0.5], // 2
-        [ 0.5,  0.5, -0.5], // 3
-        [-0.5,  0.5,  0.5], // 4
-        [ 0.5,  0.5,  0.5], // 5
-        [-0.5, -0.5,  0.5], // 6
-        [ 0.5, -0.5,  0.5], // 7
+        [0.5, -0.5, -0.5],  // 1
+        [-0.5, 0.5, -0.5],  // 2
+        [0.5, 0.5, -0.5],   // 3
+        [-0.5, 0.5, 0.5],   // 4
+        [0.5, 0.5, 0.5],    // 5
+        [-0.5, -0.5, 0.5],  // 6
+        [0.5, -0.5, 0.5],   // 7
     ];
-    
+
     let face_vertex_counts = vec![4, 4, 4, 4, 4, 4];
     let face_vertex_indices = vec![
-        0, 1, 3, 2,  // back
-        2, 3, 5, 4,  // top
-        4, 5, 7, 6,  // front
-        6, 7, 1, 0,  // bottom
-        0, 2, 4, 6,  // left
-        1, 7, 5, 3,  // right
+        0, 1, 3, 2, // back
+        2, 3, 5, 4, // top
+        4, 5, 7, 6, // front
+        6, 7, 1, 0, // bottom
+        0, 2, 4, 6, // left
+        1, 7, 5, 3, // right
     ];
-    
     let descriptor = TopologyDescriptor::new(
         vertex_positions.len(),
         &face_vertex_counts,
         &face_vertex_indices,
-    );
+    )?;
 
     let refiner_options = TopologyRefinerOptions::default();
     let mut refiner = TopologyRefiner::new(descriptor, refiner_options)?;
-    
+
     // Selective adaptive refinement: only refine near extraordinary vertices,
     // boundaries, or sharp edges so regular quad regions stay coarse.
     let base_level = refiner
@@ -51,9 +50,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .expect("face should expose vertices");
 
         let is_quad = verts.len() == 4;
-        let has_extraordinary = verts
-            .iter()
-            .any(|&v| base_level.vertex_edges(v).map_or(true, |edges| edges.len() != 4));
+        let has_extraordinary = verts.iter().any(|&v| {
+            base_level
+                .vertex_edges(v)
+                .map_or(true, |edges| edges.len() != 4)
+        });
 
         let (touches_boundary, has_sharp_edge) = base_level
             .face_edges(f as u32)
@@ -74,25 +75,30 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut adaptive_options = AdaptiveRefinementOptions::default();
     adaptive_options.isolation_level = 1;
     refiner.refine_adaptive(adaptive_options, &selected_faces);
-    
+
     // Try with Gregory basis end cap
     let patch_options = PatchTableOptions::new()
         .end_cap_type(EndCapType::GregoryBasis)
         .use_inf_sharp_patch(false);
-    
+
     let patch_table = PatchTable::new(&refiner, Some(patch_options))?;
-    
+
     // Build vertex buffer
-    let primvar_refiner = PrimvarRefiner::new(&refiner);
-    let mut all_vertices = Vec::with_capacity(refiner.vertex_total_count());
+    let primvar_refiner = PrimvarRefiner::new(&refiner)?;
+    let mut all_vertices = Vec::with_capacity(refiner.vertex_count_all_levels());
     all_vertices.extend_from_slice(&vertex_positions);
-    
+
     for level in 1..refiner.refinement_levels() {
-        let src_data: Vec<f32> = all_vertices[(all_vertices.len() - refiner.level(level - 1).unwrap().vertex_count())..]
+        let prev_count = refiner
+            .level(level - 1)
+            .map(|l| l.vertex_count())
+            .unwrap_or(0);
+        let start = all_vertices.len() - prev_count;
+        let src_data: Vec<f32> = all_vertices[start..start + prev_count]
             .iter()
             .flat_map(|v| v.iter().copied())
             .collect();
-        
+
         if let Some(refined) = primvar_refiner.interpolate(level, 3, &src_data) {
             let level_vertices: Vec<[f32; 3]> = refined
                 .chunks_exact(3)
@@ -101,17 +107,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             all_vertices.extend_from_slice(&level_vertices);
         }
     }
-    
+
     // Add local points
     let num_local_points = patch_table.local_point_count();
     if num_local_points > 0 {
         if let Some(stencil_table) = patch_table.local_point_stencil_table() {
             let mut local_points = Vec::with_capacity(num_local_points);
-            
+
             for dim in 0..3 {
                 let src_dim: Vec<f32> = all_vertices.iter().map(|v| v[dim]).collect();
                 let dst_dim = stencil_table.update_values(&src_dim, None, None);
-                
+
                 for (i, &val) in dst_dim.iter().enumerate() {
                     if dim == 0 {
                         local_points.push([val, 0.0, 0.0]);
@@ -120,32 +126,32 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     }
                 }
             }
-            
+
             all_vertices.extend_from_slice(&local_points);
         }
     }
-    
+
     // Convert to shell - test both methods
     println!("Testing regular conversion...");
     match patch_table.to_truck_shell(&all_vertices) {
         Ok(shell) => {
-            let step_string = CompleteStepDisplay::new(
-                StepModel::from(&shell),
-                Default::default(),
-            ).to_string();
+            let compressed = shell.compress();
+            let step_string =
+                CompleteStepDisplay::new(StepModel::from(&compressed), Default::default())
+                    .to_string();
             std::fs::write("cube_regular.step", step_string)?;
             println!("Wrote cube_regular.step");
         }
         Err(e) => println!("Regular conversion failed: {:?}", e),
     }
-    
+
     println!("Testing gap-filling conversion...");
     match patch_table.to_truck_shell_with_gap_filling(&all_vertices) {
         Ok(shell) => {
-            let step_string = CompleteStepDisplay::new(
-                StepModel::from(&shell),
-                Default::default(),
-            ).to_string();
+            let compressed = shell.compress();
+            let step_string =
+                CompleteStepDisplay::new(StepModel::from(&compressed), Default::default())
+                    .to_string();
             std::fs::write("cube_gap_filled.step", step_string)?;
             println!("Wrote cube_gap_filled.step");
         }
@@ -158,14 +164,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         Ok(surfaces) => {
             let faces: Vec<truck_modeling::Face> = surfaces
                 .into_iter()
-                .map(|s| truck_modeling::Face::new(vec![], truck_modeling::Surface::BSplineSurface(s)))
+                .map(|s| {
+                    truck_modeling::Face::new(vec![], truck_modeling::Surface::BSplineSurface(s))
+                })
                 .collect();
-            let shell = truck_modeling::Shell::from(faces);
-            let step_string = CompleteStepDisplay::new(
-                StepModel::from(&shell),
-                Default::default(),
-            )
-            .to_string();
+            let shell = truck_modeling::Shell::from(faces).compress();
+            let step_string =
+                CompleteStepDisplay::new(StepModel::from(&shell), Default::default()).to_string();
             std::fs::write("cube_bfr.step", step_string)?;
             println!("Wrote cube_bfr.step");
         }
@@ -178,18 +183,31 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         Ok(surfaces) => {
             let faces: Vec<truck_modeling::Face> = surfaces
                 .into_iter()
-                .map(|s| truck_modeling::Face::new(vec![], truck_modeling::Surface::BSplineSurface(s)))
+                .map(|s| {
+                    truck_modeling::Face::new(vec![], truck_modeling::Surface::BSplineSurface(s))
+                })
                 .collect();
-            let shell = truck_modeling::Shell::from(faces);
-            let step_string = CompleteStepDisplay::new(
-                StepModel::from(&shell),
-                Default::default(),
-            )
-            .to_string();
+            let shell = truck_modeling::Shell::from(faces).compress();
+            let step_string =
+                CompleteStepDisplay::new(StepModel::from(&shell), Default::default()).to_string();
             std::fs::write("cube_bfr_mixed.step", step_string)?;
             println!("Wrote cube_bfr_mixed.step");
         }
         Err(e) => println!("BFR mixed conversion failed: {:?}", e),
+    }
+
+    // Stitched export with shared edges/vertices
+    println!("Testing stitched shell export...");
+    match patch_table.to_truck_shell_stitched(&all_vertices) {
+        Ok(shell) => {
+            let compressed = shell.compress();
+            let step_string =
+                CompleteStepDisplay::new(StepModel::from(&compressed), Default::default())
+                    .to_string();
+            std::fs::write("cube_bfr_stitched.step", step_string)?;
+            println!("Wrote cube_bfr_stitched.step");
+        }
+        Err(e) => println!("Stitched export failed: {:?}", e),
     }
 
     Ok(())

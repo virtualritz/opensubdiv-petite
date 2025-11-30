@@ -89,7 +89,8 @@ mod tests {
 
     /// Build complete vertex buffer including all refinement levels.
     fn build_vertex_buffer(refiner: &TopologyRefiner, base_vertices: &[[f32; 3]]) -> Vec<[f32; 3]> {
-        let primvar_refiner = PrimvarRefiner::new(refiner);
+        let primvar_refiner =
+            PrimvarRefiner::new(refiner).expect("Failed to create primvar refiner");
         let total_vertices = refiner.vertex_total_count();
 
         let mut all_vertices = Vec::with_capacity(total_vertices);
@@ -129,7 +130,7 @@ mod tests {
 
     #[test]
     fn test_complex_polyhedron_to_step() {
-        use opensubdiv_petite::truck_integration::PatchTableExt;
+        use opensubdiv_petite::truck::PatchTableExt;
         use truck_stepio::out;
 
         // Create icosahedron base geometry
