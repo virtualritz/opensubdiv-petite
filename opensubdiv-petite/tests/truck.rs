@@ -19,7 +19,7 @@ fn test_truck_integration_compiles() {
 #[test]
 fn test_simple_plane_to_step() {
     use opensubdiv_petite::far::{
-        AdaptiveRefinementOptions, EndCapType, PatchTable, PatchTableOptions, PrimvarRefiner,
+        AdaptiveRefinementOptions, PatchTable, PatchTableOptions, PrimvarRefiner,
         TopologyDescriptor, TopologyRefiner, TopologyRefinerOptions,
     };
     use truck_stepio::out;
@@ -168,7 +168,7 @@ fn test_simple_plane_to_step() {
 #[test]
 fn test_simple_cube_to_step() {
     use opensubdiv_petite::far::{
-        AdaptiveRefinementOptions, EndCapType, PatchTable, PatchTableOptions, PrimvarRefiner,
+        AdaptiveRefinementOptions, PatchTable, PatchTableOptions, PrimvarRefiner,
         TopologyDescriptor, TopologyRefiner, TopologyRefinerOptions,
     };
     use truck_stepio::out;
@@ -376,7 +376,7 @@ fn test_creased_cube_to_step() {
     refiner.refine_adaptive(adaptive_options, &[]);
 
     // Create patch table with B-spline patches for higher-order surfaces
-    use opensubdiv_petite::far::{EndCapType, PatchTableOptions};
+    use opensubdiv_petite::far::PatchTableOptions;
     let patch_options = PatchTableOptions::new().end_cap_type(default_end_cap_type());
     let patch_table =
         PatchTable::new(&refiner, Some(patch_options)).expect("Failed to create patch table");

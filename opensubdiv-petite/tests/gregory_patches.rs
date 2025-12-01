@@ -9,16 +9,14 @@ use opensubdiv_petite::far::{
 #[cfg(feature = "truck")]
 mod truck_tests {
     use super::*;
-    use opensubdiv_petite::truck::{PatchTableExt, PatchTableWithControlPointsRef};
     use opensubdiv_petite::Index;
-    use truck_stepio::out;
     use utils::{assert_file_matches, test_output_path};
 
     /// Build complete vertex buffer including all refinement levels
     fn build_vertex_buffer(refiner: &TopologyRefiner, base_vertices: &[[f32; 3]]) -> Vec<[f32; 3]> {
         let primvar_refiner =
             PrimvarRefiner::new(refiner).expect("Failed to create primvar refiner");
-        let total_vertices = refiner.vertex_total_count();
+        let total_vertices = refiner.vertex_count_all_levels();
 
         let mut all_vertices = Vec::with_capacity(total_vertices);
 
@@ -130,7 +128,7 @@ mod truck_tests {
         );
         eprintln!(
             "Total vertices after refinement: {}",
-            refiner.vertex_total_count()
+            refiner.vertex_count_all_levels()
         );
 
         // Now create patch table with Gregory end caps
@@ -191,7 +189,7 @@ mod truck_tests {
         eprintln!("Vertex buffer has {} vertices", all_vertices.len());
         eprintln!(
             "Patch table expects {} control vertices",
-            patch_table.control_vertices_len()
+            patch_table.control_vertex_count()
         );
 
         // Check if patch table has local points that need to be appended
@@ -298,6 +296,8 @@ mod truck_tests {
 
         // For now, generate the file with holes to demonstrate the issue
         assert_file_matches(&output_path, "simple_cube_gregory.step");
+
+        Ok(())
     }
 }
 
@@ -351,7 +351,6 @@ fn test_gregory_triangle_patches() -> Result<()> {
     let mut triangle_count = 0;
     let mut loop_count = 0;
     let mut gregory_triangle_count = 0;
-    let mut other_count = 0;
 
     for array_idx in 0..patch_table.patch_array_count() {
         if let Some(desc) = patch_table.patch_array_descriptor(array_idx) {
@@ -362,7 +361,7 @@ fn test_gregory_triangle_patches() -> Result<()> {
                 opensubdiv_petite::far::PatchType::GregoryTriangle => {
                     gregory_triangle_count += count
                 }
-                _ => other_count += count,
+                _ => {}
             }
         }
     }

@@ -91,7 +91,7 @@ mod tests {
     fn build_vertex_buffer(refiner: &TopologyRefiner, base_vertices: &[[f32; 3]]) -> Vec<[f32; 3]> {
         let primvar_refiner =
             PrimvarRefiner::new(refiner).expect("Failed to create primvar refiner");
-        let total_vertices = refiner.vertex_total_count();
+        let total_vertices = refiner.vertex_count_all_levels();
 
         let mut all_vertices = Vec::with_capacity(total_vertices);
 
@@ -176,7 +176,8 @@ mod tests {
             vertex_positions.len(),
             &face_vertex_counts,
             &face_vertex_indices,
-        );
+        )
+        .expect("Failed to create topology descriptor");
         descriptor.creases(&crease_indices, &crease_weights);
 
         // Create topology refiner
@@ -196,7 +197,7 @@ mod tests {
 
         println!(
             "Complex polyhedron: {} patches from {} base vertices and {} faces",
-            patch_table.patches_len(),
+            patch_table.patch_count(),
             vertex_positions.len(),
             face_vertex_counts.len()
         );
@@ -284,7 +285,7 @@ mod tests {
             obj_file,
             "# {} vertices, {} faces",
             all_vertices.len(),
-            patch_table.patches_len()
+            patch_table.patch_count()
         )
         .unwrap();
         writeln!(obj_file, "# Creases with weight 4.0").unwrap();

@@ -1456,41 +1456,30 @@ impl<'a> TryFrom<PatchTableWithControlPointsRef<'a>> for Shell {
             if let Some(desc) = patches.patch_table.patch_array_descriptor(array_idx) {
                 let patch_type = desc.patch_type();
                 let num_patches = patches.patch_table.patch_array_patch_count(array_idx);
-                eprintln!(
-                    "Shell conversion: Processing patch array {} with type {:?} ({} patches)",
-                    array_idx, patch_type, num_patches
-                );
 
-                // Handle Regular, GregoryBasis, and GregoryTriangle patches
+                // Handle Regular, GregoryBasis, and GregoryTriangle patches.
                 if matches!(
                     patch_type,
                     PatchType::Regular | PatchType::GregoryBasis | PatchType::GregoryTriangle
                 ) {
-                    for local_idx in 0..num_patches {
+                    for _local_idx in 0..num_patches {
                         let patch =
                             PatchRef::new(patches.patch_table, patch_index, patches.control_points);
-
-                        eprintln!(
-                            "  Converting patch {} (array {}, local {}) of type {:?}",
-                            patch_index, array_idx, local_idx, patch_type
-                        );
 
                         // Get control matrix before try_into() consumes the patch.
                         #[cfg(feature = "truck_export_boundary")]
                         let control_matrix = match patch.control_points() {
                             Ok(cp) => cp,
-                            Err(e) => {
-                                eprintln!("    ERROR: Failed to get control points: {:?}", e);
+                            Err(_e) => {
                                 patch_index += 1;
                                 continue;
                             }
                         };
 
-                        // Convert to truck surface
+                        // Convert to truck surface.
                         let surface: BSplineSurface<Point3<f64>> = match patch.try_into() {
                             Ok(s) => s,
-                            Err(e) => {
-                                eprintln!("    ERROR: Failed to convert to surface: {:?}", e);
+                            Err(_e) => {
                                 patch_index += 1;
                                 continue;
                             }
@@ -1512,16 +1501,10 @@ impl<'a> TryFrom<PatchTableWithControlPointsRef<'a>> for Shell {
                         patch_index += 1;
                     }
                 } else {
-                    eprintln!(
-                        "  Skipping {} patches of type {:?}",
-                        num_patches, patch_type
-                    );
                     patch_index += patches.patch_table.patch_array_patch_count(array_idx);
                 }
             }
         }
-
-        eprintln!("Total faces created: {}", faces.len());
         Ok(Shell::from(faces))
     }
 }
@@ -1937,68 +1920,9 @@ impl PatchTableExt for PatchTable {
         // triangular patches. This is a workaround for when OpenSubdiv
         // doesn't generate Gregory patches at extraordinary vertices.
 
-        // First, convert regular patches
+        // First, convert regular patches.
         let wrapper = self.with_control_points(control_points);
         let shell = Shell::try_from(wrapper)?;
-
-        // Analyze patch connectivity to detect gaps
-        let num_faces = shell.face_iter().count();
-        println!("Gap-filling: Initial shell has {} faces", num_faces);
-
-        // For a cube with extraordinary vertices at corners:
-        // - 8 corners with valence 3
-        // - Each corner should have 3 patches meeting
-        // - If OpenSubdiv generates only Regular patches, gaps may appear
-
-        // Count edges and vertices in the shell
-        let mut edge_count = 0;
-        let mut vertex_positions = std::collections::HashSet::new();
-
-        for face in shell.face_iter() {
-            for wire in face.boundaries() {
-                for edge in wire.edge_iter() {
-                    edge_count += 1;
-                    // Get vertex positions to count unique vertices
-                    let v0_pos = edge.front().point();
-                    let v1_pos = edge.back().point();
-
-                    // Store positions with some tolerance for uniqueness
-                    let v0_key = (
-                        (v0_pos.x * 1000.0).round() as i32,
-                        (v0_pos.y * 1000.0).round() as i32,
-                        (v0_pos.z * 1000.0).round() as i32,
-                    );
-                    let v1_key = (
-                        (v1_pos.x * 1000.0).round() as i32,
-                        (v1_pos.y * 1000.0).round() as i32,
-                        (v1_pos.z * 1000.0).round() as i32,
-                    );
-
-                    vertex_positions.insert(v0_key);
-                    vertex_positions.insert(v1_key);
-                }
-            }
-        }
-
-        let num_vertices = vertex_positions.len();
-        println!(
-            "Shell has {} unique vertices and {} edges",
-            num_vertices, edge_count
-        );
-
-        // For a cube:
-        // - Should have 8 vertices after subdivision with extraordinary corners
-        // - Each vertex has valence 3 (3 edges meeting)
-        // - Total edges = 12 for a cube
-
-        // With proper boundary extraction, patches should meet correctly
-        // The boundary fix ensures that adjacent patches share exact boundary curves
-
-        println!("Gap-filling analysis complete.");
-        println!(
-            "Note: With corrected boundary extraction, patches should meet properly at edges."
-        );
-        println!("Any remaining gaps would be at extraordinary vertices where > 4 patches meet.");
 
         Ok(shell)
     }

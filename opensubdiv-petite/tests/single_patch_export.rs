@@ -7,8 +7,8 @@ mod tests {
     use crate::utils::default_end_cap_type;
     use crate::utils::{assert_file_matches, test_output_path};
     use opensubdiv_petite::far::{
-        EndCapType, PatchTable, PatchTableOptions, PrimvarRefiner, TopologyDescriptor,
-        TopologyRefiner, TopologyRefinerOptions,
+        PatchTable, PatchTableOptions, PrimvarRefiner, TopologyDescriptor, TopologyRefiner,
+        TopologyRefinerOptions,
     };
 
     #[test]
@@ -65,7 +65,7 @@ mod tests {
 
         // Build complete vertex buffer
         let primvar_refiner = PrimvarRefiner::new(&refiner)?;
-        let total_vertices = refiner.vertex_total_count();
+        let total_vertices = refiner.vertex_count_all_levels();
 
         let mut all_vertices = Vec::with_capacity(total_vertices);
         all_vertices.extend_from_slice(&vertex_positions);
