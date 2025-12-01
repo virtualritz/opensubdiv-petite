@@ -1,9 +1,11 @@
 use anyhow::Result;
 use opensubdiv_petite::far::{
-    AdaptiveRefinementOptions, EndCapType, PatchTableOptions, PrimvarRefiner, TopologyDescriptor,
-    TopologyRefiner, TopologyRefinerOptions,
+    AdaptiveRefinementOptions, EndCapType, PatchTable, PatchTableOptions, PrimvarRefiner,
+    TopologyDescriptor, TopologyRefiner, TopologyRefinerOptions,
 };
 use opensubdiv_petite::truck::{bfr_regular_surfaces, PatchTableExt};
+use opensubdiv_petite::Index;
+use truck_modeling::{Curve, Face, Point3, Shell, Surface};
 use truck_stepio::out::{CompleteStepDisplay, StepModel};
 
 fn main() -> Result<()> {
@@ -43,10 +45,10 @@ fn main() -> Result<()> {
         .level(0)
         .expect("base level should exist before refinement");
 
-    let mut selected_faces = Vec::new();
+    let mut selected_faces: Vec<Index> = Vec::new();
     for f in 0..base_level.face_count() {
         let verts = base_level
-            .face_vertices(f as u32)
+            .face_vertices(Index(f as u32))
             .expect("face should expose vertices");
 
         let is_quad = verts.len() == 4;
@@ -57,7 +59,7 @@ fn main() -> Result<()> {
         });
 
         let (touches_boundary, has_sharp_edge) = base_level
-            .face_edges(f as u32)
+            .face_edges(Index(f as u32))
             .map(|edges| {
                 let boundary = edges.iter().any(|&e| base_level.is_edge_boundary(e));
                 let sharp = edges
@@ -68,7 +70,7 @@ fn main() -> Result<()> {
             .unwrap_or((true, false));
 
         if !is_quad || has_extraordinary || touches_boundary || has_sharp_edge {
-            selected_faces.push(f as u32);
+            selected_faces.push(Index(f as u32));
         }
     }
 
@@ -116,7 +118,7 @@ fn main() -> Result<()> {
 
             for dim in 0..3 {
                 let src_dim: Vec<f32> = all_vertices.iter().map(|v| v[dim]).collect();
-                let dst_dim = stencil_table.update_values(&src_dim, None, None);
+                let dst_dim: Vec<f32> = stencil_table.update_values(&src_dim, None, None);
 
                 for (i, &val) in dst_dim.iter().enumerate() {
                     if dim == 0 {
@@ -162,15 +164,15 @@ fn main() -> Result<()> {
     println!("Testing BFR regular surfaces...");
     match bfr_regular_surfaces(&refiner, &all_vertices, 0, 0) {
         Ok(surfaces) => {
-            let faces: Vec<truck_modeling::Face> = surfaces
+            let faces: Vec<Face> = surfaces
                 .into_iter()
-                .map(|s| {
-                    truck_modeling::Face::new(vec![], truck_modeling::Surface::BSplineSurface(s))
-                })
+                .map(|s| Face::new(vec![], Surface::BSplineSurface(s)))
                 .collect();
-            let shell = truck_modeling::Shell::from(faces).compress();
+            let shell: Shell = Shell::from(faces);
+            let compressed = shell.compress();
             let step_string =
-                CompleteStepDisplay::new(StepModel::from(&shell), Default::default()).to_string();
+                CompleteStepDisplay::new(StepModel::from(&compressed), Default::default())
+                    .to_string();
             std::fs::write("cube_bfr.step", step_string)?;
             println!("Wrote cube_bfr.step");
         }
@@ -181,15 +183,15 @@ fn main() -> Result<()> {
     println!("Testing BFR + PatchTable mixed surfaces...");
     match patch_table.to_truck_surfaces_bfr_mixed(&refiner, &all_vertices, 0, 0) {
         Ok(surfaces) => {
-            let faces: Vec<truck_modeling::Face> = surfaces
+            let faces: Vec<Face> = surfaces
                 .into_iter()
-                .map(|s| {
-                    truck_modeling::Face::new(vec![], truck_modeling::Surface::BSplineSurface(s))
-                })
+                .map(|s| Face::new(vec![], Surface::BSplineSurface(s)))
                 .collect();
-            let shell = truck_modeling::Shell::from(faces).compress();
+            let shell: Shell = Shell::from(faces);
+            let compressed = shell.compress();
             let step_string =
-                CompleteStepDisplay::new(StepModel::from(&shell), Default::default()).to_string();
+                CompleteStepDisplay::new(StepModel::from(&compressed), Default::default())
+                    .to_string();
             std::fs::write("cube_bfr_mixed.step", step_string)?;
             println!("Wrote cube_bfr_mixed.step");
         }

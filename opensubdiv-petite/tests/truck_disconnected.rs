@@ -6,10 +6,9 @@ mod utils;
 mod tests {
     use crate::utils::default_end_cap_type;
     use opensubdiv_petite::far::{
-        EndCapType, PatchTable, PatchTableOptions, PrimvarRefiner, TopologyDescriptor,
-        TopologyRefiner, TopologyRefinerOptions, UniformRefinementOptions,
+        PatchTable, PatchTableOptions, PrimvarRefiner, TopologyDescriptor, TopologyRefiner,
+        TopologyRefinerOptions, UniformRefinementOptions,
     };
-    use opensubdiv_petite::truck::PatchTableExt;
     use opensubdiv_petite::Index;
     use std::path::PathBuf;
 
@@ -155,7 +154,7 @@ mod tests {
 
         let patch_table = PatchTable::new(&refiner, Some(patch_options))?;
 
-        println!("Number of patches: {}", patch_table.patches_len());
+        println!("Number of patches: {}", patch_table.patch_count());
 
         // Convert patches to individual shells
         let shells = patch_table.to_truck_shells(&all_vertices)?;
