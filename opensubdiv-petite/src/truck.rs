@@ -6,6 +6,8 @@
 
 use crate::bfr::SurfaceFactory as BfrSurfaceFactory;
 use crate::far::{PatchEvalResult, PatchTable, PatchType, TopologyRefiner};
+#[cfg(feature = "rayon")]
+use rayon::prelude::*;
 use std::{convert::TryFrom, panic};
 use thiserror::Error;
 use truck_geometry::prelude::{BSplineCurve, BSplineSurface, KnotVec, ParametricCurve};
@@ -128,18 +130,16 @@ fn adjust_regular_control_points(
 
     // Flatten 4×4 control matrix in the same order as OpenSubdiv weights:
     // w[4*i + j] = sWeights[j] * tWeights[i], where i is v-row, j is u-col.
-    let mut cps = Vec::with_capacity(16);
-    for row in 0..4 {
-        for col in 0..4 {
-            cps.push(control_matrix[row][col]);
-        }
-    }
+    let cps: Vec<_> = control_matrix
+        .iter()
+        .flat_map(|row| row.iter().copied())
+        .collect();
 
     // Build transformation matrix (16×16) starting as identity, then run the
     // same boundary adjustments on its rows as adjustBSplineBoundaryWeights.
     let mut trans = [[0.0f64; 16]; 16];
-    for i in 0..16 {
-        trans[i][i] = 1.0;
+    for (i, row) in trans.iter_mut().enumerate() {
+        row[i] = 1.0;
     }
 
     // bit 0: v-min (bottom)
@@ -499,33 +499,30 @@ impl<'a> PatchRef<'a> {
     /// Note: This is still an approximation since Gregory patches cannot be
     /// exactly represented as B-splines. However, the denser sampling captures
     /// more of the surface curvature at extraordinary vertices.
-    pub fn to_bspline_high_precision(
-        &self,
-    ) -> std::result::Result<BSplineSurface<Point3<f64>>, TruckError> {
+    pub fn to_bspline_high_precision(&self) -> Result<BSplineSurface<Point3<f64>>> {
         const GRID_SIZE: usize = 8;
 
         // Evaluate the Gregory patch at an 8×8 grid.
-        let mut samples = vec![vec![Point3::origin(); GRID_SIZE]; GRID_SIZE];
-
-        for i in 0..GRID_SIZE {
-            for j in 0..GRID_SIZE {
+        let samples: Vec<Vec<Point3<f64>>> = (0..GRID_SIZE)
+            .map(|i| {
                 let u = i as f32 / (GRID_SIZE - 1) as f32;
-                let v = j as f32 / (GRID_SIZE - 1) as f32;
-
-                if let Some(result) =
-                    self.patch_table
-                        .evaluate_point(self.patch_index, u, v, self.control_points)
-                {
-                    samples[i][j] = Point3::new(
-                        result.point[0] as f64,
-                        result.point[1] as f64,
-                        result.point[2] as f64,
-                    );
-                } else {
-                    return Err(TruckError::EvaluationFailed);
-                }
-            }
-        }
+                (0..GRID_SIZE)
+                    .map(|j| {
+                        let v = j as f32 / (GRID_SIZE - 1) as f32;
+                        self.patch_table
+                            .evaluate_point(self.patch_index, u, v, self.control_points)
+                            .map(|result| {
+                                Point3::new(
+                                    result.point[0] as f64,
+                                    result.point[1] as f64,
+                                    result.point[2] as f64,
+                                )
+                            })
+                            .ok_or(TruckError::EvaluationFailed)
+                    })
+                    .collect::<Result<Vec<_>>>()
+            })
+            .collect::<Result<Vec<_>>>()?;
 
         // Create knot vectors for an 8×8 control point grid with degree 3.
         // For n control points and degree p, we need n + p + 1 knots.
@@ -765,7 +762,15 @@ pub fn superpatch_surfaces(
         boundary_mask: i32, // Boundary flags for single-patch superpatches
     }
 
-    fn edge_row(control: &Vec<Vec<Point3<f64>>>, edge: &str) -> [Point3<f64>; 4] {
+    /// Edge data from a superpatch: (left, right, bottom, top).
+    type SuperpatchEdges = (
+        Vec<Point3<f64>>,
+        Vec<Point3<f64>>,
+        Vec<Point3<f64>>,
+        Vec<Point3<f64>>,
+    );
+
+    fn edge_row(control: &[Vec<Point3<f64>>], edge: &str) -> [Point3<f64>; 4] {
         match edge {
             "bottom" => [control[3][0], control[3][1], control[3][2], control[3][3]],
             "top" => [control[0][0], control[0][1], control[0][2], control[0][3]],
@@ -781,14 +786,7 @@ pub fn superpatch_surfaces(
             .all(|(p, q)| (p - q).magnitude2() <= tol * tol)
     }
 
-    fn superpatch_edges(
-        sp: &Superpatch,
-    ) -> (
-        Vec<Point3<f64>>, // left
-        Vec<Point3<f64>>, // right
-        Vec<Point3<f64>>, // bottom
-        Vec<Point3<f64>>, // top
-    ) {
+    fn superpatch_edges(sp: &Superpatch) -> SuperpatchEdges {
         let u_max = sp.control.len().saturating_sub(1);
         let v_max = sp
             .control
@@ -823,18 +821,13 @@ pub fn superpatch_surfaces(
     }
 
     fn merge_horizontal(a: &Superpatch, b: &Superpatch) -> Superpatch {
-        let v_len = a.control.first().map(|c| c.len()).unwrap_or(0);
-        let mut control = vec![
-            vec![Point3::origin(); v_len];
-            a.control.len() + b.control.len().saturating_sub(1)
-        ];
-
-        for (u, col) in a.control.iter().enumerate() {
-            control[u].clone_from_slice(col);
-        }
-        for (u, col) in b.control.iter().enumerate().skip(1) {
-            control[a.control.len() + u - 1].clone_from_slice(col);
-        }
+        // Concatenate control columns: all of a, then b (skipping first shared column).
+        let control: Vec<Vec<_>> = a
+            .control
+            .iter()
+            .chain(b.control.iter().skip(1))
+            .cloned()
+            .collect();
 
         // Combine boundary masks: keep a's left, top, bottom; keep b's right.
         // bit 0 (v-min/bottom), bit 1 (u-max/right), bit 2 (v-max/top), bit 3
@@ -853,16 +846,18 @@ pub fn superpatch_surfaces(
     }
 
     fn merge_vertical(top: &Superpatch, bottom: &Superpatch) -> Superpatch {
-        let u_len = top.control.len();
-        let mut control = Vec::with_capacity(u_len);
-        for u in 0..u_len {
-            let top_col = &top.control[u];
-            let bottom_col = &bottom.control[u];
-            let mut col = Vec::with_capacity(top_col.len() + bottom_col.len().saturating_sub(1));
-            col.extend_from_slice(top_col);
-            col.extend_from_slice(&bottom_col[1..]);
-            control.push(col);
-        }
+        let control: Vec<Vec<_>> = top
+            .control
+            .iter()
+            .zip(bottom.control.iter())
+            .map(|(top_col, bottom_col)| {
+                top_col
+                    .iter()
+                    .chain(bottom_col.iter().skip(1))
+                    .copied()
+                    .collect()
+            })
+            .collect();
 
         // Combine boundary masks: keep top's left, right, top; keep bottom's bottom.
         // bit 0 (v-min/bottom), bit 1 (u-max/right), bit 2 (v-max/top), bit 3
@@ -921,11 +916,10 @@ pub fn superpatch_surfaces(
         let bottom_i = edge_row(&r_i.control, "bottom");
         let right_i = edge_row(&r_i.control, "right");
 
-        for j in 0..regular.len() {
+        for (j, r_j) in regular.iter().enumerate() {
             if i == j {
                 continue;
             }
-            let r_j = &regular[j];
             let top_j = edge_row(&r_j.control, "top");
             let left_j = edge_row(&r_j.control, "left");
 
@@ -1103,12 +1097,10 @@ pub fn superpatch_surfaces(
                 for u_off in 0..width {
                     if let Some(&p_idx) = coord_map.get(&(x0 + u_off as i32, y0 + v_off as i32)) {
                         let patch = &regular[p_idx];
-                        let mut control = vec![vec![Point3::origin(); 4]; 4];
-                        for u in 0..4 {
-                            for v in 0..4 {
-                                control[u][v] = patch.control[v][u];
-                            }
-                        }
+                        // Transpose from v-major to u-major.
+                        let control: Vec<Vec<Point3<f64>>> = (0..4)
+                            .map(|u| (0..4).map(|v| patch.control[v][u]).collect())
+                            .collect();
                         superpatches.push(Superpatch {
                             control,
                             width_cells: 1,
@@ -1871,27 +1863,30 @@ impl PatchTableExt for PatchTable {
         control_points: &[[f32; 3]],
         gregory_accuracy: GregoryAccuracy,
     ) -> Result<Vec<BSplineSurface<Point3<f64>>>> {
-        let total_patches = self.patch_count();
-        let mut surfaces = Vec::with_capacity(total_patches);
-
-        for patch_index in 0..total_patches {
+        let convert_patch = |patch_index: usize| {
             let patch_ref = self.patch(patch_index, control_points);
+            if patch_ref.is_gregory() && gregory_accuracy == GregoryAccuracy::HighPrecision {
+                // Use high-precision 8×8 sampling for Gregory patches.
+                patch_ref.to_bspline_high_precision()
+            } else {
+                // Use standard conversion for regular patches or when using
+                // BSplineEndCaps accuracy (the patch table should already have
+                // B-spline end caps if configured that way).
+                BSplineSurface::try_from(patch_ref)
+            }
+        };
 
-            let surface =
-                if patch_ref.is_gregory() && gregory_accuracy == GregoryAccuracy::HighPrecision {
-                    // Use high-precision 8×8 sampling for Gregory patches.
-                    patch_ref.to_bspline_high_precision()?
-                } else {
-                    // Use standard conversion for regular patches or when using
-                    // BSplineEndCaps accuracy (the patch table should already have
-                    // B-spline end caps if configured that way).
-                    BSplineSurface::try_from(patch_ref)?
-                };
-
-            surfaces.push(surface);
+        #[cfg(feature = "rayon")]
+        {
+            (0..self.patch_count())
+                .into_par_iter()
+                .map(convert_patch)
+                .collect()
         }
-
-        Ok(surfaces)
+        #[cfg(not(feature = "rayon"))]
+        {
+            (0..self.patch_count()).map(convert_patch).collect()
+        }
     }
 
     /// Prefer BFR for regular faces and fall back to PatchTable for non-regular
