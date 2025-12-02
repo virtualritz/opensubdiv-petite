@@ -5,7 +5,7 @@ use opensubdiv_petite::far::{
 };
 use opensubdiv_petite::truck::{bfr_regular_surfaces, PatchTableExt};
 use opensubdiv_petite::Index;
-use truck_modeling::{Curve, Face, Point3, Shell, Surface};
+use truck_modeling::{Face, Shell, Surface};
 use truck_stepio::out::{CompleteStepDisplay, StepModel};
 
 fn main() -> Result<()> {

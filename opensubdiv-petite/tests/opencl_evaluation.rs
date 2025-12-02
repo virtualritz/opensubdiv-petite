@@ -1,11 +1,5 @@
 mod utils;
 
-use anyhow::Result;
-use opensubdiv_petite::far;
-use std::fs::File;
-use std::io::Write;
-use utils::{assert_file_matches, test_output_path};
-
 #[cfg(feature = "opencl")]
 #[test]
 fn test_opencl_stencil_evaluation() -> Result<()> {

@@ -1,5 +1,4 @@
 mod utils;
-use utils::{assert_file_matches, test_output_path};
 
 #[cfg(all(feature = "metal", target_os = "macos"))]
 #[test]

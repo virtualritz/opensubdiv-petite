@@ -7,11 +7,10 @@ use utils::*;
 #[test]
 fn test_two_patches_surfaces_only() -> anyhow::Result<()> {
     use opensubdiv_petite::far::{
-        AdaptiveRefinementOptions, EndCapType, PatchTable, PatchTableOptions, PrimvarRefiner,
+        AdaptiveRefinementOptions, PatchTable, PatchTableOptions, PrimvarRefiner,
         TopologyDescriptor, TopologyRefiner, TopologyRefinerOptions,
     };
     use opensubdiv_petite::truck::PatchTableExt;
-    use truck_modeling::*;
 
     // Simple cube - same as in truck.rs test
     let vertex_positions = vec![
@@ -56,7 +55,7 @@ fn test_two_patches_surfaces_only() -> anyhow::Result<()> {
 
     // Build vertex buffer
     let primvar_refiner = PrimvarRefiner::new(&refiner)?;
-    let total_vertices = refiner.vertex_total_count();
+    let total_vertices = refiner.vertex_count_all_levels();
 
     let mut all_vertices = Vec::with_capacity(total_vertices);
 
@@ -91,21 +90,21 @@ fn test_two_patches_surfaces_only() -> anyhow::Result<()> {
     }
 
     // Debug: check patch table contents
-    println!("Patch table has {} arrays", patch_table.patch_arrays_len());
-    println!("Total patches: {}", patch_table.patches_len());
-    for i in 0..patch_table.patch_arrays_len() {
+    println!("Patch table has {} arrays", patch_table.patch_array_count());
+    println!("Total patches: {}", patch_table.patch_count());
+    for i in 0..patch_table.patch_array_count() {
         if let Some(desc) = patch_table.patch_array_descriptor(i) {
             println!(
                 "  Array {}: type={:?}, {} patches",
                 i,
                 desc.patch_type(),
-                patch_table.patch_array_patches_len(i)
+                patch_table.patch_array_patch_count(i)
             );
         }
     }
 
     // If no Regular patches, try to get Quads patches
-    if patch_table.patches_len() == 0 {
+    if patch_table.patch_count() == 0 {
         println!("No patches generated! Check refinement settings.");
         return Ok(());
     }

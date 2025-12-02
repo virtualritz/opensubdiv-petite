@@ -5,8 +5,7 @@ mod utils;
 fn test_simple_plane_cv_ordering() -> anyhow::Result<()> {
     use crate::utils::default_end_cap_type;
     use opensubdiv_petite::far::{
-        EndCapType, PatchTable, PatchTableOptions, TopologyDescriptor, TopologyRefiner,
-        TopologyRefinerOptions, UniformRefinementOptions,
+        PatchTable, PatchTableOptions, TopologyDescriptor, TopologyRefiner, TopologyRefinerOptions,
     };
 
     // Create a 3x3 quad mesh (4x4 vertices)
@@ -56,7 +55,7 @@ fn test_simple_plane_cv_ordering() -> anyhow::Result<()> {
     // Build vertex buffer with all refinement levels
     use opensubdiv_petite::far::PrimvarRefiner;
     let primvar_refiner = PrimvarRefiner::new(&refiner)?;
-    let total_vertices = refiner.vertex_total_count();
+    let total_vertices = refiner.vertex_count_all_levels();
 
     let flat_positions: Vec<f32> = vertex_positions
         .iter()
@@ -98,13 +97,13 @@ fn test_simple_plane_cv_ordering() -> anyhow::Result<()> {
     }
     println!(
         "\nNumber of patches generated: {}",
-        patch_table.patches_len()
+        patch_table.patch_count()
     );
 
     // Print CV indices for each patch
-    for array_idx in 0..patch_table.patch_arrays_len() {
+    for array_idx in 0..patch_table.patch_array_count() {
         if let Some(patch_vertices) = patch_table.patch_array_vertices(array_idx) {
-            let num_patches = patch_table.patch_array_patches_len(array_idx);
+            let num_patches = patch_table.patch_array_patch_count(array_idx);
 
             for patch_idx in 0..num_patches {
                 println!("\nPatch {}:", patch_idx);
@@ -154,7 +153,7 @@ fn test_simple_plane_cv_ordering() -> anyhow::Result<()> {
     }
 
     // Check for shared vertices between patches
-    if patch_table.patches_len() >= 2 {
+    if patch_table.patch_count() >= 2 {
         if let Some(patch_vertices) = patch_table.patch_array_vertices(0) {
             println!("\n=== CHECKING SHARED VERTICES ===");
 

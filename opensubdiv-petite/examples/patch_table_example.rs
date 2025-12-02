@@ -1,7 +1,7 @@
 //! Example demonstrating patch table creation and usage
 
 use opensubdiv_petite::far::{
-    EndCapType, PatchTable, PatchTableOptions, PatchType, TopologyDescriptor, TopologyRefiner,
+    EndCapType, PatchTable, PatchTableOptions, TopologyDescriptor, TopologyRefiner,
     TopologyRefinerOptions, UniformRefinementOptions,
 };
 
@@ -78,7 +78,7 @@ fn main() {
 
     // Iterate through patch arrays
     println!("\nPatch Arrays:");
-    for i in 0..patch_table.patch_arrays_len() {
+    for i in 0..patch_table.patch_array_count() {
         if let Some(desc) = patch_table.patch_array_descriptor(i) {
             let num_patches = patch_table.patch_array_patch_count(i);
             println!(
@@ -98,8 +98,8 @@ fn main() {
 
     // Access patch parameters for the first few patches
     println!("\nFirst few patch parameters:");
-    for array_idx in 0..patch_table.patch_arrays_len().min(2) {
-        for patch_idx in 0..patch_table.patch_array_patches_len(array_idx).min(3) {
+    for array_idx in 0..patch_table.patch_array_count().min(2) {
+        for patch_idx in 0..patch_table.patch_array_patch_count(array_idx).min(3) {
             if let Some(param) = patch_table.patch_param(array_idx, patch_idx) {
                 let (u, v) = param.uv();
                 println!(
@@ -141,7 +141,7 @@ fn main() {
         .collect();
 
     // Evaluate the first patch at several parametric coordinates
-    if patch_table.patches_len() > 0 {
+    if patch_table.patch_count() > 0 {
         println!("  Evaluating first patch at different (u,v) coordinates:");
         for (u, v) in &[(0.0, 0.0), (0.5, 0.5), (1.0, 1.0)] {
             if let Some(result) = patch_table.evaluate_point(0, *u, *v, &control_points) {
