@@ -1,8 +1,5 @@
 #[test]
 fn safe_wrappers_creation() {
-    use opensubdiv_petite::osd;
-    use std::ptr;
-
     // Test that we can create safe wrappers from null pointers
     #[cfg(feature = "opencl")]
     {
@@ -42,10 +39,9 @@ fn safe_wrappers_creation() {
 #[test]
 fn wrapper_lifetime_safety() {
     // Test that wrappers properly enforce lifetime constraints
-    use opensubdiv_petite::osd;
 
     // Create a non-null pointer for testing
-    let test_ptr = 0x1234 as *mut std::ffi::c_void;
+    let _test_ptr = 0x1234 as *mut std::ffi::c_void;
 
     #[cfg(feature = "opencl")]
     {
