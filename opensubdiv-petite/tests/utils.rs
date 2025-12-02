@@ -5,8 +5,9 @@ use std::path::{Path, PathBuf};
 #[cfg(feature = "truck")]
 use opensubdiv_petite::far::EndCapType;
 
-/// Get the default EndCapType based on feature flags
+/// Get the default EndCapType based on feature flags.
 #[cfg(feature = "truck")]
+#[allow(dead_code)]
 pub fn default_end_cap_type() -> EndCapType {
     #[cfg(feature = "b_spline_end_caps")]
     {

@@ -312,24 +312,8 @@ fn test_two_patches_iges() -> Result<(), Box<dyn std::error::Error>> {
     // Export only the first two patches by modifying the export
     let output_path = test_output_path("two_patches.igs");
 
-    // We'll use the low-level export function and limit patches
-    use opensubdiv_petite::iges_export::export_patches_as_iges;
-    use std::fs::File;
-
-    // Create a wrapper patch table that only reports 2 patches
-    struct LimitedPatchTable<'a> {
-        inner: &'a PatchTable,
-        max_patches: usize,
-    }
-
-    impl<'a> LimitedPatchTable<'a> {
-        fn new(inner: &'a PatchTable, max_patches: usize) -> Self {
-            Self { inner, max_patches }
-        }
-    }
-
-    // For simplicity, we'll just export all patches for now since IGES viewers
-    // should be able to handle multiple surfaces
+    // For simplicity, we export all patches since IGES viewers can handle multiple
+    // surfaces.
     patch_table
         .export_iges_file(output_path.to_str().unwrap(), &all_vertices)
         .expect("Failed to export IGES");

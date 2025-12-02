@@ -7,7 +7,7 @@ use utils::*;
 #[test]
 fn test_simple_plane_surfaces_only() -> anyhow::Result<()> {
     use opensubdiv_petite::far::{
-        AdaptiveRefinementOptions, EndCapType, PatchTable, PatchTableOptions, PrimvarRefiner,
+        AdaptiveRefinementOptions, PatchTable, PatchTableOptions, PrimvarRefiner,
         TopologyDescriptor, TopologyRefiner, TopologyRefinerOptions,
     };
     use opensubdiv_petite::truck::PatchTableExt;
@@ -58,7 +58,7 @@ fn test_simple_plane_surfaces_only() -> anyhow::Result<()> {
 
     // Build vertex buffer
     let primvar_refiner = PrimvarRefiner::new(&refiner)?;
-    let total_vertices = refiner.vertex_total_count();
+    let total_vertices = refiner.vertex_count_all_levels();
 
     let mut all_vertices = Vec::with_capacity(total_vertices);
 
@@ -104,7 +104,7 @@ fn test_simple_plane_surfaces_only() -> anyhow::Result<()> {
         if i < 3 {
             // Debug: print control points of first few surfaces
             println!("Surface {} control points:", i);
-            use truck_geometry::prelude::ParametricSurface;
+
             for row in 0..4 {
                 for col in 0..4 {
                     let cp = surface.control_point(row, col);

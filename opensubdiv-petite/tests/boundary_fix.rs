@@ -9,7 +9,7 @@ mod tests {
     };
     use opensubdiv_petite::truck::PatchTableExt;
     use std::fs;
-    use truck_modeling::Shell;
+
     use truck_stepio::out::{CompleteStepDisplay, StepHeaderDescriptor, StepModel};
 
     #[test]
@@ -59,7 +59,7 @@ mod tests {
 
         // Build complete vertex buffer
         let primvar_refiner = PrimvarRefiner::new(&refiner)?;
-        let mut all_vertices = Vec::with_capacity(refiner.vertex_total_count());
+        let mut all_vertices = Vec::with_capacity(refiner.vertex_count_all_levels());
 
         // Add base vertices
         all_vertices.extend_from_slice(&vertex_positions);

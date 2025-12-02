@@ -51,7 +51,7 @@ fn main() -> Result<()> {
     // execution phase (every frame)
     {
         // pack the control vertices at the start of the buffer
-        src_buffer.update_data(&vertices, 0, n_coarse_verts);
+        src_buffer.update_data(&vertices, 0, n_coarse_verts)?;
 
         let src_desc = osd::BufferDescriptor::new(0, 3, 3)?;
         let dst_desc = osd::BufferDescriptor::new(0, 3, 3)?;
