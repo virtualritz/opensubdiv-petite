@@ -13,6 +13,9 @@ pub use topology_refiner::TopologyRefinerFactoryOptions;
 pub mod stencil_table;
 pub use stencil_table::{Stencil, StencilTable, StencilTableOptions, StencilTablePtr};
 
+pub mod limit_stencil_table;
+pub use limit_stencil_table::*;
+
 pub mod topology_descriptor;
 pub use topology_descriptor::*;
 

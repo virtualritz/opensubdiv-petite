@@ -64,7 +64,7 @@ mod tests {
 
             // Interpolate
             let primvar_refiner =
-                PrimvarRefiner::new(&refiner).expect("Failed to create primvar refiner");
+                PrimvarRefiner::new(refiner).expect("Failed to create primvar refiner");
             let dst_data = primvar_refiner
                 .interpolate(level, 3, &src_data)
                 .expect("Failed to interpolate primvars");
@@ -107,7 +107,7 @@ mod tests {
         ];
 
         // Define cube faces (quads)
-        let face_vertices = vec![
+        let face_vertices = [
             vec![0, 1, 5, 4], // Front
             vec![2, 3, 7, 6], // Back
             vec![0, 4, 7, 3], // Left

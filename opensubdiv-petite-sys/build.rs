@@ -121,6 +121,7 @@ pub fn main() {
         .file("c-api/far/primvar_refiner.cpp")
         .file("c-api/far/stencil_table.cpp")
         .file("c-api/far/stencil_table_factory.cpp")
+        .file("c-api/far/limit_stencil_table.cpp")
         .file("c-api/far/topology_refiner.cpp")
         .file("c-api/far/topology_level.cpp")
         .file("c-api/far/patch_table.cpp")

@@ -55,7 +55,7 @@ fn main() -> Result<()> {
         let has_extraordinary = verts.iter().any(|&v| {
             base_level
                 .vertex_edges(v)
-                .map_or(true, |edges| edges.len() != 4)
+                .is_none_or(|edges| edges.len() != 4)
         });
 
         let (touches_boundary, has_sharp_edge) = base_level
@@ -74,8 +74,10 @@ fn main() -> Result<()> {
         }
     }
 
-    let mut adaptive_options = AdaptiveRefinementOptions::default();
-    adaptive_options.isolation_level = 1;
+    let adaptive_options = AdaptiveRefinementOptions {
+        isolation_level: 1,
+        ..Default::default()
+    };
     refiner.refine_adaptive(adaptive_options, &selected_faces);
 
     // Try with Gregory basis end cap

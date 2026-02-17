@@ -86,8 +86,10 @@ fn test_simple_plane_iges() -> Result<(), Box<dyn std::error::Error>> {
         .expect("Failed to create topology refiner");
 
     // Use adaptive refinement
-    let mut adaptive_options = AdaptiveRefinementOptions::default();
-    adaptive_options.isolation_level = 3;
+    let adaptive_options = AdaptiveRefinementOptions {
+        isolation_level: 3,
+        ..Default::default()
+    };
     refiner.refine_adaptive(adaptive_options, &[]);
 
     // Create patch table
@@ -151,8 +153,10 @@ fn test_simple_cube_iges() -> Result<(), Box<dyn std::error::Error>> {
         .expect("Failed to create topology refiner");
 
     // Use adaptive refinement
-    let mut adaptive_options = AdaptiveRefinementOptions::default();
-    adaptive_options.isolation_level = 3;
+    let adaptive_options = AdaptiveRefinementOptions {
+        isolation_level: 3,
+        ..Default::default()
+    };
     refiner.refine_adaptive(adaptive_options, &[]);
 
     // Create patch table
@@ -226,8 +230,10 @@ fn test_creased_cube_iges() -> Result<(), Box<dyn std::error::Error>> {
         .expect("Failed to create topology refiner");
 
     // Use adaptive refinement
-    let mut adaptive_options = AdaptiveRefinementOptions::default();
-    adaptive_options.isolation_level = 3;
+    let adaptive_options = AdaptiveRefinementOptions {
+        isolation_level: 3,
+        ..Default::default()
+    };
     refiner.refine_adaptive(adaptive_options, &[]);
 
     // Create patch table
@@ -291,8 +297,10 @@ fn test_two_patches_iges() -> Result<(), Box<dyn std::error::Error>> {
         .expect("Failed to create topology refiner");
 
     // Use adaptive refinement
-    let mut adaptive_options = AdaptiveRefinementOptions::default();
-    adaptive_options.isolation_level = 3;
+    let adaptive_options = AdaptiveRefinementOptions {
+        isolation_level: 3,
+        ..Default::default()
+    };
     refiner.refine_adaptive(adaptive_options, &[]);
 
     // Create patch table

@@ -32,7 +32,7 @@ pub fn to_triangle_mesh_buffers<'a>(
     let face_vertices_iter = face_vertices.into();
 
     #[cfg(feature = "topology_validation")]
-    for face in face_vertices_iter.clone() {
+    for face in face_vertices_iter {
         for index in face {
             if vertices.len() <= (3 * index.0 + 2) as usize {
                 panic!("Vertex index {} is out of bounds.", index.0);
@@ -43,7 +43,6 @@ pub fn to_triangle_mesh_buffers<'a>(
     let points_nested = vertices.nest::<[_; 3]>();
 
     let (points_nested, normals_nested): (Vec<[f32; 3]>, Vec<[f32; 3]>) = face_vertices_iter
-        .clone()
         .flat_map(|face| {
             face.iter()
                 // Grab the three vertex index entries.
@@ -265,7 +264,7 @@ fn face_normal(points: &[Point]) -> Option<Normal> {
         Vector::zero(),
         |normal, corner| {
             considered_edges += 1;
-            let ortho_normal = orthogonal(&corner.0, &corner.1, &corner.2);
+            let ortho_normal = orthogonal(corner.0, corner.1, corner.2);
             let mag_sq = ortho_normal.mag_sq();
             // Filter out collinear edge pairs.
             if mag_sq < EPSILON as _ {

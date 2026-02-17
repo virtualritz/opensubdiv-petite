@@ -86,8 +86,10 @@ fn test_simple_plane_bspline_obj() -> Result<(), Box<dyn std::error::Error>> {
         .expect("Failed to create topology refiner");
 
     // Use adaptive refinement
-    let mut adaptive_options = AdaptiveRefinementOptions::default();
-    adaptive_options.isolation_level = 3;
+    let adaptive_options = AdaptiveRefinementOptions {
+        isolation_level: 3,
+        ..Default::default()
+    };
     refiner.refine_adaptive(adaptive_options, &[]);
 
     // Create patch table
@@ -150,8 +152,10 @@ fn test_simple_cube_bspline_obj() -> Result<(), Box<dyn std::error::Error>> {
         .expect("Failed to create topology refiner");
 
     // Use adaptive refinement
-    let mut adaptive_options = AdaptiveRefinementOptions::default();
-    adaptive_options.isolation_level = 3;
+    let adaptive_options = AdaptiveRefinementOptions {
+        isolation_level: 3,
+        ..Default::default()
+    };
     refiner.refine_adaptive(adaptive_options, &[]);
 
     // Create patch table
@@ -224,8 +228,10 @@ fn test_creased_cube_bspline_obj() -> Result<(), Box<dyn std::error::Error>> {
         .expect("Failed to create topology refiner");
 
     // Use adaptive refinement
-    let mut adaptive_options = AdaptiveRefinementOptions::default();
-    adaptive_options.isolation_level = 3;
+    let adaptive_options = AdaptiveRefinementOptions {
+        isolation_level: 3,
+        ..Default::default()
+    };
     refiner.refine_adaptive(adaptive_options, &[]);
 
     // Create patch table
@@ -288,8 +294,10 @@ fn test_two_patches_bspline_obj() -> Result<(), Box<dyn std::error::Error>> {
         .expect("Failed to create topology refiner");
 
     // Use adaptive refinement
-    let mut adaptive_options = AdaptiveRefinementOptions::default();
-    adaptive_options.isolation_level = 3;
+    let adaptive_options = AdaptiveRefinementOptions {
+        isolation_level: 3,
+        ..Default::default()
+    };
     refiner.refine_adaptive(adaptive_options, &[]);
 
     // Create patch table
@@ -357,8 +365,8 @@ fn test_two_patches_bspline_obj() -> Result<(), Box<dyn std::error::Error>> {
                     let patch_cvs = &cv_indices[start..start + REGULAR_PATCH_SIZE];
 
                     write!(file, "surf 0.0 1.0 0.0 1.0").unwrap();
-                    for i in 0..16 {
-                        let cv_idx = patch_cvs[i].0 as usize + 1; // 1-based
+                    for cv in patch_cvs.iter().take(16) {
+                        let cv_idx = cv.0 as usize + 1; // 1-based
                         write!(file, " {}", cv_idx).unwrap();
                     }
                     writeln!(file).unwrap();

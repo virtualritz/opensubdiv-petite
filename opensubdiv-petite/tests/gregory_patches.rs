@@ -2,13 +2,14 @@ mod utils;
 
 use anyhow::Result;
 use opensubdiv_petite::far::{
-    AdaptiveRefinementOptions, PatchTable, PatchTableOptions, PrimvarRefiner, TopologyDescriptor,
-    TopologyRefiner, TopologyRefinerOptions,
+    AdaptiveRefinementOptions, PatchTable, PatchTableOptions, TopologyDescriptor, TopologyRefiner,
+    TopologyRefinerOptions,
 };
 
 #[cfg(feature = "truck")]
 mod truck_tests {
     use super::*;
+    use opensubdiv_petite::far::PrimvarRefiner;
     use opensubdiv_petite::Index;
     use utils::{assert_file_matches, test_output_path};
 
@@ -115,9 +116,11 @@ mod truck_tests {
 
         // Refine adaptively - the default should create patches around extraordinary
         // vertices
-        let mut adaptive_options = AdaptiveRefinementOptions::default();
-        adaptive_options.isolation_level = 3; // Match common examples
-        adaptive_options.single_crease_patch = false;
+        let adaptive_options = AdaptiveRefinementOptions {
+            isolation_level: 3, // Match common examples
+            single_crease_patch: false,
+            ..Default::default()
+        };
 
         refiner.refine_adaptive(adaptive_options, &[]);
 
@@ -305,7 +308,7 @@ mod truck_tests {
 #[test]
 fn test_gregory_triangle_patches() -> Result<()> {
     // Create a tetrahedron - simplest 3D shape with triangular faces
-    let vertex_positions = vec![
+    let vertex_positions = [
         [1.0, 1.0, 1.0],   // 0
         [-1.0, -1.0, 1.0], // 1
         [-1.0, 1.0, -1.0], // 2
@@ -327,14 +330,18 @@ fn test_gregory_triangle_patches() -> Result<()> {
     )?;
 
     // Create topology refiner for triangular subdivision using Loop scheme
-    let mut refiner_options = TopologyRefinerOptions::default();
-    refiner_options.scheme = opensubdiv_petite::far::Scheme::Loop;
+    let refiner_options = TopologyRefinerOptions {
+        scheme: opensubdiv_petite::far::Scheme::Loop,
+        ..Default::default()
+    };
     let mut refiner = TopologyRefiner::new(descriptor, refiner_options)
         .expect("Failed to create topology refiner");
 
     // Refine adaptively
-    let mut adaptive_options = AdaptiveRefinementOptions::default();
-    adaptive_options.isolation_level = 3;
+    let adaptive_options = AdaptiveRefinementOptions {
+        isolation_level: 3,
+        ..Default::default()
+    };
     refiner.refine_adaptive(adaptive_options, &[]);
 
     // Create patch table with triangle subdivision

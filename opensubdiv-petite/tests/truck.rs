@@ -11,8 +11,7 @@ fn test_truck_integration_compiles() {
     // Just verify the module compiles and types are accessible
     let _error: TruckError = TruckError::InvalidControlPoints;
 
-    // This test passes if it compiles
-    assert!(true);
+    // This test passes if it compiles.
 }
 
 #[cfg(feature = "truck")]
@@ -59,8 +58,10 @@ fn test_simple_plane_to_step() {
         .expect("Failed to create topology refiner");
 
     // Use adaptive refinement
-    let mut adaptive_options = AdaptiveRefinementOptions::default();
-    adaptive_options.isolation_level = 3;
+    let adaptive_options = AdaptiveRefinementOptions {
+        isolation_level: 3,
+        ..Default::default()
+    };
     refiner.refine_adaptive(adaptive_options, &[]);
 
     // Create patch table
@@ -207,8 +208,10 @@ fn test_simple_cube_to_step() {
         .expect("Failed to create topology refiner");
 
     // Use adaptive refinement
-    let mut adaptive_options = AdaptiveRefinementOptions::default();
-    adaptive_options.isolation_level = 3;
+    let adaptive_options = AdaptiveRefinementOptions {
+        isolation_level: 3,
+        ..Default::default()
+    };
     refiner.refine_adaptive(adaptive_options, &[]);
 
     // Create patch table
@@ -370,8 +373,10 @@ fn test_creased_cube_to_step() {
     // Based on OpenSubdiv docs, adaptive refinement isolates irregular features
     // and generates B-spline patches for regular regions
     use opensubdiv_petite::far::AdaptiveRefinementOptions;
-    let mut adaptive_options = AdaptiveRefinementOptions::default();
-    adaptive_options.isolation_level = 2; // Refine to isolate irregular vertices
+    let adaptive_options = AdaptiveRefinementOptions {
+        isolation_level: 2,
+        ..Default::default()
+    }; // Refine to isolate irregular vertices
 
     refiner.refine_adaptive(adaptive_options, &[]);
 
