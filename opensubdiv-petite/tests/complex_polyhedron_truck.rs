@@ -186,8 +186,10 @@ mod tests {
             .expect("Failed to create topology refiner");
 
         // Use adaptive refinement
-        let mut adaptive_options = AdaptiveRefinementOptions::default();
-        adaptive_options.isolation_level = 3;
+        let adaptive_options = AdaptiveRefinementOptions {
+            isolation_level: 3,
+            ..Default::default()
+        };
         refiner.refine_adaptive(adaptive_options, &[]);
 
         // Create patch table

@@ -172,8 +172,10 @@ fn test_export_simple_plane_patches() -> Result<(), Box<dyn std::error::Error>> 
         .expect("Failed to create topology refiner");
 
     // Use adaptive refinement
-    let mut adaptive_options = AdaptiveRefinementOptions::default();
-    adaptive_options.isolation_level = 2;
+    let adaptive_options = AdaptiveRefinementOptions {
+        isolation_level: 2,
+        ..Default::default()
+    };
     refiner.refine_adaptive(adaptive_options, &[]);
 
     // Create patch table
@@ -230,8 +232,10 @@ fn test_export_simple_cube_patches() -> Result<(), Box<dyn std::error::Error>> {
         .expect("Failed to create topology refiner");
 
     // Use adaptive refinement
-    let mut adaptive_options = AdaptiveRefinementOptions::default();
-    adaptive_options.isolation_level = 2;
+    let adaptive_options = AdaptiveRefinementOptions {
+        isolation_level: 2,
+        ..Default::default()
+    };
     refiner.refine_adaptive(adaptive_options, &[]);
 
     // Create patch table
@@ -298,8 +302,10 @@ fn test_export_creased_cube_patches() -> Result<(), Box<dyn std::error::Error>> 
         .expect("Failed to create topology refiner");
 
     // Use adaptive refinement
-    let mut adaptive_options = AdaptiveRefinementOptions::default();
-    adaptive_options.isolation_level = 2;
+    let adaptive_options = AdaptiveRefinementOptions {
+        isolation_level: 2,
+        ..Default::default()
+    };
     refiner.refine_adaptive(adaptive_options, &[]);
 
     // Create patch table

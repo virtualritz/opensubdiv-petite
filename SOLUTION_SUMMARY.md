@@ -1,6 +1,7 @@
 # Solution Summary: Fixing Missing Curved Triangular Parts in STEP Export
 
 ## Problem
+
 OpenSubdiv was not generating Gregory patches for extraordinary vertices (vertices with valence != 4) in the cube mesh, resulting in gaps or missing curved triangular parts in STEP export. All 8 vertices of a cube have valence 3, making them extraordinary vertices.
 
 ## Root Causes Identified
@@ -22,6 +23,7 @@ OpenSubdiv was not generating Gregory patches for extraordinary vertices (vertic
 ## Solutions Implemented
 
 ### 1. Fixed Segfault in Stencil Table (c-api/far/stencil_table.cpp)
+
 ```cpp
 int actualNumControlVerts = numControlVerts;
 if (numControlVerts == 0) {
@@ -33,6 +35,7 @@ if (numControlVerts == 0) {
 ```
 
 ### 2. Corrected Boundary Extraction (truck_integration.rs)
+
 ```rust
 // Bottom edge (row 0): Use actual boundary control points
 let bottom_cps = vec![
@@ -44,6 +47,7 @@ let bottom_cps = vec![
 ```
 
 ### 3. Added Infrastructure for Gap Filling
+
 - Created `create_triangular_patch` function for degenerate B-spline surfaces
 - Added `to_truck_shell_with_gap_filling` method for future gap detection
 - With corrected boundaries, patches now meet properly at edges
@@ -64,6 +68,7 @@ let bottom_cps = vec![
 ## Future Work
 
 If gaps still appear in some cases:
+
 1. Implement actual gap detection by analyzing patch connectivity
 2. Use the `create_triangular_patch` function to fill detected gaps
 3. Consider alternative approaches for handling extraordinary vertices

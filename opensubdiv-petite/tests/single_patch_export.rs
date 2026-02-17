@@ -29,7 +29,7 @@ mod tests {
         ];
 
         // Define cube faces (quads)
-        let face_vertices = vec![
+        let face_vertices = [
             vec![0, 1, 5, 4], // Front
             vec![2, 3, 7, 6], // Back
             vec![0, 4, 7, 3], // Left
@@ -59,8 +59,10 @@ mod tests {
 
         // Use adaptive refinement to get Regular patches
         use opensubdiv_petite::far::AdaptiveRefinementOptions;
-        let mut adaptive_options = AdaptiveRefinementOptions::default();
-        adaptive_options.isolation_level = 3;
+        let adaptive_options = AdaptiveRefinementOptions {
+            isolation_level: 3,
+            ..Default::default()
+        };
         refiner.refine_adaptive(adaptive_options, &[]);
 
         // Build complete vertex buffer

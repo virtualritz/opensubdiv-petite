@@ -58,6 +58,9 @@ pub use topology_refiner::*;
 pub mod stencil_table;
 pub use stencil_table::*;
 
+pub mod limit_stencil_table;
+pub use limit_stencil_table::*;
+
 pub mod primvar_refiner;
 pub use primvar_refiner::*;
 

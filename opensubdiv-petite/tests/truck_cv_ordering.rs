@@ -44,8 +44,10 @@ fn test_simple_plane_cv_ordering() -> anyhow::Result<()> {
 
     // Use adaptive refinement
     use opensubdiv_petite::far::AdaptiveRefinementOptions;
-    let mut adaptive_options = AdaptiveRefinementOptions::default();
-    adaptive_options.isolation_level = 2;
+    let adaptive_options = AdaptiveRefinementOptions {
+        isolation_level: 2,
+        ..Default::default()
+    };
     refiner.refine_adaptive(adaptive_options, &[]);
 
     // Create patch table

@@ -365,8 +365,10 @@ fn face_vertices_iter() -> Result<()> {
     let mut refiner = TopologyRefiner::new(descriptor, TopologyRefinerOptions::default())?;
 
     // Refine uniformly to level 1.
-    let mut options = UniformRefinementOptions::default();
-    options.refinement_level = 1;
+    let options = UniformRefinementOptions {
+        refinement_level: 1,
+        ..Default::default()
+    };
     refiner.refine_uniform(options);
 
     // Get the base level.
@@ -422,8 +424,10 @@ fn face_vertices_par_iter() -> Result<()> {
     let mut refiner = TopologyRefiner::new(descriptor, TopologyRefinerOptions::default())?;
 
     // Refine uniformly to level 2 for more faces.
-    let mut options = UniformRefinementOptions::default();
-    options.refinement_level = 2;
+    let options = UniformRefinementOptions {
+        refinement_level: 2,
+        ..Default::default()
+    };
     refiner.refine_uniform(options);
 
     // Get refined level.
@@ -478,8 +482,10 @@ fn face_vertices_par_iter_performance() -> Result<()> {
     let mut refiner = TopologyRefiner::new(descriptor, TopologyRefinerOptions::default())?;
 
     // Refine to level 4 for many faces.
-    let mut options = UniformRefinementOptions::default();
-    options.refinement_level = 4;
+    let options = UniformRefinementOptions {
+        refinement_level: 4,
+        ..Default::default()
+    };
     refiner.refine_uniform(options);
 
     let level_4 = refiner.level(4).unwrap();

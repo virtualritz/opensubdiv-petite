@@ -47,8 +47,10 @@ fn test_simple_plane_surfaces_only() -> anyhow::Result<()> {
     let mut refiner = TopologyRefiner::new(descriptor, refiner_options)?;
 
     // Use adaptive refinement
-    let mut adaptive_options = AdaptiveRefinementOptions::default();
-    adaptive_options.isolation_level = 3;
+    let adaptive_options = AdaptiveRefinementOptions {
+        isolation_level: 3,
+        ..Default::default()
+    };
     refiner.refine_adaptive(adaptive_options, &[]);
 
     // Create patch table

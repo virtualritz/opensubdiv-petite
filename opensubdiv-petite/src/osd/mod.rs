@@ -72,3 +72,6 @@ pub mod opencl_evaluator;
 // Don't use wildcard export to avoid evaluate_stencils name conflicts
 #[cfg(feature = "opencl")]
 pub use opencl_evaluator::OpenClStencilTable;
+
+#[cfg(feature = "wgpu")]
+pub mod wgpu;
