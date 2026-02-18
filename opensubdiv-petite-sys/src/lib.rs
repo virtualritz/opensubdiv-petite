@@ -7,6 +7,8 @@
 #![allow(non_snake_case)]
 #![allow(improper_ctypes)]
 #![allow(unsafe_op_in_unsafe_fn)]
+#![allow(rustdoc::broken_intra_doc_links)]
+#![allow(rustdoc::invalid_html_tags)]
 //! You probably want the high level wrapper – [`opensubdiv-petite`](https://crates.io/crates/opensubdiv-petite).
 
 include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
