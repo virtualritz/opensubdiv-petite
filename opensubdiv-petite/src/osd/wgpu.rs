@@ -10,7 +10,6 @@ use crate::osd::BufferDescriptor;
 use crate::{Error, Result};
 
 use std::borrow::Cow;
-use std::collections::HashMap;
 use std::num::NonZeroU32;
 
 use bytemuck::{bytes_of, Pod, Zeroable};
@@ -46,10 +45,8 @@ impl WgslModuleConfig {
     }
 
     /// Return pipeline constants to override `WORKGROUP_SIZE`.
-    pub fn pipeline_constants(&self) -> HashMap<String, f64> {
-        let mut constants = HashMap::new();
-        constants.insert("WORKGROUP_SIZE".into(), self.workgroup_size.get() as f64);
-        constants
+    pub fn pipeline_constants(&self) -> Vec<(String, f64)> {
+        vec![("WORKGROUP_SIZE".into(), self.workgroup_size.get() as f64)]
     }
 }
 
@@ -587,17 +584,19 @@ impl StencilEvalPipeline {
         let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
             label: Some("opensubdiv-petite::stencil_eval_pipeline_layout"),
             bind_group_layouts: &[&bind_group_layout],
-            push_constant_ranges: &[],
+            immediate_size: 0,
         });
 
         let constants = config.pipeline_constants();
+        let constants_refs: Vec<(&str, f64)> =
+            constants.iter().map(|(k, v)| (k.as_str(), *v)).collect();
         let pipeline = device.create_compute_pipeline(&wgpu::ComputePipelineDescriptor {
             label: Some("opensubdiv-petite::stencil_eval_pipeline"),
             layout: Some(&pipeline_layout),
             module: &shader,
             entry_point: Some("eval_stencils"),
             compilation_options: wgpu::PipelineCompilationOptions {
-                constants: &constants,
+                constants: &constants_refs,
                 zero_initialize_workgroup_memory: true,
             },
             cache: None,
@@ -900,7 +899,7 @@ pub fn evaluate_stencils(
         batch_range,
     )?;
     queue.submit(std::iter::once(encoder.finish()));
-    device.poll(wgpu::Maintain::Wait);
+    device.poll(wgpu::PollType::wait_indefinitely()).ok();
     Ok(())
 }
 
@@ -936,6 +935,6 @@ pub fn evaluate_stencils_with_derivatives(
         batch_range,
     )?;
     queue.submit(std::iter::once(encoder.finish()));
-    device.poll(wgpu::Maintain::Wait);
+    device.poll(wgpu::PollType::wait_indefinitely()).ok();
     Ok(())
 }
