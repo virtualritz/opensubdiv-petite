@@ -17,16 +17,14 @@ fn request_device() -> Option<(wgpu::Device, wgpu::Queue)> {
         ..wgpu::Limits::downlevel_defaults()
     };
 
-    let (device, queue) = pollster::block_on(adapter.request_device(
-        &wgpu::DeviceDescriptor {
-            label: Some("opensubdiv-petite test device"),
-            required_features: wgpu::Features::empty(),
-            required_limits: limits,
-            memory_hints: wgpu::MemoryHints::Performance,
-            trace: wgpu::Trace::Off,
-            experimental_features: wgpu::ExperimentalFeatures::default(),
-        },
-    ))
+    let (device, queue) = pollster::block_on(adapter.request_device(&wgpu::DeviceDescriptor {
+        label: Some("opensubdiv-petite test device"),
+        required_features: wgpu::Features::empty(),
+        required_limits: limits,
+        memory_hints: wgpu::MemoryHints::Performance,
+        trace: wgpu::Trace::Off,
+        experimental_features: wgpu::ExperimentalFeatures::default(),
+    }))
     .ok()?;
 
     Some((device, queue))
