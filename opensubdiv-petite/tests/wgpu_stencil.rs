@@ -9,7 +9,8 @@ fn request_device() -> Option<(wgpu::Device, wgpu::Queue)> {
         power_preference: wgpu::PowerPreference::LowPower,
         compatible_surface: None,
         force_fallback_adapter: true,
-    }))?;
+    }))
+    .ok()?;
 
     let limits = wgpu::Limits {
         max_storage_buffers_per_shader_stage: 16,
@@ -22,8 +23,9 @@ fn request_device() -> Option<(wgpu::Device, wgpu::Queue)> {
             required_features: wgpu::Features::empty(),
             required_limits: limits,
             memory_hints: wgpu::MemoryHints::Performance,
+            trace: wgpu::Trace::Off,
+            experimental_features: wgpu::ExperimentalFeatures::default(),
         },
-        None,
     ))
     .ok()?;
 
@@ -53,7 +55,7 @@ fn readback_buffer(
     slice.map_async(wgpu::MapMode::Read, move |result| {
         tx.send(result).unwrap();
     });
-    device.poll(wgpu::Maintain::Wait);
+    device.poll(wgpu::PollType::wait_indefinitely()).ok();
     rx.recv().unwrap().unwrap();
     let data: Vec<f32> = bytemuck::cast_slice(&slice.get_mapped_range()).to_vec();
     drop(readback);

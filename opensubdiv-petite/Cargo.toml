@@ -76,7 +76,7 @@ truck-geometry = { git = "https://github.com/ricosjp/truck.git", package = "truc
 truck-modeling = { git = "https://github.com/ricosjp/truck.git", package = "truck-modeling", optional = true }
 bevy = { version = "0.16", optional = true, default-features = false, features = ["bevy_core_pipeline", "bevy_asset", "bevy_render", "bevy_pbr", "bevy_winit"] }
 smooth-bevy-cameras = { version = "0.14", optional = true }
-wgpu = { version = "24", optional = true }
+wgpu = { version = "28", optional = true }
 
 [target.'cfg(target_os = "linux")'.dependencies.bevy]
 version = "0.16"
