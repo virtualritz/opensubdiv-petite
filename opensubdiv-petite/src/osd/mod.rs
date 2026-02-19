@@ -73,5 +73,11 @@ pub mod opencl_evaluator;
 #[cfg(feature = "opencl")]
 pub use opencl_evaluator::OpenClStencilTable;
 
+#[cfg(feature = "openmp")]
+pub mod omp_evaluator;
+
+#[cfg(feature = "tbb")]
+pub mod tbb_evaluator;
+
 #[cfg(feature = "wgpu")]
 pub mod wgpu;

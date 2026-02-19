@@ -38,6 +38,7 @@ just build-linux-clang17
 ```
 
 **Known issues:**
+
 - System Clang 20+ may have CUDA compatibility problems.
 - GNU `libstdc++` may have missing headers on some distros.
 - Shell-level `CC`/`CXX` overrides can conflict --- unset them or use the
@@ -85,10 +86,10 @@ cargo build --features cuda
 ## Versions
 
 | Crate version | _OpenSubdiv_ version |
-|---------------|----------------------|
-| `v0.3.x`     | `v3.7.x`            |
-| `v0.2.x`     | `v3.5.x`            |
-| `v0.1.x`     | `v3.4.x`            |
+| ------------- | -------------------- |
+| `v0.3.x`      | `v3.7.x`             |
+| `v0.2.x`      | `v3.5.x`             |
+| `v0.1.x`      | `v3.4.x`             |
 
 ## Help Wanted
 
