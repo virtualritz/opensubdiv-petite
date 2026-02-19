@@ -5,7 +5,7 @@
 #![cfg_attr(docsrs, feature(doc_cfg))]
 //! # Pixar OpenSubdiv Wrapper
 //!
-//! This is an oxidized wrapper around parts of [*Pixar's
+//! This is a safe Rust wrapper around parts of [*Pixar's
 //! OpenSubdiv*](https://graphics.pixar.com/opensubdiv/).
 //!
 //! *OpenSubdiv* is a set of open source libraries that implement high
@@ -29,9 +29,9 @@
 //!
 //! Renaming was done considering these constraints:
 //! * Be verbose consistently (the original API is quite verbose but does make
-//!   use of abbreviations in some suprising places).
+//!   use of abbreviations in some surprising places).
 //! * Use canonical Rust naming  – (`num_vertices()` becomes `vertex_count()`).
-//! * Use canonically Rust constructs.  Most option/configuraion `struct`s use the
+//! * Use canonically Rust constructs.  Most option/configuration `struct`s use the
 //!   [init-`struct` pattern](https://xaeroxe.github.io/init-struct-pattern/). In
 //!   places where it’s not possible to easily map to a Rust `struct`, the builder
 //!   pattern (or anti-pattern, depending whom you ask) is used.
