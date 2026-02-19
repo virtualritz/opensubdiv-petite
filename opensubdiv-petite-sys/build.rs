@@ -23,7 +23,6 @@ pub fn main() {
         .define("NO_REGRESSION", "1")
         .define("NO_PTEX", "1")
         .define("NO_DOC", "1")
-        .define("NO_TBB", "1")
         .define("NO_GLFW", "1")
         .define("NO_OPENGL", "1") // Disable OpenGL to avoid GPU-related build issues
         .define("NO_DX", "1") // Disable DirectX
@@ -58,6 +57,10 @@ pub fn main() {
                 "-allow-unsupported-compiler -D_Float32=float -D_Float64=double -D_Float32x=float -D_Float64x=\"long double\" -D_Float128=\"long double\"");
         }
     }
+
+    // Disable TBB unless explicitly enabled
+    #[cfg(not(feature = "tbb"))]
+    open_subdiv.define("NO_TBB", "1");
 
     // Disable OpenCL unless explicitly enabled
     #[cfg(not(feature = "opencl"))]
@@ -131,9 +134,7 @@ pub fn main() {
         .file("c-api/osd/cpu_vertex_buffer.cpp");
 
     #[cfg(all(feature = "openmp", not(target_os = "macos")))]
-    osd_capi
-        .file("c-api/osd/omp_evaluator.cpp")
-        .file("c-api/osd/omp_vertex_buffer.cpp");
+    osd_capi.file("c-api/osd/omp_evaluator.cpp");
 
     #[cfg(all(feature = "cuda", not(target_os = "macos")))]
     osd_capi
@@ -153,6 +154,11 @@ pub fn main() {
         .file("c-api/osd/opencl_evaluator.cpp")
         .file("c-api/osd/opencl_vertex_buffer.cpp");
 
+    #[cfg(feature = "tbb")]
+    osd_capi
+        .include(&osd_inlude_path)
+        .file("c-api/osd/tbb_evaluator.cpp");
+
     osd_capi.compile("osd-capi");
 
     println!("cargo:rustc-link-lib=static=osd-capi");
@@ -162,6 +168,9 @@ pub fn main() {
 
     #[cfg(all(feature = "openmp", not(target_os = "macos")))]
     println!("cargo:rustc-link-lib=static=osdOMP");
+
+    #[cfg(feature = "tbb")]
+    println!("cargo:rustc-link-lib=dylib=tbb");
 
     #[cfg(feature = "cuda")]
     {

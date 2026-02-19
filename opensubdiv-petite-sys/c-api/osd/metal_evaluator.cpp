@@ -10,26 +10,34 @@ typedef OpenSubdiv::Osd::MTLVertexBuffer MTLVertexBuffer;
 typedef OpenSubdiv::Osd::BufferDescriptor BufferDescriptor;
 
 // MTLStencilTable
-extern "C" {
-MTLStencilTable* MTLStencilTable_Create(const StencilTable* st, void* context) {
-    return MTLStencilTable::Create(st, context);
-}
+extern "C"
+{
+    MTLStencilTable *MTLStencilTable_Create(const StencilTable *st, void *context)
+    {
+        return MTLStencilTable::Create(st, context);
+    }
 
-void MTLStencilTable_destroy(MTLStencilTable* st) { delete st; }
+    void MTLStencilTable_destroy(MTLStencilTable *st)
+    {
+        delete st;
+    }
 }
 
 // MTLComputeEvaluator
-extern "C" {
-bool MTLComputeEvaluator_EvalStencils(MTLVertexBuffer* src_buffer,
-                                      BufferDescriptor src_desc,
-                                      MTLVertexBuffer* dst_buffer,
-                                      BufferDescriptor dst_desc,
-                                      MTLStencilTable* stencil_table,
-                                      void* command_buffer,
-                                      void* compute_encoder) {
-    return OpenSubdiv::Osd::MTLComputeEvaluator::EvalStencils(
-        src_buffer, src_desc, dst_buffer, dst_desc, stencil_table, 
-        command_buffer, compute_encoder);
+extern "C"
+{
+    bool MTLComputeEvaluator_EvalStencils(
+        MTLVertexBuffer *src_buffer,
+        BufferDescriptor src_desc,
+        MTLVertexBuffer *dst_buffer,
+        BufferDescriptor dst_desc,
+        MTLStencilTable *stencil_table,
+        void *command_buffer,
+        void *compute_encoder)
+    {
+        return OpenSubdiv::Osd::MTLComputeEvaluator::EvalStencils(
+            src_buffer, src_desc, dst_buffer, dst_desc, stencil_table, command_buffer,
+            compute_encoder);
+    }
 }
-}
-#endif // __APPLE__
+#endif  // __APPLE__

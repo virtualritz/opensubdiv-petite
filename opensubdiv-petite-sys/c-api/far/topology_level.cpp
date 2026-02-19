@@ -8,24 +8,30 @@ typedef OpenSubdiv::Vtr::ConstIndexArray ConstIndexArray;
 typedef OpenSubdiv::Vtr::ConstLocalIndexArray ConstLocalIndexArray;
 typedef OpenSubdiv::Vtr::Index Index;
 
-extern "C" {
+extern "C"
+{
     /// \brief Return the number of vertices in this level
-    int TopologyLevel_GetNumVertices(TopologyLevel* tl) {
+    int TopologyLevel_GetNumVertices(TopologyLevel *tl)
+    {
         return tl->GetNumVertices();
     }
 
     /// \brief Return the number of faces in this level
-    int TopologyLevel_GetNumFaces(TopologyLevel* tl) {
+    int TopologyLevel_GetNumFaces(TopologyLevel *tl)
+    {
         return tl->GetNumFaces();
     }
 
     /// \brief Return the number of edges in this level
-    int TopologyLevel_GetNumEdges(TopologyLevel* tl) {
+    int TopologyLevel_GetNumEdges(TopologyLevel *tl)
+    {
         return tl->GetNumEdges();
     }
 
-    /// \brief Return the total number of face-vertices, i.e. the sum of all vertices for all faces
-    int TopologyLevel_GetNumFaceVertices(TopologyLevel* tl) {
+    /// \brief Return the total number of face-vertices, i.e. the sum of all vertices
+    /// for all faces
+    int TopologyLevel_GetNumFaceVertices(TopologyLevel *tl)
+    {
         return tl->GetNumFaceVertices();
     }
     //@}
@@ -42,59 +48,72 @@ extern "C" {
     /// For some of the relations, i.e. those for which the incident components are
     /// of higher order or 'contain' the component itself (e.g. a vertex has incident
     /// faces that contain it), an additional 'local index' is available that identifies
-    /// the component within each of its neighbors.  For example, if vertex V is the k'th
-    /// vertex in some face F, then when F occurs in the set of incident vertices of V,
-    /// the local index corresponding to F will be k.  The ordering of local indices
-    /// matches the ordering of the incident component to which it corresponds.
+    /// the component within each of its neighbors.  For example, if vertex V is the
+    /// k'th vertex in some face F, then when F occurs in the set of incident vertices
+    /// of V, the local index corresponding to F will be k.  The ordering of local
+    /// indices matches the ordering of the incident component to which it corresponds.
     //
 
     /// \brief Access the vertices incident a given face
-    ConstIndexArray TopologyLevel_GetFaceVertices(TopologyLevel* tl, Index f) {
+    ConstIndexArray TopologyLevel_GetFaceVertices(TopologyLevel *tl, Index f)
+    {
         return tl->GetFaceVertices(f);
     }
 
     /// \brief Access the edges incident a given face
-    ConstIndexArray TopologyLevel_GetFaceEdges(TopologyLevel* tl, Index f) {
+    ConstIndexArray TopologyLevel_GetFaceEdges(TopologyLevel *tl, Index f)
+    {
         return tl->GetFaceEdges(f);
     }
 
     /// \brief Access the vertices incident a given edge
-    ConstIndexArray TopologyLevel_GetEdgeVertices(TopologyLevel* tl, Index e) {
+    ConstIndexArray TopologyLevel_GetEdgeVertices(TopologyLevel *tl, Index e)
+    {
         return tl->GetEdgeVertices(e);
     }
 
     /// \brief Access the faces incident a given edge
-    ConstIndexArray TopologyLevel_GetEdgeFaces(TopologyLevel* tl, Index e) {
+    ConstIndexArray TopologyLevel_GetEdgeFaces(TopologyLevel *tl, Index e)
+    {
         return tl->GetEdgeFaces(e);
     }
 
     /// \brief Access the faces incident a given vertex
-    ConstIndexArray TopologyLevel_GetVertexFaces(TopologyLevel* tl, Index v) {
+    ConstIndexArray TopologyLevel_GetVertexFaces(TopologyLevel *tl, Index v)
+    {
         return tl->GetVertexFaces(v);
     }
 
     /// \brief Access the edges incident a given vertex
-    ConstIndexArray TopologyLevel_GetVertexEdges(TopologyLevel* tl, Index v) {
+    ConstIndexArray TopologyLevel_GetVertexEdges(TopologyLevel *tl, Index v)
+    {
         return tl->GetVertexEdges(v);
     }
 
     /// \brief Access the local indices of a vertex with respect to its incident faces
-    ConstLocalIndexArray TopologyLevel_GetVertexFaceLocalIndices(TopologyLevel* tl, Index v) {
+    ConstLocalIndexArray
+    TopologyLevel_GetVertexFaceLocalIndices(TopologyLevel *tl, Index v)
+    {
         return tl->GetVertexFaceLocalIndices(v);
     }
 
     /// \brief Access the local indices of a vertex with respect to its incident edges
-    ConstLocalIndexArray TopologyLevel_GetVertexEdgeLocalIndices(TopologyLevel* tl, Index v) {
+    ConstLocalIndexArray
+    TopologyLevel_GetVertexEdgeLocalIndices(TopologyLevel *tl, Index v)
+    {
         return tl->GetVertexEdgeLocalIndices(v);
     }
 
     /// \brief Access the local indices of an edge with respect to its incident faces
-    ConstLocalIndexArray TopologyLevel_GetEdgeFaceLocalIndices(TopologyLevel* tl, Index e) {
+    ConstLocalIndexArray
+    TopologyLevel_GetEdgeFaceLocalIndices(TopologyLevel *tl, Index e)
+    {
         return tl->GetEdgeFaceLocalIndices(e);
     }
 
     /// \brief Identify the edge matching the given vertex pair
-    Index TopologyLevel_FindEdge(TopologyLevel* tl, Index v0, Index v1) {
+    Index TopologyLevel_FindEdge(TopologyLevel *tl, Index v0, Index v1)
+    {
         return tl->FindEdge(v0, v1);
     }
     //@}
@@ -104,22 +123,26 @@ extern "C" {
     ///
 
     /// \brief Return if the edge is non-manifold
-    bool TopologyLevel_IsEdgeNonManifold(TopologyLevel* tl, Index e) {
+    bool TopologyLevel_IsEdgeNonManifold(TopologyLevel *tl, Index e)
+    {
         return tl->IsEdgeNonManifold(e);
     }
 
     /// \brief Return if the vertex is non-manifold
-    bool TopologyLevel_IsVertexNonManifold(TopologyLevel* tl, Index v) {
+    bool TopologyLevel_IsVertexNonManifold(TopologyLevel *tl, Index v)
+    {
         return tl->IsVertexNonManifold(v);
     }
 
     /// \brief Return if the edge is a boundary
-    bool TopologyLevel_IsEdgeBoundary(TopologyLevel* tl, Index e) {
+    bool TopologyLevel_IsEdgeBoundary(TopologyLevel *tl, Index e)
+    {
         return tl->IsEdgeBoundary(e);
     }
 
     /// \brief Return if the vertex is a boundary
-    bool TopologyLevel_IsVertexBoundary(TopologyLevel* tl, Index v) {
+    bool TopologyLevel_IsVertexBoundary(TopologyLevel *tl, Index v)
+    {
         return tl->IsVertexBoundary(v);
     }
     //@}
@@ -132,22 +155,27 @@ extern "C" {
     /// can be inspected.
 
     /// \brief Return the sharpness assigned a given edge
-    float TopologyLevel_GetEdgeSharpness(TopologyLevel* tl, Index e) {
+    float TopologyLevel_GetEdgeSharpness(TopologyLevel *tl, Index e)
+    {
         return tl->GetEdgeSharpness(e);
     }
 
     /// \brief Return the sharpness assigned a given vertex
-    float TopologyLevel_GetVertexSharpness(TopologyLevel* tl, Index v) {
+    float TopologyLevel_GetVertexSharpness(TopologyLevel *tl, Index v)
+    {
         return tl->GetVertexSharpness(v);
     }
 
     /// \brief Return if a given face has been tagged as a hole
-    bool  TopologyLevel_IsFaceHole(TopologyLevel* tl, Index f) {
+    bool TopologyLevel_IsFaceHole(TopologyLevel *tl, Index f)
+    {
         return tl->IsFaceHole(f);
     }
 
-    /// \brief Return the subdivision rule assigned a given vertex specific to this level
-    SdcCreaseRule TopologyLevel_GetVertexRule(TopologyLevel* tl, Index v) {
+    /// \brief Return the subdivision rule assigned a given vertex specific to this
+    /// level
+    SdcCreaseRule TopologyLevel_GetVertexRule(TopologyLevel *tl, Index v)
+    {
         return tl->GetVertexRule(v);
     }
     //@}
@@ -184,84 +212,105 @@ extern "C" {
     /// that it only considers continuity across the edge, not the entire
     /// neighborhood around each end vertex.
 
-    /// \brief Return the number of face-varying channels (should be same for all levels)
-    int TopologyLevel_GetNumFVarChannels(TopologyLevel* tl) {
+    /// \brief Return the number of face-varying channels (should be same for all
+    /// levels)
+    int TopologyLevel_GetNumFVarChannels(TopologyLevel *tl)
+    {
         return tl->GetNumFVarChannels();
     }
 
     /// \brief Return the total number of face-varying values in a particular channel
     /// (the upper bound of a face-varying value index)
-    int TopologyLevel_GetNumFVarValues(TopologyLevel* tl, int channel) {
+    int TopologyLevel_GetNumFVarValues(TopologyLevel *tl, int channel)
+    {
         return tl->GetNumFVarValues(channel);
     }
 
     /// \brief Access the face-varying values associated with a particular face
-    ConstIndexArray TopologyLevel_GetFaceFVarValues(TopologyLevel* tl, Index f, int channel) {
+    ConstIndexArray
+    TopologyLevel_GetFaceFVarValues(TopologyLevel *tl, Index f, int channel)
+    {
         return tl->GetFaceFVarValues(f, channel);
     }
 
     /// \brief Return if face-varying topology around a vertex matches
-    bool TopologyLevel_DoesVertexFVarTopologyMatch(TopologyLevel* tl, Index v, int channel) {
+    bool
+    TopologyLevel_DoesVertexFVarTopologyMatch(TopologyLevel *tl, Index v, int channel)
+    {
         return tl->DoesVertexFVarTopologyMatch(v, channel);
     }
 
     /// \brief Return if face-varying topology across the edge only matches
-    bool TopologyLevel_DoesEdgeFVarTopologyMatch(TopologyLevel* tl, Index e, int channel) {
+    bool
+    TopologyLevel_DoesEdgeFVarTopologyMatch(TopologyLevel *tl, Index e, int channel)
+    {
         return tl->DoesEdgeFVarTopologyMatch(e, channel);
     }
 
     /// \brief Return if face-varying topology around a face matches
-    bool TopologyLevel_DoesFaceFVarTopologyMatch(TopologyLevel* tl, Index f, int channel) {
+    bool
+    TopologyLevel_DoesFaceFVarTopologyMatch(TopologyLevel *tl, Index f, int channel)
+    {
         return tl->DoesFaceFVarTopologyMatch(f, channel);
     }
 
     //@}
 
     //@{
-    /// @name Methods to identify parent or child components in adjoining levels of refinement:
+    /// @name Methods to identify parent or child components in adjoining levels of
+    /// refinement:
 
     /// \brief Access the child faces (in the next level) of a given face
-    ConstIndexArray TopologyLevel_GetFaceChildFaces(TopologyLevel* tl, Index f) {
+    ConstIndexArray TopologyLevel_GetFaceChildFaces(TopologyLevel *tl, Index f)
+    {
         return tl->GetFaceChildFaces(f);
     }
 
     /// \brief Access the child edges (in the next level) of a given face
-    ConstIndexArray TopologyLevel_GetFaceChildEdges(TopologyLevel* tl, Index f) {
+    ConstIndexArray TopologyLevel_GetFaceChildEdges(TopologyLevel *tl, Index f)
+    {
         return tl->GetFaceChildEdges(f);
     }
 
     /// \brief Access the child edges (in the next level) of a given edge
-    ConstIndexArray TopologyLevel_GetEdgeChildEdges(TopologyLevel* tl, Index e) {
+    ConstIndexArray TopologyLevel_GetEdgeChildEdges(TopologyLevel *tl, Index e)
+    {
         return tl->GetEdgeChildEdges(e);
     }
 
     /// \brief Return the child vertex (in the next level) of a given face
-    Index TopologyLevel_GetFaceChildVertex(TopologyLevel* tl,   Index f) {
+    Index TopologyLevel_GetFaceChildVertex(TopologyLevel *tl, Index f)
+    {
         return tl->GetFaceChildVertex(f);
     }
 
     /// \brief Return the child vertex (in the next level) of a given edge
-    Index TopologyLevel_GetEdgeChildVertex(TopologyLevel* tl,   Index e){
+    Index TopologyLevel_GetEdgeChildVertex(TopologyLevel *tl, Index e)
+    {
         return tl->GetEdgeChildVertex(e);
     }
 
     /// \brief Return the child vertex (in the next level) of a given vertex
-    Index TopologyLevel_GetVertexChildVertex(TopologyLevel* tl, Index v) {
+    Index TopologyLevel_GetVertexChildVertex(TopologyLevel *tl, Index v)
+    {
         return tl->GetVertexChildVertex(v);
     }
 
     /// \brief Return the parent face (in the previous level) of a given face
-    Index TopologyLevel_GetFaceParentFace(TopologyLevel* tl, Index f) {
+    Index TopologyLevel_GetFaceParentFace(TopologyLevel *tl, Index f)
+    {
         return tl->GetFaceParentFace(f);
     }
     //@}
 
     //@{
     /// @name Debugging aides:
-    bool TopologyLevel_ValidateTopology(TopologyLevel* tl) {
+    bool TopologyLevel_ValidateTopology(TopologyLevel *tl)
+    {
         return tl->ValidateTopology();
     }
-    void TopologyLevel_PrintTopology(TopologyLevel* tl, bool children) {
+    void TopologyLevel_PrintTopology(TopologyLevel *tl, bool children)
+    {
         return tl->PrintTopology(children);
     }
     //@}

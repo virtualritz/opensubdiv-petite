@@ -32,3 +32,13 @@ pub use opencl_evaluator::*;
 pub mod opencl_vertex_buffer;
 #[cfg(feature = "opencl")]
 pub use opencl_vertex_buffer::*;
+
+#[cfg(feature = "openmp")]
+pub mod omp_evaluator;
+#[cfg(feature = "openmp")]
+pub use omp_evaluator::*;
+
+#[cfg(feature = "tbb")]
+pub mod tbb_evaluator;
+#[cfg(feature = "tbb")]
+pub use tbb_evaluator::*;

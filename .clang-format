@@ -1,0 +1,11 @@
+---
+BasedOnStyle: LLVM
+AlignAfterOpenBracket: AlwaysBreak
+AllowShortFunctionsOnASingleLine: false
+BinPackParameters: false
+BreakBeforeBraces: Mozilla
+ColumnLimit: 88
+IndentWidth: 4
+SpacesBeforeTrailingComments: 2
+UseTab: Never
+...

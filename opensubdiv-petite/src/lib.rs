@@ -43,6 +43,49 @@
 //!   express intent.  See also
 //!   [here](https://github.com/PixarAnimationStudios/OpenSubdiv/issues/1222).
 //!
+//! ## OpenSubdiv Backend Support
+//!
+//! *OpenSubdiv* exposes several optional backends via CMake flags. The table
+//! below shows which ones this wrapper supports today.
+//!
+//! | Backend | Feature flag | Status |
+//! |---------|-------------|--------|
+//! | CPU (single-threaded) | — | Always enabled |
+//! | TBB (CPU parallel) | `tbb` | Supported |
+//! | CUDA (NVIDIA GPU) | `cuda` | Supported |
+//! | Metal (Apple GPU) | `metal` | Supported |
+//! | OpenCL | `opencl` | Supported |
+//! | wgpu/WGSL (compute) | `wgpu` | Supported (Rust-native, not from C++) |
+//! | OpenMP (CPU parallel) | `omp` | Supported (broken on macOS) |
+//! | CLEW (OpenCL loader) | `clew` | Build flag only --- no Rust API |
+//! | PTex | `ptex` | Build flag only --- no Rust API |
+//! | OpenGL | — | Not yet supported |
+//! | DirectX 11 | — | Not yet supported |
+//!
+//! ### wgpu
+//!
+//! The `wgpu` feature enables a **pure-Rust** GPU compute path for stencil
+//! evaluation using WGSL shaders.  This is not an *OpenSubdiv* backend ---
+//! it uploads `StencilTable` data to `wgpu` storage buffers and
+//! dispatches a WGSL compute shader.
+//!
+//! ```rust,ignore
+//! use opensubdiv_petite::osd::wgpu::*;
+//!
+//! // Upload stencil table to GPU.
+//! let gpu_stencils = StencilTableGpu::from_cpu(&device, &stencil_table)?;
+//!
+//! // Create the compute pipeline (once).
+//! let pipeline = StencilEvalPipeline::new(&device, WgslModuleConfig::default());
+//!
+//! // Evaluate: src_buffer → dst_buffer.
+//! evaluate_stencils(
+//!     &device, &queue, &pipeline, &gpu_stencils,
+//!     &src_buffer, &dst_buffer, src_desc, dst_desc,
+//!     0..gpu_stencils.stencil_count,
+//! )?;
+//! ```
+//!
 //! ## Cargo Features
 #![doc = document_features::document_features!()]
 //!

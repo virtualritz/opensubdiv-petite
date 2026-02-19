@@ -32,6 +32,7 @@ omp = []
 opencl = []
 openmp = []
 ptex = []
+tbb = []
 
 [dependencies]
 derive_more = { version = "2", features = ["full"] }
