@@ -43,5 +43,8 @@ cc = { version = "1", features = ["parallel"] }
 cmake = "0.1"
 bindgen = "0.72"
 
+[package.metadata.docs.rs]
+rustdoc-args = ["--cfg", "docsrs"]
+
 [lib]
 doctest = false

@@ -36,7 +36,7 @@ metal = ["opensubdiv-petite-sys/metal"]
 ##
 ## Requires an OpenMP-capable compiler:
 ## - **Linux:** GCC has built-in support; Clang needs `libomp-dev` (`sudo apt install libomp-dev`).
-## - **macOS:** Broken --- Apple Clang lacks OpenMP. Homebrew Clang may work but is untested.
+## - **macOS:** Broken — Apple Clang lacks OpenMP. Homebrew Clang may work but is untested.
 ## - **Windows:** MSVC has built-in support.
 omp = ["opensubdiv-petite-sys/omp", "opensubdiv-petite-sys/openmp"]
 
@@ -132,4 +132,5 @@ name = "truck_integration_example"
 required-features = ["truck"]
 
 [package.metadata.docs.rs]
-features = ["tri_mesh_buffers", "topology_validation"]
+features = ["tri_mesh_buffers", "topology_validation", "wgpu"]
+rustdoc-args = ["--cfg", "docsrs"]

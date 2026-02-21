@@ -57,15 +57,15 @@
 //! | OpenCL | `opencl` | Supported |
 //! | wgpu/WGSL (compute) | `wgpu` | Supported (Rust-native, not from C++) |
 //! | OpenMP (CPU parallel) | `omp` | Supported (broken on macOS) |
-//! | CLEW (OpenCL loader) | `clew` | Build flag only --- no Rust API |
-//! | PTex | `ptex` | Build flag only --- no Rust API |
+//! | CLEW (OpenCL loader) | `clew` | Build flag only — no Rust API |
+//! | PTex | `ptex` | Build flag only — no Rust API |
 //! | OpenGL | — | Not yet supported |
 //! | DirectX 11 | — | Not yet supported |
 //!
 //! ### wgpu
 //!
 //! The `wgpu` feature enables a **pure-Rust** GPU compute path for stencil
-//! evaluation using WGSL shaders.  This is not an *OpenSubdiv* backend ---
+//! evaluation using WGSL shaders.  This is not an *OpenSubdiv* backend —
 //! it uploads `StencilTable` data to `wgpu` storage buffers and
 //! dispatches a WGSL compute shader.
 //!
