@@ -56,15 +56,15 @@ below shows which ones this wrapper supports today.
 | OpenCL | `opencl` | Supported |
 | wgpu/WGSL (compute) | `wgpu` | Supported (Rust-native, not from C++) |
 | OpenMP (CPU parallel) | `omp` | Supported (broken on macOS) |
-| CLEW (OpenCL loader) | `clew` | Build flag only --- no Rust API |
-| PTex | `ptex` | Build flag only --- no Rust API |
+| CLEW (OpenCL loader) | `clew` | Build flag only — no Rust API |
+| PTex | `ptex` | Build flag only — no Rust API |
 | OpenGL | — | Not yet supported |
 | DirectX 11 | — | Not yet supported |
 
 #### wgpu
 
 The `wgpu` feature enables a **pure-Rust** GPU compute path for stencil
-evaluation using WGSL shaders.  This is not an *OpenSubdiv* backend ---
+evaluation using WGSL shaders.  This is not an *OpenSubdiv* backend —
 it uploads `StencilTable` data to `wgpu` storage buffers and
 dispatches a WGSL compute shader.
 
@@ -100,37 +100,37 @@ in any way related to the *OpenSubdiv* version that is wrapped.
 
 ## Cargo Features
 
-- **`bevy`** --- Integration with Bevy game engine.
-- **`clew`** --- Use CLEW for OpenCL runtime loading.
-- **`cuda`** --- Enable CUDA GPU backend for NVIDIA GPUs.
+- **`bevy`** — Integration with Bevy game engine.
+- **`clew`** — Use CLEW for OpenCL runtime loading.
+- **`cuda`** — Enable CUDA GPU backend for NVIDIA GPUs.
   Requires the [CUDA Toolkit](https://developer.nvidia.com/cuda-toolkit).
   On Ubuntu: `sudo apt install nvidia-cuda-toolkit`. GCC 12 is recommended
   as the host compiler (`sudo apt install gcc-12 g++-12`).
-- **`metal`** --- Enable Metal GPU backend for Apple devices.
-- **`omp`** --- Enable OpenMP for CPU parallelization. Alias for `openmp`.
+- **`metal`** — Enable Metal GPU backend for Apple devices.
+- **`omp`** — Enable OpenMP for CPU parallelization. Alias for `openmp`.
   Requires an OpenMP-capable compiler:
   - **Linux:** GCC has built-in support; Clang needs `libomp-dev` (`sudo apt install libomp-dev`).
-  - **macOS:** Broken --- Apple Clang lacks OpenMP. Homebrew Clang may work but is untested.
+  - **macOS:** Broken — Apple Clang lacks OpenMP. Homebrew Clang may work but is untested.
   - **Windows:** MSVC has built-in support.
-- **`opencl`** --- Enable OpenCL GPU backend for cross-platform GPU support.
+- **`opencl`** — Enable OpenCL GPU backend for cross-platform GPU support.
   Requires an OpenCL SDK/ICD loader:
   - **Linux:** `sudo apt install ocl-icd-opencl-dev` (Debian/Ubuntu).
   - **macOS:** Included with Xcode.
   - **Windows:** Install the OpenCL SDK from your GPU vendor.
-- **`openmp`** --- Enable OpenMP for CPU parallelization (alias for `omp`).
-- **`ptex`** --- Enable PTex texture support.
-- **`rayon`** --- Enable parallel processing with `rayon`.
-- **`tbb`** --- Enable TBB (Threading Building Blocks) CPU backend.
+- **`openmp`** — Enable OpenMP for CPU parallelization (alias for `omp`).
+- **`ptex`** — Enable PTex texture support.
+- **`rayon`** — Enable parallel processing with `rayon`.
+- **`tbb`** — Enable TBB (Threading Building Blocks) CPU backend.
   Requires TBB installed on your system:
   - **Linux:** `sudo apt install libtbb-dev` (Debian/Ubuntu) or `sudo dnf install tbb-devel` (Fedora).
   - **macOS:** `brew install tbb`.
   - **Windows:** Install [oneAPI TBB](https://github.com/oneapi-src/oneTBB) and ensure CMake can find it.
-- **`tri_mesh_buffers`** --- Enable triangle mesh buffer generation.
-- **`topology_validation`** _(enabled by default)_ --- Enable topology validation for debugging. Disable for release builds.
-- **`wgpu`** --- Enable WGSL compute path (wgpu).
-- **`truck`** --- Enable `truck` CAD kernel integration for B-rep export.
-- **`truck_export_boundary`** --- Export boundary curves when using `truck` integration.
-- **`b_spline_end_caps`** --- Use B-spline basis end caps instead of Gregory patches (legacy behavior).
+- **`tri_mesh_buffers`** — Enable triangle mesh buffer generation.
+- **`topology_validation`** _(enabled by default)_ — Enable topology validation for debugging. Disable for release builds.
+- **`wgpu`** — Enable WGSL compute path (wgpu).
+- **`truck`** — Enable `truck` CAD kernel integration for B-rep export.
+- **`truck_export_boundary`** — Export boundary curves when using `truck` integration.
+- **`b_spline_end_caps`** — Use B-spline basis end caps instead of Gregory patches (legacy behavior).
 
 ## License
 

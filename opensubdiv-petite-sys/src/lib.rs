@@ -9,8 +9,13 @@
 #![allow(unsafe_op_in_unsafe_fn)]
 #![allow(rustdoc::broken_intra_doc_links)]
 #![allow(rustdoc::invalid_html_tags)]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 //! You probably want the high level wrapper – [`opensubdiv-petite`](https://crates.io/crates/opensubdiv-petite).
 
+#[cfg(docsrs)]
+include!("bindings.rs");
+
+#[cfg(not(docsrs))]
 include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 
 // Manual type definitions for blocked types

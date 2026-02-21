@@ -5,6 +5,12 @@ use std::{env, path::PathBuf};
 //static MAC_OS_BREW_CLANG_PATH: &str = "/usr/local/opt/llvm";
 
 pub fn main() {
+    // On docs.rs the C++ toolchain is unavailable. The pre-generated
+    // src/bindings.rs is used instead (selected in lib.rs via cfg(docsrs)).
+    if std::env::var("DOCS_RS").is_ok() {
+        return;
+    }
+
     #[cfg(all(target_os = "macos", feature = "cuda"))]
     panic!("The feature `cuda` is not available on macOS.");
 
