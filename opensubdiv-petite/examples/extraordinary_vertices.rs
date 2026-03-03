@@ -5,9 +5,9 @@ use opensubdiv_petite::far::{
     TopologyDescriptor, TopologyRefiner, TopologyRefinerOptions,
 };
 
-#[cfg(feature = "truck")]
+#[cfg(feature = "monstertruck")]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    use opensubdiv_petite::truck::PatchTableExt;
+    use opensubdiv_petite::monstertruck::PatchTableExt;
 
     // Create a simple cube mesh - corners have valence 3 (extraordinary vertices)
     let vertex_positions = vec![
@@ -147,8 +147,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         println!("Total vertices: {}", all_vertices.len());
 
-        // Try to convert to truck shell
-        match patch_table.to_truck_shell(&all_vertices) {
+        // Try to convert to monstertruck shell
+        match patch_table.to_monstertruck_shell(&all_vertices) {
             Ok(_shell) => println!("Successfully converted to shell"),
             Err(e) => println!("Failed to convert to shell: {:?}", e),
         }
@@ -157,8 +157,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-#[cfg(not(feature = "truck"))]
+#[cfg(not(feature = "monstertruck"))]
 fn main() {
-    println!("This example requires the 'truck' feature. Run with:");
-    println!("  cargo run --example test_extraordinary_vertices --features truck");
+    println!("This example requires the 'monstertruck' feature. Run with:");
+    println!("  cargo run --example test_extraordinary_vertices --features monstertruck");
 }

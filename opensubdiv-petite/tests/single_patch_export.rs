@@ -2,7 +2,7 @@
 
 mod utils;
 
-#[cfg(feature = "truck")]
+#[cfg(feature = "monstertruck")]
 mod tests {
     use crate::utils::default_end_cap_type;
     use crate::utils::{assert_file_matches, test_output_path};
@@ -13,8 +13,8 @@ mod tests {
 
     #[test]
     fn test_simple_cube_single_patch() -> anyhow::Result<()> {
-        use opensubdiv_petite::truck::PatchTableExt;
-        use truck_stepio::out;
+        use opensubdiv_petite::monstertruck::PatchTableExt;
+        use monstertruck_step::out;
 
         // Define simple cube vertices
         let vertex_positions = vec![
@@ -106,7 +106,7 @@ mod tests {
         let patch_table = PatchTable::new(&refiner, Some(patch_options))?;
 
         // Convert just the first patch to a B-spline surface
-        let surfaces = patch_table.to_truck_surfaces(&all_vertices)?;
+        let surfaces = patch_table.to_monstertruck_surfaces(&all_vertices)?;
 
         if surfaces.is_empty() {
             panic!("No surfaces created!");
@@ -116,9 +116,9 @@ mod tests {
         let first_surface = surfaces.into_iter().next().unwrap();
 
         // Create a face from this single surface
-        use truck_geometry::prelude::BSplineCurve;
-        use truck_geometry::prelude::{KnotVec, ParametricSurface};
-        use truck_modeling::{Curve, Edge, Face, Shell, Surface, Vertex, Wire};
+        use monstertruck_geometry::prelude::BsplineCurve;
+        use monstertruck_geometry::prelude::{KnotVector, ParametricSurface};
+        use monstertruck_modeling::{Curve, Edge, Face, Shell, Surface, Vertex, Wire};
 
         // Get the four corner points - for this knot configuration,
         // the valid surface is in the [1/3, 2/3] parameter range
@@ -137,27 +137,27 @@ mod tests {
         let e0 = Edge::new(
             &v00,
             &v10,
-            Curve::BSplineCurve(BSplineCurve::new(KnotVec::bezier_knot(1), vec![p00, p10])),
+            Curve::BsplineCurve(BsplineCurve::new(KnotVector::bezier_knot(1), vec![p00, p10])),
         );
         let e1 = Edge::new(
             &v10,
             &v11,
-            Curve::BSplineCurve(BSplineCurve::new(KnotVec::bezier_knot(1), vec![p10, p11])),
+            Curve::BsplineCurve(BsplineCurve::new(KnotVector::bezier_knot(1), vec![p10, p11])),
         );
         let e2 = Edge::new(
             &v11,
             &v01,
-            Curve::BSplineCurve(BSplineCurve::new(KnotVec::bezier_knot(1), vec![p11, p01])),
+            Curve::BsplineCurve(BsplineCurve::new(KnotVector::bezier_knot(1), vec![p11, p01])),
         );
         let e3 = Edge::new(
             &v01,
             &v00,
-            Curve::BSplineCurve(BSplineCurve::new(KnotVec::bezier_knot(1), vec![p01, p00])),
+            Curve::BsplineCurve(BsplineCurve::new(KnotVector::bezier_knot(1), vec![p01, p00])),
         );
 
         // Create wire and face
         let wire = Wire::from(vec![e0, e1, e2, e3]);
-        let face = Face::new(vec![wire], Surface::BSplineSurface(first_surface));
+        let face = Face::new(vec![wire], Surface::BsplineSurface(first_surface));
 
         // Create a shell with just this one face
         let shell = Shell::from(vec![face]);

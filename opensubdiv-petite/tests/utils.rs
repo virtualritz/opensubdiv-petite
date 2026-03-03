@@ -2,11 +2,11 @@ use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-#[cfg(feature = "truck")]
+#[cfg(feature = "monstertruck")]
 use opensubdiv_petite::far::EndCapType;
 
 /// Get the default EndCapType based on feature flags.
-#[cfg(feature = "truck")]
+#[cfg(feature = "monstertruck")]
 #[allow(dead_code)]
 pub fn default_end_cap_type() -> EndCapType {
     #[cfg(feature = "b_spline_end_caps")]
@@ -19,8 +19,8 @@ pub fn default_end_cap_type() -> EndCapType {
     }
 }
 
-/// Get the default EndCapType for non-truck builds
-#[cfg(not(feature = "truck"))]
+/// Get the default EndCapType for non-monstertruck builds
+#[cfg(not(feature = "monstertruck"))]
 #[allow(dead_code)]
 pub fn default_end_cap_type() -> opensubdiv_petite::far::EndCapType {
     opensubdiv_petite::far::EndCapType::GregoryBasis

@@ -1,6 +1,6 @@
 mod utils;
 
-#[cfg(feature = "truck")]
+#[cfg(feature = "monstertruck")]
 #[test]
 fn test_simple_plane_cv_ordering() -> anyhow::Result<()> {
     use crate::utils::default_end_cap_type;

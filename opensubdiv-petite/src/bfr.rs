@@ -184,10 +184,10 @@ impl Surface {
     }
 }
 
-#[cfg(feature = "truck")]
-use truck_geometry::prelude::{BSplineSurface, KnotVec, Point3};
+#[cfg(feature = "monstertruck")]
+use monstertruck_geometry::prelude::{BsplineSurface, KnotVector, Point3};
 
-#[cfg(feature = "truck")]
+#[cfg(feature = "monstertruck")]
 impl SurfaceFactory {
     /// Build B-spline surfaces for regular faces at the base level using BFR.
     /// Irregular faces are skipped.
@@ -195,7 +195,7 @@ impl SurfaceFactory {
         &self,
         refiner: &crate::far::TopologyRefiner,
         mesh_points: &[[f32; 3]],
-    ) -> Result<Vec<BSplineSurface<Point3>>, BfrError> {
+    ) -> Result<Vec<BsplineSurface<Point3>>, BfrError> {
         let base = refiner.level(0).ok_or(BfrError::InitializationFailed)?;
 
         let mut surfaces = Vec::new();
@@ -218,8 +218,8 @@ impl SurfaceFactory {
                 control_matrix[row][col] = Point3::new(p[0] as f64, p[1] as f64, p[2] as f64);
             }
 
-            let knots = KnotVec::from(vec![-3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0, 4.0]);
-            surfaces.push(BSplineSurface::new((knots.clone(), knots), control_matrix));
+            let knots = KnotVector::from(vec![-3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0, 4.0]);
+            surfaces.push(BsplineSurface::new((knots.clone(), knots), control_matrix));
         }
 
         Ok(surfaces)

@@ -261,7 +261,7 @@ fn test_creased_cube_bspline_obj() -> Result<(), Box<dyn std::error::Error>> {
 
 #[test]
 fn test_two_patches_bspline_obj() -> Result<(), Box<dyn std::error::Error>> {
-    // Simple cube - same as in truck.rs test
+    // Simple cube - same as in monstertruck.rs test
     let vertex_positions = vec![
         [-1.0, -1.0, -1.0],
         [1.0, -1.0, -1.0],

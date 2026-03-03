@@ -6,8 +6,8 @@ use opensubdiv_petite::far::{
     TopologyRefinerOptions,
 };
 
-#[cfg(feature = "truck")]
-mod truck_tests {
+#[cfg(feature = "monstertruck")]
+mod monstertruck_tests {
     use super::*;
     use opensubdiv_petite::far::PrimvarRefiner;
     use opensubdiv_petite::Index;
@@ -182,9 +182,9 @@ mod truck_tests {
         // at extraordinary vertices"); }
 
         // Export to STEP file
-        use opensubdiv_petite::truck::PatchTableWithControlPointsRef;
+        use opensubdiv_petite::monstertruck::PatchTableWithControlPointsRef;
         use std::convert::TryFrom;
-        use truck_modeling::Shell;
+        use monstertruck_modeling::Shell;
 
         // Build complete vertex buffer
         let mut all_vertices = build_vertex_buffer(&refiner, &vertex_positions);
@@ -267,19 +267,19 @@ mod truck_tests {
             }
         }
 
-        // Convert patches to truck shell using idiomatic TryFrom
+        // Convert patches to monstertruck shell using idiomatic TryFrom
         let patch_table_with_cvs = PatchTableWithControlPointsRef {
             patch_table: &patch_table,
             control_points: &all_vertices,
         };
         let shell =
-            Shell::try_from(patch_table_with_cvs).expect("Failed to convert to truck shell");
+            Shell::try_from(patch_table_with_cvs).expect("Failed to convert to monstertruck shell");
 
         // Compress and export the shell as STEP
         let compressed = shell.compress();
-        let step_string = truck_stepio::out::CompleteStepDisplay::new(
-            truck_stepio::out::StepModel::from(&compressed),
-            truck_stepio::out::StepHeaderDescriptor {
+        let step_string = monstertruck_step::out::CompleteStepDisplay::new(
+            monstertruck_step::out::StepModel::from(&compressed),
+            monstertruck_step::out::StepHeaderDescriptor {
                 file_name: "simple_cube_gregory.step".to_owned(),
                 ..Default::default()
             },

@@ -3,11 +3,11 @@ use opensubdiv_petite::far::{
     AdaptiveRefinementOptions, EndCapType, PatchTable, PatchTableOptions, PrimvarRefiner,
     TopologyDescriptor, TopologyRefiner, TopologyRefinerOptions,
 };
-use opensubdiv_petite::truck::{
+use opensubdiv_petite::monstertruck::{
     bfr_regular_surfaces, superpatch_surfaces, GregoryAccuracy, PatchTableExt, StepExportOptions,
 };
 use opensubdiv_petite::Index;
-use truck_stepio::out::*;
+use monstertruck_step::out::*;
 
 fn main() -> Result<()> {
     // Creased cube: all edges sharpness 8.0
@@ -159,7 +159,7 @@ fn main() -> Result<()> {
 
     if bfr_surfaces.is_empty() {
         eprintln!("BFR produced no regular surfaces; falling back to PatchTable shell.");
-        if let Ok(shell) = patch_table.to_truck_shell(&all_vertices) {
+        if let Ok(shell) = patch_table.to_monstertruck_shell(&all_vertices) {
             let compressed = shell.compress();
             let step_string =
                 CompleteStepDisplay::new(StepModel::from(&compressed), Default::default())
@@ -172,11 +172,11 @@ fn main() -> Result<()> {
             );
         }
     } else {
-        let faces: Vec<truck_modeling::Face> = bfr_surfaces
+        let faces: Vec<monstertruck_modeling::Face> = bfr_surfaces
             .into_iter()
-            .map(|s| truck_modeling::Face::new(vec![], truck_modeling::Surface::BSplineSurface(s)))
+            .map(|s| monstertruck_modeling::Face::new(vec![], monstertruck_modeling::Surface::BsplineSurface(s)))
             .collect();
-        let shell = truck_modeling::Shell::from(faces);
+        let shell = monstertruck_modeling::Shell::from(faces);
         let compressed = shell.compress();
         let step_string =
             CompleteStepDisplay::new(StepModel::from(&compressed), Default::default()).to_string();
@@ -188,15 +188,15 @@ fn main() -> Result<()> {
     // irregular ones so every patch carries a full 4x4 control net instead of
     // the coarse, planar fallback shell.
     println!("Creased cube: BFR + PatchTable mixed surfaces...");
-    match patch_table.to_truck_surfaces_bfr_mixed(&refiner, &all_vertices, 0, approx_sharp) {
+    match patch_table.to_monstertruck_surfaces_bfr_mixed(&refiner, &all_vertices, 0, approx_sharp) {
         Ok(surfaces) if !surfaces.is_empty() => {
-            let faces: Vec<truck_modeling::Face> = surfaces
+            let faces: Vec<monstertruck_modeling::Face> = surfaces
                 .into_iter()
                 .map(|s| {
-                    truck_modeling::Face::new(vec![], truck_modeling::Surface::BSplineSurface(s))
+                    monstertruck_modeling::Face::new(vec![], monstertruck_modeling::Surface::BsplineSurface(s))
                 })
                 .collect();
-            let shell = truck_modeling::Shell::from(faces);
+            let shell = monstertruck_modeling::Shell::from(faces);
             let compressed = shell.compress();
             let step_string =
                 CompleteStepDisplay::new(StepModel::from(&compressed), Default::default())
@@ -206,7 +206,7 @@ fn main() -> Result<()> {
         }
         _ => {
             eprintln!("Mixed export fell back to PatchTable shell.");
-            match patch_table.to_truck_shell(&all_vertices) {
+            match patch_table.to_monstertruck_shell(&all_vertices) {
                 Ok(shell) => {
                     let compressed = shell.compress();
                     let step_string =
@@ -225,13 +225,13 @@ fn main() -> Result<()> {
     println!("Creased cube: superpatch export...");
     match superpatch_surfaces(&patch_table, &all_vertices, 1.0e-6) {
         Ok(surfaces) if !surfaces.is_empty() => {
-            let faces: Vec<truck_modeling::Face> = surfaces
+            let faces: Vec<monstertruck_modeling::Face> = surfaces
                 .into_iter()
                 .map(|s| {
-                    truck_modeling::Face::new(vec![], truck_modeling::Surface::BSplineSurface(s))
+                    monstertruck_modeling::Face::new(vec![], monstertruck_modeling::Surface::BsplineSurface(s))
                 })
                 .collect();
-            let shell = truck_modeling::Shell::from(faces);
+            let shell = monstertruck_modeling::Shell::from(faces);
             let compressed = shell.compress();
             let step_string =
                 CompleteStepDisplay::new(StepModel::from(&compressed), Default::default())
@@ -241,7 +241,7 @@ fn main() -> Result<()> {
         }
         _ => {
             eprintln!("Superpatch export failed; falling back to PatchTable shell.");
-            if let Ok(shell) = patch_table.to_truck_shell(&all_vertices) {
+            if let Ok(shell) = patch_table.to_monstertruck_shell(&all_vertices) {
                 let compressed = shell.compress();
                 let step_string =
                     CompleteStepDisplay::new(StepModel::from(&compressed), Default::default())
@@ -254,7 +254,7 @@ fn main() -> Result<()> {
 
     // Stitched shell from PatchTable (shared edges/vertices)
     println!("Creased cube: stitched shell export...");
-    match patch_table.to_truck_shell_stitched(&all_vertices) {
+    match patch_table.to_monstertruck_shell_stitched(&all_vertices) {
         Ok(shell) => {
             let compressed = shell.compress();
             let step_string =

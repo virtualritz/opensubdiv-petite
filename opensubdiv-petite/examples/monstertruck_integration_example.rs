@@ -1,28 +1,28 @@
-//! Example demonstrating OpenSubdiv to truck CAD kernel integration.
+//! Example demonstrating OpenSubdiv to monstertruck CAD kernel integration.
 
 use anyhow::Result;
 use opensubdiv_petite::far::{
     EndCapType, PatchTable, PatchTableOptions, PrimvarRefiner, TopologyDescriptor, TopologyRefiner,
     TopologyRefinerOptions, UniformRefinementOptions,
 };
-#[cfg(feature = "truck")]
-use opensubdiv_petite::truck::{bfr_regular_surfaces, PatchTableExt};
+#[cfg(feature = "monstertruck")]
+use opensubdiv_petite::monstertruck::{bfr_regular_surfaces, PatchTableExt};
 
-#[cfg(feature = "truck")]
-use truck_stepio::out::{CompleteStepDisplay, StepModel};
+#[cfg(feature = "monstertruck")]
+use monstertruck_step::r#out::{CompleteStepDisplay, StepModel};
 
 fn main() -> Result<()> {
-    #[cfg(not(feature = "truck"))]
+    #[cfg(not(feature = "monstertruck"))]
     {
-        println!("This example requires the 'truck' feature.");
-        println!("Run with: cargo run --example truck_integration_example --features truck");
+        println!("This example requires the 'monstertruck' feature.");
+        println!("Run with: cargo run --example monstertruck_integration_example --features monstertruck");
         return Ok(());
     }
 
-    #[cfg(feature = "truck")]
+    #[cfg(feature = "monstertruck")]
     {
-        println!("OpenSubdiv to Truck Integration Example");
-        println!("======================================\n");
+        println!("OpenSubdiv to Monstertruck Integration Example");
+        println!("==============================================\n");
 
         // Cube topology
         let face_vertex_counts = vec![4, 4, 4, 4, 4, 4];
@@ -104,21 +104,21 @@ fn main() -> Result<()> {
         println!("BFR produced {} coarse B-spline surfaces", bfr_surfaces);
 
         // Convert all patches to B-spline surfaces (PatchTable + BFR mixed)
-        let surfaces = patch_table.to_truck_surfaces_bfr_mixed(&refiner, &all_vertices, 0, 0)?;
+        let surfaces = patch_table.to_monstertruck_surfaces_bfr_mixed(&refiner, &all_vertices, 0, 0)?;
         println!(
             "Converted {} patches to B-spline surfaces (mixed BFR/PatchTable)",
             surfaces.len()
         );
 
         // Build stitched shell and export STEP
-        let shell = patch_table.to_truck_shell_stitched(&all_vertices)?;
+        let shell = patch_table.to_monstertruck_shell_stitched(&all_vertices)?;
         let compressed = shell.compress();
         let step_string =
             CompleteStepDisplay::new(StepModel::from(&compressed), Default::default()).to_string();
-        std::fs::write("truck_integration.step", step_string)?;
-        println!("Wrote truck_integration.step");
+        std::fs::write("monstertruck_integration.step", step_string)?;
+        println!("Wrote monstertruck_integration.step");
 
-        println!("\nTruck integration example completed!");
+        println!("\nMonstertruck integration example completed!");
     }
 
     Ok(())

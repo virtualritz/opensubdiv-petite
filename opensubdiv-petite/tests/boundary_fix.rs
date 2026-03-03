@@ -1,16 +1,16 @@
 //! Test the boundary fix for patches near extraordinary vertices
 
-#[cfg(feature = "truck")]
+#[cfg(feature = "monstertruck")]
 mod tests {
     use anyhow::Result;
     use opensubdiv_petite::far::{
         AdaptiveRefinementOptions, EndCapType, PatchTable, PatchTableOptions, PrimvarRefiner,
         TopologyDescriptor, TopologyRefiner, TopologyRefinerOptions,
     };
-    use opensubdiv_petite::truck::PatchTableExt;
+    use opensubdiv_petite::monstertruck::PatchTableExt;
     use std::fs;
 
-    use truck_stepio::out::{CompleteStepDisplay, StepHeaderDescriptor, StepModel};
+    use monstertruck_step::out::{CompleteStepDisplay, StepHeaderDescriptor, StepModel};
 
     #[test]
     fn test_cube_boundary_fix() -> Result<()> {
@@ -105,8 +105,8 @@ mod tests {
             }
         }
 
-        // Convert to truck shell
-        let shell = patch_table.to_truck_shell(&all_vertices)?;
+        // Convert to monstertruck shell
+        let shell = patch_table.to_monstertruck_shell(&all_vertices)?;
 
         // Export to STEP
         let compressed = shell.compress();

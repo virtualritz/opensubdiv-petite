@@ -109,8 +109,8 @@ pub use error::{Error, Result};
 #[cfg(feature = "tri_mesh_buffers")]
 pub mod tri_mesh_buffers;
 
-#[cfg(feature = "truck")]
-pub mod truck;
+#[cfg(feature = "monstertruck")]
+pub mod monstertruck;
 
 pub mod iges_export;
 pub mod obj_bspline_export;
