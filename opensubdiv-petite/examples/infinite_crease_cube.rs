@@ -12,8 +12,8 @@ use opensubdiv_petite::far::{
     AdaptiveRefinementOptions, EndCapType, PatchTable, PatchTableOptions, PrimvarRefiner,
     TopologyDescriptor, TopologyRefiner, TopologyRefinerOptions,
 };
-use opensubdiv_petite::truck::PatchTableExt;
-use truck_stepio::out::*;
+use opensubdiv_petite::monstertruck::PatchTableExt;
+use monstertruck_step::out::*;
 
 /// Export a cube with all 12 edges creased at the given sharpness.
 fn export_infinite_crease_cube(sharpness: f32, filename: &str) -> Result<()> {
@@ -151,8 +151,8 @@ fn export_infinite_crease_cube(sharpness: f32, filename: &str) -> Result<()> {
 
     println!("  Total vertices: {}", all_vertices.len());
 
-    // Export to STEP via truck.
-    match patch_table.to_truck_shell(&all_vertices) {
+    // Export to STEP via monstertruck.
+    match patch_table.to_monstertruck_shell(&all_vertices) {
         Ok(shell) => {
             let compressed = shell.compress();
             let step_string =

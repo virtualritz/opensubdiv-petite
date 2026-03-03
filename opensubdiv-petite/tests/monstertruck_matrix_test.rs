@@ -1,10 +1,10 @@
-#[cfg(feature = "truck")]
+#[cfg(feature = "monstertruck")]
 #[test]
-fn test_truck_bspline_matrix_ordering() {
-    use truck_geometry::prelude::*;
+fn test_monstertruck_bspline_matrix_ordering() {
+    use monstertruck_geometry::prelude::*;
 
     // Create a simple B-spline surface with known control points
-    // to understand truck's expected ordering
+    // to understand monstertruck's expected ordering
 
     // Define a 4x4 grid of control points
     let control_points = vec![
@@ -35,13 +35,13 @@ fn test_truck_bspline_matrix_ordering() {
     ];
 
     // Create uniform B-spline knot vectors
-    let u_knots = KnotVec::uniform_knot(3, 4);
-    let v_knots = KnotVec::uniform_knot(3, 4);
+    let u_knots = KnotVector::uniform_knot(3, 4);
+    let v_knots = KnotVector::uniform_knot(3, 4);
 
-    let surface = BSplineSurface::new((u_knots.clone(), v_knots.clone()), control_points);
+    let surface = BsplineSurface::new((u_knots.clone(), v_knots.clone()), control_points);
 
     // Sample the surface at various points
-    println!("\n=== TRUCK B-SPLINE SURFACE TEST ===");
+    println!("\n=== MONSTERTRUCK B-SPLINE SURFACE TEST ===");
     println!("Testing surface evaluation at different (u,v) coordinates:");
 
     for (u, v) in &[
@@ -90,7 +90,7 @@ fn test_truck_bspline_matrix_ordering() {
         ],
     ];
 
-    let surface_transposed = BSplineSurface::new(
+    let surface_transposed = BsplineSurface::new(
         (u_knots.clone(), v_knots.clone()),
         control_points_transposed,
     );
@@ -114,5 +114,5 @@ fn test_truck_bspline_matrix_ordering() {
         );
     }
 
-    println!("\n=== END TRUCK B-SPLINE TEST ===\n");
+    println!("\n=== END MONSTERTRUCK B-SPLINE TEST ===\n");
 }

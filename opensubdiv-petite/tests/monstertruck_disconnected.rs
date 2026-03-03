@@ -2,7 +2,7 @@
 
 mod utils;
 
-#[cfg(feature = "truck")]
+#[cfg(feature = "monstertruck")]
 mod tests {
     use crate::utils::default_end_cap_type;
     use opensubdiv_petite::far::{
@@ -91,8 +91,8 @@ mod tests {
     // #[test]
     #[allow(dead_code)]
     fn test_simple_cube_disconnected_patches() -> anyhow::Result<()> {
-        use opensubdiv_petite::truck::PatchTableExt;
-        use truck_stepio::out;
+        use opensubdiv_petite::monstertruck::PatchTableExt;
+        use monstertruck_step::out;
 
         // Define simple cube vertices
         let vertex_positions = vec![
@@ -157,7 +157,7 @@ mod tests {
         println!("Number of patches: {}", patch_table.patch_count());
 
         // Convert patches to individual shells
-        let shells = patch_table.to_truck_shells(&all_vertices)?;
+        let shells = patch_table.to_monstertruck_shells(&all_vertices)?;
 
         println!("Created {} individual shells", shells.len());
 

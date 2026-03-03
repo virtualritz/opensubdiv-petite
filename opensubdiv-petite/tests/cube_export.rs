@@ -3,10 +3,10 @@ use opensubdiv_petite::far::{
     AdaptiveRefinementOptions, EndCapType, PatchTable, PatchTableOptions, PrimvarRefiner,
     TopologyDescriptor, TopologyRefiner, TopologyRefinerOptions,
 };
-use opensubdiv_petite::truck::{bfr_regular_surfaces, PatchTableExt};
+use opensubdiv_petite::monstertruck::{bfr_regular_surfaces, PatchTableExt};
 use opensubdiv_petite::Index;
-use truck_modeling::{Face, Shell, Surface};
-use truck_stepio::out::{CompleteStepDisplay, StepModel};
+use monstertruck_modeling::{Face, Shell, Surface};
+use monstertruck_step::out::{CompleteStepDisplay, StepModel};
 
 fn main() -> Result<()> {
     // Create a simple cube mesh
@@ -137,7 +137,7 @@ fn main() -> Result<()> {
 
     // Convert to shell - test both methods
     println!("Testing regular conversion...");
-    match patch_table.to_truck_shell(&all_vertices) {
+    match patch_table.to_monstertruck_shell(&all_vertices) {
         Ok(shell) => {
             let compressed = shell.compress();
             let step_string =
@@ -150,7 +150,7 @@ fn main() -> Result<()> {
     }
 
     println!("Testing gap-filling conversion...");
-    match patch_table.to_truck_shell_with_gap_filling(&all_vertices) {
+    match patch_table.to_monstertruck_shell_with_gap_filling(&all_vertices) {
         Ok(shell) => {
             let compressed = shell.compress();
             let step_string =
@@ -168,7 +168,7 @@ fn main() -> Result<()> {
         Ok(surfaces) => {
             let faces: Vec<Face> = surfaces
                 .into_iter()
-                .map(|s| Face::new(vec![], Surface::BSplineSurface(s)))
+                .map(|s| Face::new(vec![], Surface::BsplineSurface(s)))
                 .collect();
             let shell: Shell = Shell::from(faces);
             let compressed = shell.compress();
@@ -183,11 +183,11 @@ fn main() -> Result<()> {
 
     // Mixed export: BFR for regular faces, PatchTable for irregular
     println!("Testing BFR + PatchTable mixed surfaces...");
-    match patch_table.to_truck_surfaces_bfr_mixed(&refiner, &all_vertices, 0, 0) {
+    match patch_table.to_monstertruck_surfaces_bfr_mixed(&refiner, &all_vertices, 0, 0) {
         Ok(surfaces) => {
             let faces: Vec<Face> = surfaces
                 .into_iter()
-                .map(|s| Face::new(vec![], Surface::BSplineSurface(s)))
+                .map(|s| Face::new(vec![], Surface::BsplineSurface(s)))
                 .collect();
             let shell: Shell = Shell::from(faces);
             let compressed = shell.compress();
@@ -202,7 +202,7 @@ fn main() -> Result<()> {
 
     // Stitched export with shared edges/vertices
     println!("Testing stitched shell export...");
-    match patch_table.to_truck_shell_stitched(&all_vertices) {
+    match patch_table.to_monstertruck_shell_stitched(&all_vertices) {
         Ok(shell) => {
             let compressed = shell.compress();
             let step_string =
