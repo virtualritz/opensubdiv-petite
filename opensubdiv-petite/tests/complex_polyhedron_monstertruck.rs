@@ -1,8 +1,8 @@
-//! Test for complex polyhedron operations with STEP export via truck.
+//! Test for complex polyhedron operations with STEP export via monstertruck.
 
 mod utils;
 
-#[cfg(feature = "truck")]
+#[cfg(feature = "monstertruck")]
 mod tests {
     use crate::utils::*;
     use opensubdiv_petite::far::{
@@ -130,8 +130,8 @@ mod tests {
 
     #[test]
     fn test_complex_polyhedron_to_step() {
-        use opensubdiv_petite::truck::PatchTableExt;
-        use truck_stepio::out;
+        use opensubdiv_petite::monstertruck::PatchTableExt;
+        use monstertruck_step::out;
 
         // Create icosahedron base geometry
         let mut vertex_positions = create_icosahedron_vertices();
@@ -246,10 +246,10 @@ mod tests {
             }
         }
 
-        // Convert patches to truck shell
+        // Convert patches to monstertruck shell
         let shell = patch_table
-            .to_truck_shell(&all_vertices)
-            .expect("Failed to convert to truck shell");
+            .to_monstertruck_shell(&all_vertices)
+            .expect("Failed to convert to monstertruck shell");
 
         // Compress and export the shell as STEP
         let compressed = shell.compress();

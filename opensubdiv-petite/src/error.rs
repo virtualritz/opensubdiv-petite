@@ -54,10 +54,10 @@ pub enum Error {
     #[error("GPU backend error: {0}")]
     GpuBackend(String),
 
-    /// Truck integration error.
-    #[cfg(feature = "truck")]
-    #[error("Truck error: {0}")]
-    Truck(#[from] crate::truck::TruckError),
+    /// Monstertruck integration error.
+    #[cfg(feature = "monstertruck")]
+    #[error("Monstertruck error: {0}")]
+    Monstertruck(#[from] crate::monstertruck::MonstertruckError),
 
     /// IO error for file operations.
     #[error("IO error: {0}")]

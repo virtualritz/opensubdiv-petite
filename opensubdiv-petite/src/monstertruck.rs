@@ -1,8 +1,8 @@
-//! Integration with the truck CAD kernel for B-rep surface generation
+//! Integration with the monstertruck CAD kernel for B-rep surface generation.
 //!
 //! This module provides `From` trait implementations to convert OpenSubdiv
-//! patches to truck's surface representations, enabling high-order surface
-//! export to STEP format.
+//! patches to monstertruck's surface representations, enabling high-order
+//! surface export to STEP format.
 
 use crate::bfr::SurfaceFactory as BfrSurfaceFactory;
 use crate::far::{PatchEvalResult, PatchTable, PatchType, TopologyRefiner};
@@ -10,20 +10,20 @@ use crate::far::{PatchEvalResult, PatchTable, PatchType, TopologyRefiner};
 use rayon::prelude::*;
 use std::{convert::TryFrom, panic};
 use thiserror::Error;
-use truck_geometry::prelude::{BSplineCurve, BSplineSurface, KnotVec, ParametricCurve};
-use truck_modeling::{
-    cgmath::{EuclideanSpace, InnerSpace, Point3, Vector3},
+use monstertruck_geometry::prelude::{BsplineCurve, BsplineSurface, KnotVector, ParametricCurve};
+use monstertruck_modeling::{
+    EuclideanSpace, InnerSpace, Point3, Vector3,
     Face, MetricSpace, Shell, Surface,
 };
-#[cfg(feature = "truck_export_boundary")]
-use truck_modeling::{Curve, Edge, Vertex, Wire};
+#[cfg(feature = "monstertruck_export_boundary")]
+use monstertruck_modeling::{Curve, Edge, Vertex, Wire};
 
-/// Type alias for results in this module
-pub type Result<T> = std::result::Result<T, TruckError>;
+/// Type alias for results in this module.
+pub type Result<T> = std::result::Result<T, MonstertruckError>;
 
-/// Error type for truck integration
+/// Error type for monstertruck integration.
 #[derive(Debug, Clone, Error)]
-pub enum TruckError {
+pub enum MonstertruckError {
     /// Unsupported patch type
     #[error("Unsupported patch type: {0:?}")]
     UnsupportedPatchType(PatchType),
@@ -69,9 +69,9 @@ pub enum GregoryAccuracy {
     HighPrecision,
 }
 
-/// Options for STEP export via truck integration.
+/// Options for STEP export via monstertruck integration.
 ///
-/// Controls how OpenSubdiv patches are converted to truck B-spline surfaces
+/// Controls how OpenSubdiv patches are converted to monstertruck B-spline surfaces
 /// for STEP file output.
 #[derive(Debug, Clone)]
 pub struct StepExportOptions {
@@ -121,9 +121,9 @@ impl Default for StepExportOptions {
 /// using the plain uniform basis, we transpose that weight transform and apply
 /// it to the control points instead.
 fn adjust_regular_control_points(
-    control_matrix: Vec<Vec<Point3<f64>>>,
+    control_matrix: Vec<Vec<Point3>>,
     boundary_mask: i32,
-) -> Vec<Vec<Point3<f64>>> {
+) -> Vec<Vec<Point3>> {
     if boundary_mask == 0 {
         return control_matrix;
     }
@@ -244,7 +244,7 @@ impl<'a> PatchRef<'a> {
     }
 
     /// Get the patch type for this patch.
-    pub fn patch_type(&self) -> std::result::Result<PatchType, TruckError> {
+    pub fn patch_type(&self) -> std::result::Result<PatchType, MonstertruckError> {
         let (_, _, patch_type) = self.patch_info()?;
         Ok(patch_type)
     }
@@ -282,7 +282,7 @@ impl<'a> PatchRef<'a> {
     }
 
     /// Get patch array information
-    fn patch_info(&self) -> std::result::Result<(usize, usize, PatchType), TruckError> {
+    fn patch_info(&self) -> std::result::Result<(usize, usize, PatchType), MonstertruckError> {
         let mut current_index = self.patch_index;
 
         for array_idx in 0..self.patch_table.patch_array_count() {
@@ -291,18 +291,18 @@ impl<'a> PatchRef<'a> {
                 let desc = self
                     .patch_table
                     .patch_array_descriptor(array_idx)
-                    .ok_or(TruckError::InvalidControlPoints)?;
+                    .ok_or(MonstertruckError::InvalidControlPoints)?;
                 return Ok((array_idx, current_index, desc.patch_type()));
             }
             current_index -= array_size;
         }
 
         eprintln!("Failed to find patch {} in patch table", self.patch_index);
-        Err(TruckError::InvalidControlPoints)
+        Err(MonstertruckError::InvalidControlPoints)
     }
 
     /// Extract control points for this patch
-    fn control_points(&self) -> std::result::Result<Vec<Vec<Point3<f64>>>, TruckError> {
+    fn control_points(&self) -> std::result::Result<Vec<Vec<Point3>>, MonstertruckError> {
         let (array_index, local_index, patch_type) = self.patch_info()?;
         let boundary_mask = self.boundary_mask();
 
@@ -320,7 +320,7 @@ impl<'a> PatchRef<'a> {
             PatchType::GregoryTriangle => {
                 self.extract_gregory_triangle_patch_control_points(array_index, local_index)
             }
-            _ => Err(TruckError::UnsupportedPatchType(patch_type)),
+            _ => Err(MonstertruckError::UnsupportedPatchType(patch_type)),
         }
     }
 
@@ -330,21 +330,21 @@ impl<'a> PatchRef<'a> {
         array_index: usize,
         local_index: usize,
         boundary_mask: i32,
-    ) -> std::result::Result<Vec<Vec<Point3<f64>>>, TruckError> {
+    ) -> std::result::Result<Vec<Vec<Point3>>, MonstertruckError> {
         const REGULAR_PATCH_SIZE: usize = 4;
         let desc = self
             .patch_table
             .patch_array_descriptor(array_index)
-            .ok_or(TruckError::InvalidControlPoints)?;
+            .ok_or(MonstertruckError::InvalidControlPoints)?;
 
         if desc.control_vertex_count() != REGULAR_PATCH_SIZE * REGULAR_PATCH_SIZE {
-            return Err(TruckError::InvalidControlPoints);
+            return Err(MonstertruckError::InvalidControlPoints);
         }
 
         let cv_indices = self
             .patch_table
             .patch_array_vertices(array_index)
-            .ok_or(TruckError::InvalidControlPoints)?;
+            .ok_or(MonstertruckError::InvalidControlPoints)?;
 
         let start = local_index * desc.control_vertex_count();
         if start + desc.control_vertex_count() > cv_indices.len() {
@@ -357,7 +357,7 @@ impl<'a> PatchRef<'a> {
                 desc.control_vertex_count(),
                 cv_indices.len()
             );
-            return Err(TruckError::InvalidControlPoints);
+            return Err(MonstertruckError::InvalidControlPoints);
         }
         let patch_cvs = &cv_indices[start..start + desc.control_vertex_count()];
 
@@ -376,7 +376,7 @@ impl<'a> PatchRef<'a> {
                     idx,
                     self.control_points.len() - 1
                 );
-                return Err(TruckError::InvalidControlPoints);
+                return Err(MonstertruckError::InvalidControlPoints);
             }
 
             let cp = &self.control_points[idx];
@@ -396,7 +396,7 @@ impl<'a> PatchRef<'a> {
         &self,
         _array_index: usize,
         _local_index: usize,
-    ) -> std::result::Result<Vec<Vec<Point3<f64>>>, TruckError> {
+    ) -> std::result::Result<Vec<Vec<Point3>>, MonstertruckError> {
         // AIDEV-NOTE: Gregory basis patch approximation
         // Gregory basis patches have 20 control points arranged in a special pattern.
         // For now, we evaluate the patch at a 4x4 grid to create an approximation.
@@ -424,7 +424,7 @@ impl<'a> PatchRef<'a> {
                         result.point[2] as f64,
                     );
                 } else {
-                    return Err(TruckError::EvaluationFailed);
+                    return Err(MonstertruckError::EvaluationFailed);
                 }
             }
         }
@@ -437,7 +437,7 @@ impl<'a> PatchRef<'a> {
         &self,
         _array_index: usize,
         _local_index: usize,
-    ) -> std::result::Result<Vec<Vec<Point3<f64>>>, TruckError> {
+    ) -> std::result::Result<Vec<Vec<Point3>>, MonstertruckError> {
         // AIDEV-NOTE: Gregory triangle patch approximation
         // Gregory triangle patches have 18 control points for triangular domains.
         // For now, we evaluate the patch at a 4x4 grid to create a quad approximation.
@@ -475,7 +475,7 @@ impl<'a> PatchRef<'a> {
                         result.point[2] as f64,
                     );
                 } else {
-                    return Err(TruckError::EvaluationFailed);
+                    return Err(MonstertruckError::EvaluationFailed);
                 }
             }
         }
@@ -499,11 +499,11 @@ impl<'a> PatchRef<'a> {
     /// Note: This is still an approximation since Gregory patches cannot be
     /// exactly represented as B-splines. However, the denser sampling captures
     /// more of the surface curvature at extraordinary vertices.
-    pub fn to_bspline_high_precision(&self) -> Result<BSplineSurface<Point3<f64>>> {
+    pub fn to_bspline_high_precision(&self) -> Result<BsplineSurface<Point3>> {
         const GRID_SIZE: usize = 8;
 
         // Evaluate the Gregory patch at an 8×8 grid.
-        let samples: Vec<Vec<Point3<f64>>> = (0..GRID_SIZE)
+        let samples: Vec<Vec<Point3>> = (0..GRID_SIZE)
             .map(|i| {
                 let u = i as f32 / (GRID_SIZE - 1) as f32;
                 (0..GRID_SIZE)
@@ -518,7 +518,7 @@ impl<'a> PatchRef<'a> {
                                     result.point[2] as f64,
                                 )
                             })
-                            .ok_or(TruckError::EvaluationFailed)
+                            .ok_or(MonstertruckError::EvaluationFailed)
                     })
                     .collect::<Result<Vec<_>>>()
             })
@@ -528,17 +528,17 @@ impl<'a> PatchRef<'a> {
         // For n control points and degree p, we need n + p + 1 knots.
         // With 8 control points and degree 3, we need 12 knots.
         // Use uniform spacing for smooth C² continuity.
-        let knots = KnotVec::from(vec![
+        let knots = KnotVector::from(vec![
             -3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0,
         ]);
 
-        Ok(BSplineSurface::new((knots.clone(), knots), samples))
+        Ok(BsplineSurface::new((knots.clone(), knots), samples))
     }
 }
 
-/// Convert a regular B-spline patch to a truck BSplineSurface
-impl<'a> TryFrom<PatchRef<'a>> for BSplineSurface<Point3<f64>> {
-    type Error = TruckError;
+/// Convert a regular B-spline patch to a monstertruck BsplineSurface
+impl<'a> TryFrom<PatchRef<'a>> for BsplineSurface<Point3> {
+    type Error = MonstertruckError;
 
     fn try_from(patch: PatchRef<'a>) -> std::result::Result<Self, Self::Error> {
         let control_matrix = patch.control_points()?;
@@ -547,10 +547,10 @@ impl<'a> TryFrom<PatchRef<'a>> for BSplineSurface<Point3<f64>> {
         // Export patches exactly as OpenSubdiv defines them: uniform knots with
         // phantom rows/columns. Boundary masks affect evaluation inside OSD, but
         // the control net is authored for this uniform basis, so we keep it.
-        let u_knots = KnotVec::from(vec![-3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0, 4.0]);
-        let v_knots = KnotVec::from(vec![-3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0, 4.0]);
+        let u_knots = KnotVector::from(vec![-3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0, 4.0]);
+        let v_knots = KnotVector::from(vec![-3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0, 4.0]);
 
-        Ok(BSplineSurface::new((u_knots, v_knots), control_matrix))
+        Ok(BsplineSurface::new((u_knots, v_knots), control_matrix))
     }
 }
 
@@ -560,12 +560,12 @@ impl<'a> TryFrom<PatchRef<'a>> for BSplineSurface<Point3<f64>> {
 /// This helper function extracts the boundary control points from a bicubic
 /// B-spline patch and creates proper boundary curves for the face. This is
 /// required for some STEP viewers that need explicit boundary definitions.
-#[cfg(feature = "truck_export_boundary")]
+#[cfg(feature = "monstertruck_export_boundary")]
 fn create_face_with_boundary(
-    control_matrix: &[Vec<Point3<f64>>],
-    surface: BSplineSurface<Point3<f64>>,
+    control_matrix: &[Vec<Point3>],
+    surface: BsplineSurface<Point3>,
 ) -> Face {
-    use truck_geometry::prelude::BSplineCurve;
+    use monstertruck_geometry::prelude::BsplineCurve;
 
     // AIDEV-NOTE: Boundary control point extraction.
     // For OpenSubdiv B-spline patches with uniform knot vectors,
@@ -604,13 +604,13 @@ fn create_face_with_boundary(
     ];
 
     // Create the same knot vector as the surface.
-    let edge_knots = KnotVec::from(vec![-3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0, 4.0]);
+    let edge_knots = KnotVector::from(vec![-3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0, 4.0]);
 
     // Create B-spline curves for edges.
-    let bottom_curve = BSplineCurve::new(edge_knots.clone(), bottom_cps);
-    let right_curve = BSplineCurve::new(edge_knots.clone(), right_cps);
-    let top_curve = BSplineCurve::new(edge_knots.clone(), top_cps);
-    let left_curve = BSplineCurve::new(edge_knots, left_cps);
+    let bottom_curve = BsplineCurve::new(edge_knots.clone(), bottom_cps);
+    let right_curve = BsplineCurve::new(edge_knots.clone(), right_cps);
+    let top_curve = BsplineCurve::new(edge_knots.clone(), top_cps);
+    let left_curve = BsplineCurve::new(edge_knots, left_cps);
 
     // Create vertices at the corner positions.
     let v00 = Vertex::new(control_matrix[0][0]); // Bottom-left.
@@ -619,19 +619,19 @@ fn create_face_with_boundary(
     let v01 = Vertex::new(control_matrix[3][0]); // Top-left.
 
     // Create edges with B-spline curves.
-    let e0 = Edge::new(&v00, &v10, Curve::BSplineCurve(bottom_curve));
-    let e1 = Edge::new(&v10, &v11, Curve::BSplineCurve(right_curve));
-    let e2 = Edge::new(&v11, &v01, Curve::BSplineCurve(top_curve));
-    let e3 = Edge::new(&v01, &v00, Curve::BSplineCurve(left_curve));
+    let e0 = Edge::new(&v00, &v10, Curve::BsplineCurve(bottom_curve));
+    let e1 = Edge::new(&v10, &v11, Curve::BsplineCurve(right_curve));
+    let e2 = Edge::new(&v11, &v01, Curve::BsplineCurve(top_curve));
+    let e3 = Edge::new(&v01, &v00, Curve::BsplineCurve(left_curve));
 
     // Create wire and face.
     let wire = Wire::from(vec![e0, e1, e2, e3]);
-    Face::new(vec![wire], Surface::BSplineSurface(surface))
+    Face::new(vec![wire], Surface::BsplineSurface(surface))
 }
 
 /// Convert all regular patches to B-spline surfaces
-impl<'a> TryFrom<PatchTableWithControlPointsRef<'a>> for Vec<BSplineSurface<Point3<f64>>> {
-    type Error = TruckError;
+impl<'a> TryFrom<PatchTableWithControlPointsRef<'a>> for Vec<BsplineSurface<Point3>> {
+    type Error = MonstertruckError;
 
     fn try_from(
         patches: PatchTableWithControlPointsRef<'a>,
@@ -650,7 +650,7 @@ impl<'a> TryFrom<PatchTableWithControlPointsRef<'a>> for Vec<BSplineSurface<Poin
                     for _ in 0..patches.patch_table.patch_array_patch_count(array_idx) {
                         let patch =
                             PatchRef::new(patches.patch_table, patch_index, patches.control_points);
-                        match BSplineSurface::try_from(patch) {
+                        match BsplineSurface::try_from(patch) {
                             Ok(surface) => surfaces.push(surface),
                             Err(e) => eprintln!(
                                 "Failed to convert patch {} (type {:?}): {:?}",
@@ -686,7 +686,7 @@ impl<'a> TryFrom<PatchTableWithControlPointsRef<'a>> for Vec<BSplineSurface<Poin
 pub fn patch_table_surfaces_non_regular(
     patch_table: &PatchTable,
     control_points: &[[f32; 3]],
-) -> Result<Vec<BSplineSurface<Point3<f64>>>> {
+) -> Result<Vec<BsplineSurface<Point3>>> {
     let mut surfaces = Vec::new();
     let mut patch_index = 0;
 
@@ -710,7 +710,7 @@ pub fn patch_table_surfaces_non_regular(
             ) {
                 for _ in 0..num_patches {
                     let patch = PatchRef::new(patch_table, patch_index, control_points);
-                    match BSplineSurface::try_from(patch) {
+                    match BsplineSurface::try_from(patch) {
                         Ok(surface) => surfaces.push(surface),
                         Err(e) => eprintln!(
                             "Failed to convert non-regular patch {} (type {:?}): {:?}",
@@ -735,13 +735,13 @@ pub fn superpatch_surfaces(
     patch_table: &PatchTable,
     control_points: &[[f32; 3]],
     tol: f64,
-) -> Result<Vec<BSplineSurface<Point3<f64>>>> {
+) -> Result<Vec<BsplineSurface<Point3>>> {
     const DEGREE: usize = 3;
 
     #[derive(Clone)]
     struct RegPatch {
         _index: usize,
-        control: Vec<Vec<Point3<f64>>>, // 4x4, row-major (v-major)
+        control: Vec<Vec<Point3>>, // 4x4, row-major (v-major)
         boundary_mask: i32,             // Boundary flags from PatchParam
     }
 
@@ -753,7 +753,7 @@ pub fn superpatch_surfaces(
 
     #[derive(Clone)]
     struct Superpatch {
-        control: Vec<Vec<Point3<f64>>>, // u-major
+        control: Vec<Vec<Point3>>, // u-major
         width_cells: usize,
         height_cells: usize,
         origin_x: i32,
@@ -764,13 +764,13 @@ pub fn superpatch_surfaces(
 
     /// Edge data from a superpatch: (left, right, bottom, top).
     type SuperpatchEdges = (
-        Vec<Point3<f64>>,
-        Vec<Point3<f64>>,
-        Vec<Point3<f64>>,
-        Vec<Point3<f64>>,
+        Vec<Point3>,
+        Vec<Point3>,
+        Vec<Point3>,
+        Vec<Point3>,
     );
 
-    fn edge_row(control: &[Vec<Point3<f64>>], edge: &str) -> [Point3<f64>; 4] {
+    fn edge_row(control: &[Vec<Point3>], edge: &str) -> [Point3; 4] {
         match edge {
             "bottom" => [control[3][0], control[3][1], control[3][2], control[3][3]],
             "top" => [control[0][0], control[0][1], control[0][2], control[0][3]],
@@ -780,7 +780,7 @@ pub fn superpatch_surfaces(
         }
     }
 
-    fn rows_match(a: &[Point3<f64>; 4], b: &[Point3<f64>; 4], tol: f64) -> bool {
+    fn rows_match(a: &[Point3; 4], b: &[Point3; 4], tol: f64) -> bool {
         a.iter()
             .zip(b.iter())
             .all(|(p, q)| (p - q).magnitude2() <= tol * tol)
@@ -811,7 +811,7 @@ pub fn superpatch_surfaces(
         (left, right, bottom, top)
     }
 
-    fn edges_match(a: &[Point3<f64>], b: &[Point3<f64>], tol: f64) -> bool {
+    fn edges_match(a: &[Point3], b: &[Point3], tol: f64) -> bool {
         if a.len() != b.len() {
             return false;
         }
@@ -1056,7 +1056,7 @@ pub fn superpatch_surfaces(
 
         let ctrl_u = width * DEGREE + 1;
         let ctrl_v = height * DEGREE + 1;
-        let mut grid: Vec<Vec<Option<Point3<f64>>>> = vec![vec![None; ctrl_u]; ctrl_v];
+        let mut grid: Vec<Vec<Option<Point3>>> = vec![vec![None; ctrl_u]; ctrl_v];
         let mut valid = true;
 
         for v_off in 0..height {
@@ -1098,7 +1098,7 @@ pub fn superpatch_surfaces(
                     if let Some(&p_idx) = coord_map.get(&(x0 + u_off as i32, y0 + v_off as i32)) {
                         let patch = &regular[p_idx];
                         // Transpose from v-major to u-major.
-                        let control: Vec<Vec<Point3<f64>>> = (0..4)
+                        let control: Vec<Vec<Point3>> = (0..4)
                             .map(|u| (0..4).map(|v| patch.control[v][u]).collect())
                             .collect();
                         superpatches.push(Superpatch {
@@ -1117,7 +1117,7 @@ pub fn superpatch_surfaces(
             continue;
         }
 
-        // Transpose to u-major for truck surfaces.
+        // Transpose to u-major for monstertruck surfaces.
         let mut control_matrix = vec![vec![Point3::origin(); ctrl_v]; ctrl_u];
         for v in 0..ctrl_v {
             for u in 0..ctrl_u {
@@ -1250,7 +1250,7 @@ pub fn superpatch_surfaces(
             let knot_v: Vec<f64> = (0..(ctrl_v + DEGREE + 1))
                 .map(|k| k as f64 - DEGREE as f64)
                 .collect();
-            BSplineSurface::new((KnotVec::from(knot_u), KnotVec::from(knot_v)), sp.control)
+            BsplineSurface::new((KnotVector::from(knot_u), KnotVector::from(knot_v)), sp.control)
         })
         .collect();
 
@@ -1263,16 +1263,16 @@ pub fn superpatch_surfaces(
 /*
 /// Convert patches to a complete Shell with shared topology
 impl<'a> TryFrom<PatchTableWithControlPointsRef<'a>> for Shell {
-    type Error = TruckError;
+    type Error = MonstertruckError;
 
     fn try_from(patches: PatchTableWithControlPoints<'a>) -> std::result::Result<Self, Self::Error> {
-        let surfaces: Vec<BSplineSurface<Point3<f64>>> = patches.try_into()?;
+        let surfaces: Vec<BsplineSurface<Point3>> = patches.try_into()?;
 
         use std::collections::HashMap;
-        use truck_geometry::prelude::BSplineCurve;
+        use monstertruck_geometry::prelude::BsplineCurve;
 
         // AIDEV-NOTE: Create proper B-rep with shared vertices and edges
-        // Following the pattern from truck-topology's cube example, we need to:
+        // Following the pattern from monstertruck-topology's cube example, we need to:
         // 1. Create all vertices first
         // 2. Create all edges between vertices
         // 3. Build faces using these edges with proper orientation
@@ -1292,7 +1292,7 @@ impl<'a> TryFrom<PatchTableWithControlPointsRef<'a>> for Shell {
             let p01 = surface.subs(0.0, 1.0);
 
             // Get or create vertices
-            let mut get_or_create_vertex = |point: Point3<f64>| -> Vertex {
+            let mut get_or_create_vertex = |point: Point3| -> Vertex {
                 let key = [
                     (point.x / TOLERANCE).round() as i64,
                     (point.y / TOLERANCE).round() as i64,
@@ -1316,7 +1316,7 @@ impl<'a> TryFrom<PatchTableWithControlPointsRef<'a>> for Shell {
         type EdgeKey = ([i64; 3], [i64; 3]);
         let mut edge_map: HashMap<EdgeKey, Edge> = HashMap::new();
 
-        let make_edge_key = |p0: Point3<f64>, p1: Point3<f64>| -> EdgeKey {
+        let make_edge_key = |p0: Point3, p1: Point3| -> EdgeKey {
             let k0 = [
                 (p0.x / TOLERANCE).round() as i64,
                 (p0.y / TOLERANCE).round() as i64,
@@ -1334,18 +1334,18 @@ impl<'a> TryFrom<PatchTableWithControlPointsRef<'a>> for Shell {
         // Collect all edges from all patches
         for (v00, v10, v11, v01, p00, p10, p11, p01) in &surface_corners {
             // Helper to create or get edge
-            let mut get_or_create_edge = |v0: &Vertex, v1: &Vertex, p0: Point3<f64>, p1: Point3<f64>| {
+            let mut get_or_create_edge = |v0: &Vertex, v1: &Vertex, p0: Point3, p1: Point3| {
                 let key = make_edge_key(p0, p1);
                 edge_map.entry(key)
                     .or_insert_with(|| {
                         // Always create edge in consistent direction based on key
                         if make_edge_key(p0, p1) == (key.0, key.1) {
-                            Edge::new(v0, v1, Curve::BSplineCurve(
-                                BSplineCurve::new(KnotVec::bezier_knot(1), vec![p0, p1])
+                            Edge::new(v0, v1, Curve::BsplineCurve(
+                                BsplineCurve::new(KnotVector::bezier_knot(1), vec![p0, p1])
                             ))
                         } else {
-                            Edge::new(v1, v0, Curve::BSplineCurve(
-                                BSplineCurve::new(KnotVec::bezier_knot(1), vec![p1, p0])
+                            Edge::new(v1, v0, Curve::BsplineCurve(
+                                BsplineCurve::new(KnotVector::bezier_knot(1), vec![p1, p0])
                             ))
                         }
                     });
@@ -1364,13 +1364,13 @@ impl<'a> TryFrom<PatchTableWithControlPointsRef<'a>> for Shell {
         for (i, (surface, (v00, v10, v11, v01, p00, p10, p11, p01))) in surfaces.into_iter().zip(surface_corners).enumerate() {
             // Get the edges for this face
             let bottom_edge = edge_map.get(&make_edge_key(p00, p10))
-                .ok_or(TruckError::InvalidControlPoints)?;
+                .ok_or(MonstertruckError::InvalidControlPoints)?;
             let right_edge = edge_map.get(&make_edge_key(p10, p11))
-                .ok_or(TruckError::InvalidControlPoints)?;
+                .ok_or(MonstertruckError::InvalidControlPoints)?;
             let top_edge = edge_map.get(&make_edge_key(p11, p01))
-                .ok_or(TruckError::InvalidControlPoints)?;
+                .ok_or(MonstertruckError::InvalidControlPoints)?;
             let left_edge = edge_map.get(&make_edge_key(p01, p00))
-                .ok_or(TruckError::InvalidControlPoints)?;
+                .ok_or(MonstertruckError::InvalidControlPoints)?;
 
             // Calculate face normal at the center to determine proper orientation
             let center_u = 0.5;
@@ -1427,7 +1427,7 @@ impl<'a> TryFrom<PatchTableWithControlPointsRef<'a>> for Shell {
                 Wire::from(vec![bottom, right, top, left])
             };
 
-            let mut face = Face::new(vec![wire], Surface::BSplineSurface(surface));
+            let mut face = Face::new(vec![wire], Surface::BsplineSurface(surface));
             if needs_inversion {
                 face.invert();
             }
@@ -1443,7 +1443,7 @@ impl<'a> TryFrom<PatchTableWithControlPointsRef<'a>> for Shell {
 
 /// Convert patches to a simple Shell with disconnected faces
 impl<'a> TryFrom<PatchTableWithControlPointsRef<'a>> for Shell {
-    type Error = TruckError;
+    type Error = MonstertruckError;
 
     fn try_from(
         patches: PatchTableWithControlPointsRef<'a>,
@@ -1467,7 +1467,7 @@ impl<'a> TryFrom<PatchTableWithControlPointsRef<'a>> for Shell {
                             PatchRef::new(patches.patch_table, patch_index, patches.control_points);
 
                         // Get control matrix before try_into() consumes the patch.
-                        #[cfg(feature = "truck_export_boundary")]
+                        #[cfg(feature = "monstertruck_export_boundary")]
                         let control_matrix = match patch.control_points() {
                             Ok(cp) => cp,
                             Err(_e) => {
@@ -1476,8 +1476,8 @@ impl<'a> TryFrom<PatchTableWithControlPointsRef<'a>> for Shell {
                             }
                         };
 
-                        // Convert to truck surface.
-                        let surface: BSplineSurface<Point3<f64>> = match patch.try_into() {
+                        // Convert to monstertruck surface.
+                        let surface: BsplineSurface<Point3> = match patch.try_into() {
                             Ok(s) => s,
                             Err(_e) => {
                                 patch_index += 1;
@@ -1485,16 +1485,16 @@ impl<'a> TryFrom<PatchTableWithControlPointsRef<'a>> for Shell {
                             }
                         };
 
-                        #[cfg(feature = "truck_export_boundary")]
+                        #[cfg(feature = "monstertruck_export_boundary")]
                         {
                             let face = create_face_with_boundary(&control_matrix, surface);
                             faces.push(face);
                         }
 
-                        #[cfg(not(feature = "truck_export_boundary"))]
+                        #[cfg(not(feature = "monstertruck_export_boundary"))]
                         {
-                            // Create face without explicit boundary - let truck determine it.
-                            let face = Face::new(vec![], Surface::BSplineSurface(surface));
+                            // Create face without explicit boundary - let monstertruck determine it.
+                            let face = Face::new(vec![], Surface::BsplineSurface(surface));
                             faces.push(face);
                         }
 
@@ -1511,7 +1511,7 @@ impl<'a> TryFrom<PatchTableWithControlPointsRef<'a>> for Shell {
 
 /// Convert patches to a vector of individual Shells (one face per shell)
 impl<'a> TryFrom<PatchTableWithControlPointsRef<'a>> for Vec<Shell> {
-    type Error = TruckError;
+    type Error = MonstertruckError;
 
     fn try_from(
         patches: PatchTableWithControlPointsRef<'a>,
@@ -1533,21 +1533,21 @@ impl<'a> TryFrom<PatchTableWithControlPointsRef<'a>> for Vec<Shell> {
                             PatchRef::new(patches.patch_table, patch_index, patches.control_points);
 
                         // Get control matrix before try_into() consumes the patch.
-                        #[cfg(feature = "truck_export_boundary")]
+                        #[cfg(feature = "monstertruck_export_boundary")]
                         let control_matrix = patch.control_points()?;
 
-                        // Convert to truck surface
-                        let surface: BSplineSurface<Point3<f64>> = patch.try_into()?;
+                        // Convert to monstertruck surface
+                        let surface: BsplineSurface<Point3> = patch.try_into()?;
 
-                        #[cfg(feature = "truck_export_boundary")]
+                        #[cfg(feature = "monstertruck_export_boundary")]
                         {
                             let face = create_face_with_boundary(&control_matrix, surface);
                             shells.push(Shell::from(vec![face]));
                         }
 
-                        #[cfg(not(feature = "truck_export_boundary"))]
+                        #[cfg(not(feature = "monstertruck_export_boundary"))]
                         {
-                            let face = Face::new(vec![], Surface::BSplineSurface(surface));
+                            let face = Face::new(vec![], Surface::BsplineSurface(surface));
                             shells.push(Shell::from(vec![face]));
                         }
 
@@ -1564,7 +1564,7 @@ impl<'a> TryFrom<PatchTableWithControlPointsRef<'a>> for Vec<Shell> {
 }
 
 /// Convert patch evaluation result to Point3
-impl From<PatchEvalResult> for Point3<f64> {
+impl From<PatchEvalResult> for Point3 {
     fn from(result: PatchEvalResult) -> Self {
         Point3::new(
             result.point[0] as f64,
@@ -1575,7 +1575,7 @@ impl From<PatchEvalResult> for Point3<f64> {
 }
 
 /// Helper function to convert array to Vector3
-pub fn array_to_vector3(v: &[f32; 3]) -> Vector3<f64> {
+pub fn array_to_vector3(v: &[f32; 3]) -> Vector3 {
     Vector3::new(v[0] as f64, v[1] as f64, v[2] as f64)
 }
 
@@ -1586,17 +1586,17 @@ pub fn bfr_regular_surfaces(
     control_points: &[[f32; 3]],
     approx_smooth: i32,
     approx_sharp: i32,
-) -> Result<Vec<BSplineSurface<Point3<f64>>>> {
+) -> Result<Vec<BsplineSurface<Point3>>> {
     const PLANAR_ABS_TOL: f64 = 1.0e-8;
     const PLANAR_REL_SCALE: f64 = 1.0e-3;
 
     let factory = BfrSurfaceFactory::new(refiner, approx_smooth, approx_sharp).map_err(|e| {
-        TruckError::BfrConversionFailed(format!("factory creation failed: {:?}", e))
+        MonstertruckError::BfrConversionFailed(format!("factory creation failed: {:?}", e))
     })?;
 
     let mut surfaces = factory
         .build_regular_surfaces(refiner, control_points)
-        .map_err(|e| TruckError::BfrConversionFailed(format!("{:?}", e)))?
+        .map_err(|e| MonstertruckError::BfrConversionFailed(format!("{:?}", e)))?
         .into_iter()
         .collect::<Vec<_>>();
 
@@ -1655,11 +1655,11 @@ pub fn bfr_regular_surfaces(
 /// Create a triangular patch as a degenerate quad B-spline surface
 /// This is used to fill gaps near extraordinary vertices
 pub fn create_triangular_patch(
-    p0: Point3<f64>,
-    p1: Point3<f64>,
-    p2: Point3<f64>,
-    center: Point3<f64>,
-) -> BSplineSurface<Point3<f64>> {
+    p0: Point3,
+    p1: Point3,
+    p2: Point3,
+    center: Point3,
+) -> BsplineSurface<Point3> {
     // AIDEV-NOTE: Triangular patch creation for extraordinary vertices
     // When OpenSubdiv doesn't generate Gregory patches, we need to create
     // triangular patches to fill the gaps. We do this by creating a degenerate
@@ -1698,15 +1698,15 @@ pub fn create_triangular_patch(
     ];
 
     // Use the same knot vectors as regular patches
-    let u_knots = KnotVec::from(vec![-3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0, 4.0]);
-    let v_knots = KnotVec::from(vec![-3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0, 4.0]);
+    let u_knots = KnotVector::from(vec![-3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0, 4.0]);
+    let v_knots = KnotVector::from(vec![-3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0, 4.0]);
 
-    BSplineSurface::new((u_knots, v_knots), control_matrix)
+    BsplineSurface::new((u_knots, v_knots), control_matrix)
 }
 
 /// Extension trait for PatchTable to provide conversion methods
 pub trait PatchTableExt {
-    /// Create a wrapper for conversion to truck surfaces
+    /// Create a wrapper for conversion to monstertruck surfaces
     fn with_control_points<'a>(
         &'a self,
         control_points: &'a [[f32; 3]],
@@ -1715,41 +1715,41 @@ pub trait PatchTableExt {
     /// Get a specific patch for conversion
     fn patch<'a>(&'a self, index: usize, control_points: &'a [[f32; 3]]) -> PatchRef<'a>;
 
-    /// Convert patches to a truck shell with the given control points
-    fn to_truck_shell(&self, control_points: &[[f32; 3]]) -> Result<Shell>;
+    /// Convert patches to a monstertruck shell with the given control points
+    fn to_monstertruck_shell(&self, control_points: &[[f32; 3]]) -> Result<Shell>;
 
-    /// Convert patches to truck surfaces with the given control points
-    fn to_truck_surfaces(
+    /// Convert patches to monstertruck surfaces with the given control points
+    fn to_monstertruck_surfaces(
         &self,
         control_points: &[[f32; 3]],
-    ) -> Result<Vec<BSplineSurface<Point3<f64>>>>;
+    ) -> Result<Vec<BsplineSurface<Point3>>>;
 
-    /// Convert patches to truck surfaces with configurable Gregory accuracy.
+    /// Convert patches to monstertruck surfaces with configurable Gregory accuracy.
     ///
     /// This method allows specifying how Gregory patches (at extraordinary
     /// vertices) should be converted:
     /// - `BSplineEndCaps`: Standard 4×4 sampling (faster, slight approximation)
     /// - `HighPrecision`: 8×8 sampling for better accuracy at extraordinary
     ///   vertices
-    fn to_truck_surfaces_with_options(
+    fn to_monstertruck_surfaces_with_options(
         &self,
         control_points: &[[f32; 3]],
         gregory_accuracy: GregoryAccuracy,
-    ) -> Result<Vec<BSplineSurface<Point3<f64>>>>;
+    ) -> Result<Vec<BsplineSurface<Point3>>>;
 
     /// Prefer BFR for regular faces and fall back to PatchTable for non-regular
     /// patches.
-    fn to_truck_surfaces_bfr_mixed(
+    fn to_monstertruck_surfaces_bfr_mixed(
         &self,
         refiner: &TopologyRefiner,
         control_points: &[[f32; 3]],
         approx_smooth: i32,
         approx_sharp: i32,
-    ) -> Result<Vec<BSplineSurface<Point3<f64>>>>;
+    ) -> Result<Vec<BsplineSurface<Point3>>>;
 
     /// Build a shell using BFR for regular faces and PatchTable for irregular
     /// patches.
-    fn to_truck_shell_bfr_mixed(
+    fn to_monstertruck_shell_bfr_mixed(
         &self,
         refiner: &TopologyRefiner,
         control_points: &[[f32; 3]],
@@ -1758,16 +1758,16 @@ pub trait PatchTableExt {
     ) -> Result<Shell>;
 
     /// Build a stitched B-rep shell with shared vertices/edges between patches.
-    fn to_truck_shell_stitched(&self, control_points: &[[f32; 3]]) -> Result<Shell>;
+    fn to_monstertruck_shell_stitched(&self, control_points: &[[f32; 3]]) -> Result<Shell>;
 
     /// Convert patches to individual shells (one per patch) for disconnected
     /// export
-    fn to_truck_shells(&self, control_points: &[[f32; 3]]) -> Result<Vec<Shell>>;
+    fn to_monstertruck_shells(&self, control_points: &[[f32; 3]]) -> Result<Vec<Shell>>;
 
     /// Convert patches to a shell with gap filling for extraordinary vertices
-    fn to_truck_shell_with_gap_filling(&self, control_points: &[[f32; 3]]) -> Result<Shell>;
+    fn to_monstertruck_shell_with_gap_filling(&self, control_points: &[[f32; 3]]) -> Result<Shell>;
 
-    /// Export patches to a truck Shell for STEP output with configurable
+    /// Export patches to a monstertruck Shell for STEP output with configurable
     /// options.
     ///
     /// This is the recommended entry point for STEP export. It consolidates
@@ -1780,7 +1780,7 @@ pub trait PatchTableExt {
     /// # Example
     ///
     /// ```ignore
-    /// use opensubdiv_petite::truck::{PatchTableExt, StepExportOptions, GregoryAccuracy};
+    /// use opensubdiv_petite::monstertruck::{PatchTableExt, StepExportOptions, GregoryAccuracy};
     ///
     /// // Default export (BSpline end caps, no stitching, superpatch merging)
     /// let shell = patch_table.to_step_shell(&vertices, Default::default())?;
@@ -1828,24 +1828,24 @@ impl PatchTableExt for PatchTable {
         PatchRef::new(self, index, control_points)
     }
 
-    fn to_truck_shell(&self, control_points: &[[f32; 3]]) -> Result<Shell> {
+    fn to_monstertruck_shell(&self, control_points: &[[f32; 3]]) -> Result<Shell> {
         let wrapper = self.with_control_points(control_points);
         Shell::try_from(wrapper)
     }
 
-    fn to_truck_surfaces(
+    fn to_monstertruck_surfaces(
         &self,
         control_points: &[[f32; 3]],
-    ) -> Result<Vec<BSplineSurface<Point3<f64>>>> {
+    ) -> Result<Vec<BsplineSurface<Point3>>> {
         let wrapper = self.with_control_points(control_points);
-        Vec::<BSplineSurface<Point3<f64>>>::try_from(wrapper)
+        Vec::<BsplineSurface<Point3>>::try_from(wrapper)
     }
 
-    fn to_truck_surfaces_with_options(
+    fn to_monstertruck_surfaces_with_options(
         &self,
         control_points: &[[f32; 3]],
         gregory_accuracy: GregoryAccuracy,
-    ) -> Result<Vec<BSplineSurface<Point3<f64>>>> {
+    ) -> Result<Vec<BsplineSurface<Point3>>> {
         let convert_patch = |patch_index: usize| {
             let patch_ref = self.patch(patch_index, control_points);
             if patch_ref.is_gregory() && gregory_accuracy == GregoryAccuracy::HighPrecision {
@@ -1855,7 +1855,7 @@ impl PatchTableExt for PatchTable {
                 // Use standard conversion for regular patches or when using
                 // BSplineEndCaps accuracy (the patch table should already have
                 // B-spline end caps if configured that way).
-                BSplineSurface::try_from(patch_ref)
+                BsplineSurface::try_from(patch_ref)
             }
         };
 
@@ -1875,13 +1875,13 @@ impl PatchTableExt for PatchTable {
     /// Prefer BFR for regular faces and fall back to PatchTable for non-regular
     /// patches. BFR approximation levels control how far sharp/smooth
     /// features refine; use 0/0 to keep base quads coarse.
-    fn to_truck_surfaces_bfr_mixed(
+    fn to_monstertruck_surfaces_bfr_mixed(
         &self,
         refiner: &TopologyRefiner,
         control_points: &[[f32; 3]],
         approx_smooth: i32,
         approx_sharp: i32,
-    ) -> Result<Vec<BSplineSurface<Point3<f64>>>> {
+    ) -> Result<Vec<BsplineSurface<Point3>>> {
         let mut surfaces =
             match bfr_regular_surfaces(refiner, control_points, approx_smooth, approx_sharp) {
                 Ok(s) => s,
@@ -1903,18 +1903,18 @@ impl PatchTableExt for PatchTable {
         if surfaces.is_empty() {
             // No BFR or non-regular outputs; fall back to full PatchTable
             // conversion so we still return curved 4x4 patches.
-            self.to_truck_surfaces(control_points)
+            self.to_monstertruck_surfaces(control_points)
         } else {
             Ok(surfaces)
         }
     }
 
-    fn to_truck_shells(&self, control_points: &[[f32; 3]]) -> Result<Vec<Shell>> {
+    fn to_monstertruck_shells(&self, control_points: &[[f32; 3]]) -> Result<Vec<Shell>> {
         let wrapper = self.with_control_points(control_points);
         Vec::<Shell>::try_from(wrapper)
     }
 
-    fn to_truck_shell_with_gap_filling(&self, control_points: &[[f32; 3]]) -> Result<Shell> {
+    fn to_monstertruck_shell_with_gap_filling(&self, control_points: &[[f32; 3]]) -> Result<Shell> {
         // AIDEV-NOTE: Gap filling for extraordinary vertices
         // This method detects gaps in the patch layout and fills them with
         // triangular patches. This is a workaround for when OpenSubdiv
@@ -1927,7 +1927,7 @@ impl PatchTableExt for PatchTable {
         Ok(shell)
     }
 
-    fn to_truck_shell_bfr_mixed(
+    fn to_monstertruck_shell_bfr_mixed(
         &self,
         refiner: &TopologyRefiner,
         control_points: &[[f32; 3]],
@@ -1935,15 +1935,15 @@ impl PatchTableExt for PatchTable {
         approx_sharp: i32,
     ) -> Result<Shell> {
         let surfaces =
-            self.to_truck_surfaces_bfr_mixed(refiner, control_points, approx_smooth, approx_sharp)?;
+            self.to_monstertruck_surfaces_bfr_mixed(refiner, control_points, approx_smooth, approx_sharp)?;
         let faces: Vec<Face> = surfaces
             .into_iter()
-            .map(|s| Face::new(vec![], Surface::BSplineSurface(s)))
+            .map(|s| Face::new(vec![], Surface::BsplineSurface(s)))
             .collect();
         Ok(Shell::from(faces))
     }
 
-    fn to_truck_shell_stitched(&self, control_points: &[[f32; 3]]) -> Result<Shell> {
+    fn to_monstertruck_shell_stitched(&self, control_points: &[[f32; 3]]) -> Result<Shell> {
         // AIDEV-NOTE: Tolerant weld mode stitches edges using curve geometry samples
         // instead of control cages so slight mismatches still share topology.
         const STITCH_TOL: f64 = 1.0e-6;
@@ -1951,15 +1951,15 @@ impl PatchTableExt for PatchTable {
 
         #[derive(Clone)]
         struct EdgeSamples {
-            start: Point3<f64>,
-            end: Point3<f64>,
-            samples: Vec<Point3<f64>>,
+            start: Point3,
+            end: Point3,
+            samples: Vec<Point3>,
         }
 
         #[derive(Clone)]
         struct EdgeEntry {
             samples: EdgeSamples,
-            edge: truck_modeling::Edge,
+            edge: monstertruck_modeling::Edge,
         }
 
         enum OrientationMatch {
@@ -1967,14 +1967,14 @@ impl PatchTableExt for PatchTable {
             Reversed,
         }
 
-        fn points_within(a: &Point3<f64>, b: &Point3<f64>, tol_sq: f64) -> bool {
+        fn points_within(a: &Point3, b: &Point3, tol_sq: f64) -> bool {
             a.distance2(*b) <= tol_sq
         }
 
         fn sample_curve_points(
-            curve: &BSplineCurve<Point3<f64>>,
+            curve: &BsplineCurve<Point3>,
             sample_count: usize,
-        ) -> Vec<Point3<f64>> {
+        ) -> Vec<Point3> {
             let start = curve.knot(0);
             let end = curve.knot(curve.knot_vec().len() - 1);
 
@@ -2006,7 +2006,7 @@ impl PatchTableExt for PatchTable {
                 return false;
             }
 
-            let mut iter: Box<dyn Iterator<Item = (&Point3<f64>, &Point3<f64>)>> = if reversed {
+            let mut iter: Box<dyn Iterator<Item = (&Point3, &Point3)>> = if reversed {
                 Box::new(reference.samples.iter().zip(candidate.samples.iter().rev()))
             } else {
                 Box::new(reference.samples.iter().zip(candidate.samples.iter()))
@@ -2019,7 +2019,7 @@ impl PatchTableExt for PatchTable {
             entries: &[EdgeEntry],
             candidate: &EdgeSamples,
             tol_sq: f64,
-        ) -> Option<(truck_modeling::Edge, OrientationMatch)> {
+        ) -> Option<(monstertruck_modeling::Edge, OrientationMatch)> {
             entries.iter().find_map(|entry| {
                 if samples_match(&entry.samples, candidate, tol_sq, false) {
                     Some((entry.edge.clone(), OrientationMatch::Aligned))
@@ -2033,7 +2033,7 @@ impl PatchTableExt for PatchTable {
 
         let mut faces = Vec::new();
         let mut patch_index = 0usize;
-        let mut vertex_pool: Vec<(Point3<f64>, truck_modeling::Vertex)> = Vec::new();
+        let mut vertex_pool: Vec<(Point3, monstertruck_modeling::Vertex)> = Vec::new();
         let mut edge_entries: Vec<EdgeEntry> = Vec::new();
         let tol_sq = STITCH_TOL * STITCH_TOL;
         let mut invalid_count = 0usize;
@@ -2063,7 +2063,7 @@ impl PatchTableExt for PatchTable {
                         }
                     };
 
-                    let surface: BSplineSurface<Point3<f64>> = match patch.try_into() {
+                    let surface: BsplineSurface<Point3> = match patch.try_into() {
                         Ok(s) => s,
                         Err(_) => {
                             patch_index += 1;
@@ -2071,23 +2071,23 @@ impl PatchTableExt for PatchTable {
                         }
                     };
 
-                    let find_vertex = |pool: &mut Vec<(Point3<f64>, truck_modeling::Vertex)>,
-                                       p: Point3<f64>| {
+                    let find_vertex = |pool: &mut Vec<(Point3, monstertruck_modeling::Vertex)>,
+                                       p: Point3| {
                         if let Some((_, v)) =
                             pool.iter().find(|(pos, _)| points_within(pos, &p, tol_sq))
                         {
                             v.clone()
                         } else {
-                            let v = truck_modeling::Vertex::new(p);
+                            let v = monstertruck_modeling::Vertex::new(p);
                             pool.push((p, v.clone()));
                             v
                         }
                     };
 
-                    let make_edge_curve = |cps: Vec<Point3<f64>>| -> BSplineCurve<Point3<f64>> {
+                    let make_edge_curve = |cps: Vec<Point3>| -> BsplineCurve<Point3> {
                         let edge_knots =
-                            KnotVec::from(vec![-3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0, 4.0]);
-                        BSplineCurve::new(edge_knots, cps)
+                            KnotVector::from(vec![-3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0, 4.0]);
+                        BsplineCurve::new(edge_knots, cps)
                     };
 
                     let bottom_curve = make_edge_curve(vec![
@@ -2121,11 +2121,11 @@ impl PatchTableExt for PatchTable {
                     let left_samples = sample_curve_points(&left_curve, STITCH_SAMPLES);
 
                     let distinct_vertex =
-                        |pool: &mut Vec<(Point3<f64>, truck_modeling::Vertex)>,
-                         p: Point3<f64>,
-                         avoid: &truck_modeling::Vertex| {
+                        |pool: &mut Vec<(Point3, monstertruck_modeling::Vertex)>,
+                         p: Point3,
+                         avoid: &monstertruck_modeling::Vertex| {
                             if points_within(&avoid.point(), &p, tol_sq) {
-                                let v = truck_modeling::Vertex::new(p);
+                                let v = monstertruck_modeling::Vertex::new(p);
                                 pool.push((p, v.clone()));
                                 v
                             } else {
@@ -2199,27 +2199,27 @@ impl PatchTableExt for PatchTable {
                     let edge_count = edges.len();
                     let edges = edges.into_iter().collect::<Vec<_>>();
                     let mut wire_edges = Vec::with_capacity(4);
-                    let mut first_front: Option<truck_modeling::Vertex> = None;
-                    let mut prev_end: Option<truck_modeling::Vertex> = None;
+                    let mut first_front: Option<monstertruck_modeling::Vertex> = None;
+                    let mut prev_end: Option<monstertruck_modeling::Vertex> = None;
 
-                    let linear_curve = |v0: &truck_modeling::Vertex,
-                                        v1: &truck_modeling::Vertex|
-                     -> truck_modeling::Curve {
-                        truck_modeling::Curve::BSplineCurve(BSplineCurve::new(
-                            KnotVec::bezier_knot(1),
+                    let linear_curve = |v0: &monstertruck_modeling::Vertex,
+                                        v1: &monstertruck_modeling::Vertex|
+                     -> monstertruck_modeling::Curve {
+                        monstertruck_modeling::Curve::BsplineCurve(BsplineCurve::new(
+                            KnotVector::bezier_knot(1),
                             vec![v0.point(), v1.point()],
                         ))
                     };
 
-                    let build_edge = |v0: &truck_modeling::Vertex,
-                                      v1: &truck_modeling::Vertex,
-                                      curve: truck_modeling::Curve|
-                     -> truck_modeling::Edge {
+                    let build_edge = |v0: &monstertruck_modeling::Vertex,
+                                      v1: &monstertruck_modeling::Vertex,
+                                      curve: monstertruck_modeling::Curve|
+                     -> monstertruck_modeling::Edge {
                         if v0.id() == v1.id() {
-                            let dup = truck_modeling::Vertex::new(v1.point());
-                            truck_modeling::Edge::new(v0, &dup, curve)
+                            let dup = monstertruck_modeling::Vertex::new(v1.point());
+                            monstertruck_modeling::Edge::new(v0, &dup, curve)
                         } else {
-                            truck_modeling::Edge::new(v0, v1, curve)
+                            monstertruck_modeling::Edge::new(v0, v1, curve)
                         }
                     };
 
@@ -2239,7 +2239,7 @@ impl PatchTableExt for PatchTable {
 
                         let end_vertex =
                             if points_within(&start_vertex.point(), &candidate.end, tol_sq) {
-                                truck_modeling::Vertex::new(candidate.end)
+                                monstertruck_modeling::Vertex::new(candidate.end)
                             } else {
                                 end_vertex
                             };
@@ -2314,7 +2314,7 @@ impl PatchTableExt for PatchTable {
                     }
 
                     let surface_clone = surface.clone();
-                    let enforce_continuity = |edges: Vec<truck_modeling::Edge>| {
+                    let enforce_continuity = |edges: Vec<monstertruck_modeling::Edge>| {
                         if edges.is_empty() {
                             return edges;
                         }
@@ -2368,7 +2368,7 @@ impl PatchTableExt for PatchTable {
                     };
 
                     let validate_wire =
-                        |edges: &[truck_modeling::Edge],
+                        |edges: &[monstertruck_modeling::Edge],
                          tol_sq: f64|
                          -> std::result::Result<(), &'static str> {
                             if edges.len() != 4 {
@@ -2409,7 +2409,7 @@ impl PatchTableExt for PatchTable {
                                 let next = (i + 1) % corners.len();
                                 if corners[i].id() == corners[next].id() {
                                     corners[next] =
-                                        truck_modeling::Vertex::new(corners[next].point());
+                                        monstertruck_modeling::Vertex::new(corners[next].point());
                                 }
                             }
 
@@ -2454,8 +2454,8 @@ impl PatchTableExt for PatchTable {
                     match validate_wire(&wire_edges, tol_sq) {
                         Ok(()) => match panic::catch_unwind(panic::AssertUnwindSafe(|| {
                             Face::new(
-                                vec![truck_modeling::Wire::from(wire_edges)],
-                                Surface::BSplineSurface(surface_clone),
+                                vec![monstertruck_modeling::Wire::from(wire_edges)],
+                                Surface::BsplineSurface(surface_clone),
                             )
                         })) {
                             Ok(face) => faces.push(face),
@@ -2504,7 +2504,7 @@ impl PatchTableExt for PatchTable {
         }
 
         if faces.is_empty() {
-            Err(TruckError::InvalidControlPoints)
+            Err(MonstertruckError::InvalidControlPoints)
         } else {
             Ok(Shell::from(faces))
         }
@@ -2519,8 +2519,8 @@ impl PatchTableExt for PatchTable {
         // Routes to appropriate implementation based on options.
         //
         // Current routing:
-        // - stitch_edges: true  -> to_truck_shell_stitched (shared vertices/edges)
-        // - stitch_edges: false -> to_truck_shell (disconnected faces)
+        // - stitch_edges: true  -> to_monstertruck_shell_stitched (shared vertices/edges)
+        // - stitch_edges: false -> to_monstertruck_shell (disconnected faces)
         // - use_superpatches: true -> superpatch_surfaces (merged regular patches)
         //
         if options.use_superpatches {
@@ -2531,7 +2531,7 @@ impl PatchTableExt for PatchTable {
                 Ok(surfaces) if !surfaces.is_empty() => {
                     let faces: Vec<Face> = surfaces
                         .into_iter()
-                        .map(|s| Face::new(vec![], Surface::BSplineSurface(s)))
+                        .map(|s| Face::new(vec![], Surface::BsplineSurface(s)))
                         .collect();
 
                     if options.stitch_edges {
@@ -2564,14 +2564,14 @@ impl PatchTableExt for PatchTable {
         if options.stitch_edges {
             // Stitched shell doesn't currently support gregory accuracy option.
             // TODO: Integrate gregory accuracy into stitched export.
-            self.to_truck_shell_stitched(control_points)
+            self.to_monstertruck_shell_stitched(control_points)
         } else {
             // Use surfaces with gregory accuracy option.
             let surfaces =
-                self.to_truck_surfaces_with_options(control_points, options.gregory_accuracy)?;
+                self.to_monstertruck_surfaces_with_options(control_points, options.gregory_accuracy)?;
             let faces: Vec<Face> = surfaces
                 .into_iter()
-                .map(|s| Face::new(vec![], Surface::BSplineSurface(s)))
+                .map(|s| Face::new(vec![], Surface::BsplineSurface(s)))
                 .collect();
             Ok(Shell::from(faces))
         }
@@ -2588,11 +2588,11 @@ mod tests {
         // let control_points: Vec<[f32; 3]> = ...;
         //
         // // Convert a single patch
-        // let surface: BSplineSurface<Point3<f64>> = patch_table.patch(0,
+        // let surface: BsplineSurface<Point3> = patch_table.patch(0,
         // &control_points).try_into()?;
         //
         // // Convert all patches to surfaces
-        // let surfaces: Vec<BSplineSurface<Point3<f64>>> =
+        // let surfaces: Vec<BsplineSurface<Point3>> =
         // patch_table.with_control_points(&control_points).try_into()?;
         //
         // // Convert to shell

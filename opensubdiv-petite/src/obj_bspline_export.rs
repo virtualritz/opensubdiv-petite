@@ -104,7 +104,7 @@ pub fn export_patches_as_bspline_surfaces<W: Write>(
                     writeln!(writer)?;
 
                     // Write knot vectors
-                    // Use the same knot vector we fixed for truck: [-3, -2, -1, 0, 1, 2, 3, 4]
+                    // Use the same knot vector we fixed for monstertruck: [-3, -2, -1, 0, 1, 2, 3, 4]
                     writeln!(writer, "parm u -3.0 -2.0 -1.0 0.0 1.0 2.0 3.0 4.0")?;
                     writeln!(writer, "parm v -3.0 -2.0 -1.0 0.0 1.0 2.0 3.0 4.0")?;
 

@@ -1,27 +1,27 @@
 mod utils;
 
-#[cfg(feature = "truck")]
+#[cfg(feature = "monstertruck")]
 use utils::*;
 
-#[cfg(feature = "truck")]
+#[cfg(feature = "monstertruck")]
 #[test]
-fn test_truck_integration_compiles() {
-    use opensubdiv_petite::truck::TruckError;
+fn test_monstertruck_integration_compiles() {
+    use opensubdiv_petite::monstertruck::MonstertruckError;
 
     // Just verify the module compiles and types are accessible
-    let _error: TruckError = TruckError::InvalidControlPoints;
+    let _error: MonstertruckError = MonstertruckError::InvalidControlPoints;
 
     // This test passes if it compiles.
 }
 
-#[cfg(feature = "truck")]
+#[cfg(feature = "monstertruck")]
 #[test]
 fn test_simple_plane_to_step() {
     use opensubdiv_petite::far::{
         AdaptiveRefinementOptions, PatchTable, PatchTableOptions, PrimvarRefiner,
         TopologyDescriptor, TopologyRefiner, TopologyRefinerOptions,
     };
-    use truck_stepio::out;
+    use monstertruck_step::out;
 
     // Create a 3x3 quad mesh (4x4 vertices)
     let mut vertex_positions = Vec::new();
@@ -137,12 +137,12 @@ fn test_simple_plane_to_step() {
         }
     }
 
-    // Convert patches to truck shell
-    use opensubdiv_petite::truck::PatchTableExt;
+    // Convert patches to monstertruck shell
+    use opensubdiv_petite::monstertruck::PatchTableExt;
 
     let shell = patch_table
-        .to_truck_shell(&all_vertices)
-        .expect("Failed to convert to truck shell");
+        .to_monstertruck_shell(&all_vertices)
+        .expect("Failed to convert to monstertruck shell");
 
     // Compress and export the shell as STEP
     let compressed = shell.compress();
@@ -165,14 +165,14 @@ fn test_simple_plane_to_step() {
     assert_file_matches(&step_path, "simple_plane.step");
 }
 
-#[cfg(feature = "truck")]
+#[cfg(feature = "monstertruck")]
 #[test]
 fn test_simple_cube_to_step() {
     use opensubdiv_petite::far::{
         AdaptiveRefinementOptions, PatchTable, PatchTableOptions, PrimvarRefiner,
         TopologyDescriptor, TopologyRefiner, TopologyRefinerOptions,
     };
-    use truck_stepio::out;
+    use monstertruck_step::out;
 
     // Simple cube vertices
     let vertex_positions = vec![
@@ -287,12 +287,12 @@ fn test_simple_cube_to_step() {
         }
     }
 
-    // Convert patches to truck shell
-    use opensubdiv_petite::truck::PatchTableExt;
+    // Convert patches to monstertruck shell
+    use opensubdiv_petite::monstertruck::PatchTableExt;
 
     let shell = patch_table
-        .to_truck_shell(&all_vertices)
-        .expect("Failed to convert to truck shell");
+        .to_monstertruck_shell(&all_vertices)
+        .expect("Failed to convert to monstertruck shell");
 
     // Compress and export the shell as STEP
     let compressed = shell.compress();
@@ -315,13 +315,13 @@ fn test_simple_cube_to_step() {
     assert_file_matches(&step_path, "simple_cube.step");
 }
 
-#[cfg(feature = "truck")]
+#[cfg(feature = "monstertruck")]
 #[test]
 fn test_creased_cube_to_step() {
     use opensubdiv_petite::far::{
         PatchTable, TopologyDescriptor, TopologyRefiner, TopologyRefinerOptions,
     };
-    use truck_stepio::out;
+    use monstertruck_step::out;
 
     // Define the creased cube vertices
     let vertex_positions = vec![
@@ -455,12 +455,12 @@ fn test_creased_cube_to_step() {
         }
     }
 
-    // Convert patches to truck shell
-    use opensubdiv_petite::truck::PatchTableExt;
+    // Convert patches to monstertruck shell
+    use opensubdiv_petite::monstertruck::PatchTableExt;
 
     let shell = patch_table
-        .to_truck_shell(&all_vertices)
-        .expect("Failed to convert to truck shell");
+        .to_monstertruck_shell(&all_vertices)
+        .expect("Failed to convert to monstertruck shell");
 
     // Compress and export the shell as STEP
     let compressed = shell.compress();

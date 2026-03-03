@@ -3,10 +3,10 @@ use opensubdiv_petite::far::{
     TopologyDescriptor, TopologyRefiner, TopologyRefinerOptions,
 };
 
-#[cfg(feature = "truck")]
+#[cfg(feature = "monstertruck")]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    use opensubdiv_petite::truck::PatchTableExt;
-    use truck_stepio::out::*;
+    use opensubdiv_petite::monstertruck::PatchTableExt;
+    use monstertruck_step::out::*;
 
     // Create a simple cube mesh
     let vertex_positions = vec![
@@ -96,7 +96,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Convert to shell - test both methods
     println!("Testing regular conversion...");
-    match patch_table.to_truck_shell(&all_vertices) {
+    match patch_table.to_monstertruck_shell(&all_vertices) {
         Ok(shell) => {
             let compressed = shell.compress();
             let step_string =
@@ -109,7 +109,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     println!("Testing gap-filling conversion...");
-    match patch_table.to_truck_shell_with_gap_filling(&all_vertices) {
+    match patch_table.to_monstertruck_shell_with_gap_filling(&all_vertices) {
         Ok(shell) => {
             let compressed = shell.compress();
             let step_string =
@@ -124,8 +124,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-#[cfg(not(feature = "truck"))]
+#[cfg(not(feature = "monstertruck"))]
 fn main() {
-    println!("This example requires the 'truck' feature. Run with:");
-    println!("  cargo run --example test_cube_export --features truck");
+    println!("This example requires the 'monstertruck' feature. Run with:");
+    println!("  cargo run --example test_cube_export --features monstertruck");
 }

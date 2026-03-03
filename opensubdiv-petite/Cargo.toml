@@ -74,11 +74,11 @@ topology_validation = []
 ## Enable WGSL compute path (wgpu).
 wgpu = ["dep:wgpu"]
 
-## Enable `truck` CAD kernel integration for B-rep export.
-truck = ["truck-geometry", "truck-modeling"]
+## Enable `monstertruck` CAD kernel integration for B-rep export.
+monstertruck = ["monstertruck-geometry", "monstertruck-modeling"]
 
-## Export boundary curves when using `truck` integration.
-truck_export_boundary = ["truck"]
+## Export boundary curves when using `monstertruck` integration.
+monstertruck_export_boundary = ["monstertruck"]
 
 ## Use B-spline basis end caps instead of Gregory patches (legacy behavior).
 b_spline_end_caps = []
@@ -94,8 +94,8 @@ rayon = { version = "1", optional = true }
 itertools = { version = "0.14", optional = true }
 ultraviolet = { version = "0.10", optional = true }
 slice-of-array = { version = "0.3", optional = true }
-truck-geometry = { git = "https://github.com/ricosjp/truck.git", package = "truck-geometry", optional = true }
-truck-modeling = { git = "https://github.com/ricosjp/truck.git", package = "truck-modeling", optional = true }
+monstertruck-geometry = { git = "https://github.com/virtualritz/monstertruck-private.git", package = "monstertruck-geometry", optional = true }
+monstertruck-modeling = { git = "https://github.com/virtualritz/monstertruck-private.git", package = "monstertruck-modeling", optional = true }
 bevy = { version = "0.16", optional = true, default-features = false, features = ["bevy_core_pipeline", "bevy_asset", "bevy_render", "bevy_pbr", "bevy_winit"] }
 smooth-bevy-cameras = { version = "0.14", optional = true }
 wgpu = { version = "28", optional = true }
@@ -107,7 +107,7 @@ features = ["x11", "wayland"]
 default-features = false
 
 [dev-dependencies]
-truck-stepio = { git = "https://github.com/ricosjp/truck.git", package = "truck-stepio" }
+monstertruck-step = { git = "https://github.com/virtualritz/monstertruck-private.git", package = "monstertruck-step" }
 anyhow = "1.0"
 glam = "0.30"
 pollster = "0.3"
@@ -128,8 +128,8 @@ name = "patch_table_example"
 
 [[example]]
 path = "examples/truck_integration_example.rs"
-name = "truck_integration_example"
-required-features = ["truck"]
+name = "monstertruck_integration_example"
+required-features = ["monstertruck"]
 
 [package.metadata.docs.rs]
 features = ["tri_mesh_buffers", "topology_validation", "wgpu"]

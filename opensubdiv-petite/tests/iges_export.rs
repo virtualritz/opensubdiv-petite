@@ -118,7 +118,7 @@ fn test_simple_plane_iges() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[test]
-#[ignore = "IGES export needs to be reimplemented through truck for proper control vertex handling"]
+#[ignore = "IGES export needs to be reimplemented through monstertruck for proper control vertex handling"]
 fn test_simple_cube_iges() -> Result<(), Box<dyn std::error::Error>> {
     // Simple cube vertices
     let vertex_positions = vec![
@@ -185,7 +185,7 @@ fn test_simple_cube_iges() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[test]
-#[ignore = "IGES export needs to be reimplemented through truck for proper control vertex handling"]
+#[ignore = "IGES export needs to be reimplemented through monstertruck for proper control vertex handling"]
 fn test_creased_cube_iges() -> Result<(), Box<dyn std::error::Error>> {
     // Creased cube vertices
     let vertex_positions = vec![
@@ -262,9 +262,9 @@ fn test_creased_cube_iges() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[test]
-#[ignore = "IGES export needs to be reimplemented through truck for proper control vertex handling"]
+#[ignore = "IGES export needs to be reimplemented through monstertruck for proper control vertex handling"]
 fn test_two_patches_iges() -> Result<(), Box<dyn std::error::Error>> {
-    // Simple cube - same as in truck.rs test
+    // Simple cube - same as in monstertruck.rs test
     let vertex_positions = vec![
         [-1.0, -1.0, -1.0],
         [1.0, -1.0, -1.0],
