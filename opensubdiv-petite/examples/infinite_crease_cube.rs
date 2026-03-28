@@ -8,12 +8,12 @@
 //! because they don't decay - the edge stays perfectly sharp forever.
 
 use anyhow::Result;
+use monstertruck_step::out::*;
 use opensubdiv_petite::far::{
     AdaptiveRefinementOptions, EndCapType, PatchTable, PatchTableOptions, PrimvarRefiner,
     TopologyDescriptor, TopologyRefiner, TopologyRefinerOptions,
 };
 use opensubdiv_petite::monstertruck::PatchTableExt;
-use monstertruck_step::out::*;
 
 /// Export a cube with all 12 edges creased at the given sharpness.
 fn export_infinite_crease_cube(sharpness: f32, filename: &str) -> Result<()> {

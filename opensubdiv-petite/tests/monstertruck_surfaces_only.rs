@@ -6,13 +6,13 @@ use utils::*;
 #[cfg(feature = "monstertruck")]
 #[test]
 fn test_simple_plane_surfaces_only() -> anyhow::Result<()> {
+    use monstertruck_modeling::*;
+    use monstertruck_step::out;
     use opensubdiv_petite::far::{
         AdaptiveRefinementOptions, PatchTable, PatchTableOptions, PrimvarRefiner,
         TopologyDescriptor, TopologyRefiner, TopologyRefinerOptions,
     };
     use opensubdiv_petite::monstertruck::PatchTableExt;
-    use monstertruck_modeling::*;
-    use monstertruck_step::out;
 
     // Create a 3x3 quad mesh (4x4 vertices)
     let mut vertex_positions = Vec::new();

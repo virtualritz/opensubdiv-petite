@@ -1,4 +1,5 @@
 use anyhow::Result;
+use monstertruck_step::out::*;
 use opensubdiv_petite::far::{
     AdaptiveRefinementOptions, EndCapType, PatchTable, PatchTableOptions, PrimvarRefiner,
     TopologyDescriptor, TopologyRefiner, TopologyRefinerOptions,
@@ -7,7 +8,6 @@ use opensubdiv_petite::monstertruck::{
     bfr_regular_surfaces, superpatch_surfaces, GregoryAccuracy, PatchTableExt, StepExportOptions,
 };
 use opensubdiv_petite::Index;
-use monstertruck_step::out::*;
 
 fn main() -> Result<()> {
     // Creased cube: all edges sharpness 8.0
@@ -174,7 +174,12 @@ fn main() -> Result<()> {
     } else {
         let faces: Vec<monstertruck_modeling::Face> = bfr_surfaces
             .into_iter()
-            .map(|s| monstertruck_modeling::Face::new(vec![], monstertruck_modeling::Surface::BsplineSurface(s)))
+            .map(|s| {
+                monstertruck_modeling::Face::new(
+                    vec![],
+                    monstertruck_modeling::Surface::BsplineSurface(s),
+                )
+            })
             .collect();
         let shell = monstertruck_modeling::Shell::from(faces);
         let compressed = shell.compress();
@@ -193,7 +198,10 @@ fn main() -> Result<()> {
             let faces: Vec<monstertruck_modeling::Face> = surfaces
                 .into_iter()
                 .map(|s| {
-                    monstertruck_modeling::Face::new(vec![], monstertruck_modeling::Surface::BsplineSurface(s))
+                    monstertruck_modeling::Face::new(
+                        vec![],
+                        monstertruck_modeling::Surface::BsplineSurface(s),
+                    )
                 })
                 .collect();
             let shell = monstertruck_modeling::Shell::from(faces);
@@ -228,7 +236,10 @@ fn main() -> Result<()> {
             let faces: Vec<monstertruck_modeling::Face> = surfaces
                 .into_iter()
                 .map(|s| {
-                    monstertruck_modeling::Face::new(vec![], monstertruck_modeling::Surface::BsplineSurface(s))
+                    monstertruck_modeling::Face::new(
+                        vec![],
+                        monstertruck_modeling::Surface::BsplineSurface(s),
+                    )
                 })
                 .collect();
             let shell = monstertruck_modeling::Shell::from(faces);
