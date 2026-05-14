@@ -29,17 +29,17 @@ Many methods have slightly different names on the Rust side.
 Renaming was done considering these constraints:
 * Be verbose consistently (the original API is quite verbose but does make
   use of abbreviations in some surprising places).
-* Use canonical Rust naming  – (`num_vertices()` becomes `vertex_count()`).
-* Use canonically Rust constructs.  Most option/configuration `struct`s use the
+* Use canonical Rust naming – (`num_vertices()` becomes `vertex_count()`).
+* Use canonical Rust constructs. Most option/configuration `struct`s use the
   [init-`struct` pattern](https://xaeroxe.github.io/init-struct-pattern/). In
   places where it’s not possible to easily map to a Rust `struct`, the builder
-  pattern (or anti-pattern, depending whom you ask) is used.
+  pattern (or anti-pattern, depending on whom you ask) is used.
 * Be brief when possible. Example: `StencilTable::numStencils()` in C++
   becomes `StencilTable::len()` in Rust.
 * Use unsigned integer types, specifically `usize` and `u32`, instead of
   signed ones (`i32`) for anything that can only contain positive values
-  (indices, sizes/lengths/counts, valences, arities, etc.).  Types should
-  express intent.  See also
+  (indices, sizes/lengths/counts, valences, arities, etc.). Types should
+  express intent. See also
   [here](https://github.com/PixarAnimationStudios/OpenSubdiv/issues/1222).
 
 ### OpenSubdiv Backend Support
@@ -64,9 +64,9 @@ below shows which ones this wrapper supports today.
 #### wgpu
 
 The `wgpu` feature enables a **pure-Rust** GPU compute path for stencil
-evaluation using WGSL shaders.  This is not an *OpenSubdiv* backend —
-it uploads `StencilTable` data to `wgpu` storage buffers and
-dispatches a WGSL compute shader.
+evaluation using WGSL shaders. This is not an *OpenSubdiv* backend —
+it uploads `StencilTable` data to `wgpu` storage buffers and dispatches
+a WGSL compute shader.
 
 ```rust
 use opensubdiv_petite::osd::wgpu::*;
@@ -89,8 +89,9 @@ evaluate_stencils(
 
 ### Versions
 
-For now crate versions reflect code maturity on the Rust side. They are not
-in any way related to the *OpenSubdiv* version that is wrapped.
+Crate versions are independent of *OpenSubdiv*'s release numbers — they
+track Rust-side maturity. The table below shows which *OpenSubdiv* release
+each crate version wraps:
 
 - `v0.3.x` – *OpenSubdiv* `v3.7.x`
 - `v0.2.x` – *OpenSubdiv* `v3.5.x`
@@ -128,8 +129,8 @@ in any way related to the *OpenSubdiv* version that is wrapped.
 - **`tri_mesh_buffers`** — Enable triangle mesh buffer generation.
 - **`topology_validation`** _(enabled by default)_ — Enable topology validation for debugging. Disable for release builds.
 - **`wgpu`** — Enable WGSL compute path (wgpu).
-- **`truck`** — Enable `truck` CAD kernel integration for B-rep export.
-- **`truck_export_boundary`** — Export boundary curves when using `truck` integration.
+- **`monstertruck`** — Enable `monstertruck` CAD kernel integration for B-rep export.
+- **`monstertruck_export_boundary`** — Export boundary curves when using `monstertruck` integration.
 - **`b_spline_end_caps`** — Use B-spline basis end caps instead of Gregory patches (legacy behavior).
 
 ## License
