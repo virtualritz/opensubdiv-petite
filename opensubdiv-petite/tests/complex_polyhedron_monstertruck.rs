@@ -130,8 +130,8 @@ mod tests {
 
     #[test]
     fn test_complex_polyhedron_to_step() {
-        use opensubdiv_petite::monstertruck::PatchTableExt;
         use monstertruck_step::out;
+        use opensubdiv_petite::monstertruck::PatchTableExt;
 
         // Create icosahedron base geometry
         let mut vertex_positions = create_icosahedron_vertices();

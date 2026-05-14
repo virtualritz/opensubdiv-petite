@@ -91,8 +91,8 @@ mod tests {
     // #[test]
     #[allow(dead_code)]
     fn test_simple_cube_disconnected_patches() -> anyhow::Result<()> {
-        use opensubdiv_petite::monstertruck::PatchTableExt;
         use monstertruck_step::out;
+        use opensubdiv_petite::monstertruck::PatchTableExt;
 
         // Define simple cube vertices
         let vertex_positions = vec![

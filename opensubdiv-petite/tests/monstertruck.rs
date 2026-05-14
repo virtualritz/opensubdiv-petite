@@ -17,11 +17,11 @@ fn test_monstertruck_integration_compiles() {
 #[cfg(feature = "monstertruck")]
 #[test]
 fn test_simple_plane_to_step() {
+    use monstertruck_step::out;
     use opensubdiv_petite::far::{
         AdaptiveRefinementOptions, PatchTable, PatchTableOptions, PrimvarRefiner,
         TopologyDescriptor, TopologyRefiner, TopologyRefinerOptions,
     };
-    use monstertruck_step::out;
 
     // Create a 3x3 quad mesh (4x4 vertices)
     let mut vertex_positions = Vec::new();
@@ -168,11 +168,11 @@ fn test_simple_plane_to_step() {
 #[cfg(feature = "monstertruck")]
 #[test]
 fn test_simple_cube_to_step() {
+    use monstertruck_step::out;
     use opensubdiv_petite::far::{
         AdaptiveRefinementOptions, PatchTable, PatchTableOptions, PrimvarRefiner,
         TopologyDescriptor, TopologyRefiner, TopologyRefinerOptions,
     };
-    use monstertruck_step::out;
 
     // Simple cube vertices
     let vertex_positions = vec![
@@ -318,10 +318,10 @@ fn test_simple_cube_to_step() {
 #[cfg(feature = "monstertruck")]
 #[test]
 fn test_creased_cube_to_step() {
+    use monstertruck_step::out;
     use opensubdiv_petite::far::{
         PatchTable, TopologyDescriptor, TopologyRefiner, TopologyRefinerOptions,
     };
-    use monstertruck_step::out;
 
     // Define the creased cube vertices
     let vertex_positions = vec![
