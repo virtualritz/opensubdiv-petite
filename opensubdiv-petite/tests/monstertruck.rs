@@ -1,13 +1,20 @@
 mod utils;
 
 #[cfg(feature = "monstertruck")]
+use monstertruck::step::save::{CompleteStepDisplay, StepHeaderDescriptor, StepModel};
+#[cfg(feature = "monstertruck")]
+use opensubdiv_petite::far::{
+    AdaptiveRefinementOptions, PatchTable, PatchTableOptions, PrimvarRefiner, TopologyDescriptor,
+    TopologyRefiner, TopologyRefinerOptions,
+};
+#[cfg(feature = "monstertruck")]
+use opensubdiv_petite::monstertruck::{MonstertruckError, PatchTableExt};
+#[cfg(feature = "monstertruck")]
 use utils::*;
 
 #[cfg(feature = "monstertruck")]
 #[test]
 fn test_monstertruck_integration_compiles() {
-    use opensubdiv_petite::monstertruck::MonstertruckError;
-
     // Just verify the module compiles and types are accessible
     let _error: MonstertruckError = MonstertruckError::InvalidControlPoints;
 
@@ -17,12 +24,6 @@ fn test_monstertruck_integration_compiles() {
 #[cfg(feature = "monstertruck")]
 #[test]
 fn test_simple_plane_to_step() {
-    use monstertruck_step::out;
-    use opensubdiv_petite::far::{
-        AdaptiveRefinementOptions, PatchTable, PatchTableOptions, PrimvarRefiner,
-        TopologyDescriptor, TopologyRefiner, TopologyRefinerOptions,
-    };
-
     // Create a 3x3 quad mesh (4x4 vertices)
     let mut vertex_positions = Vec::new();
     for y in 0..4 {
@@ -138,8 +139,6 @@ fn test_simple_plane_to_step() {
     }
 
     // Convert patches to monstertruck shell
-    use opensubdiv_petite::monstertruck::PatchTableExt;
-
     let shell = patch_table
         .to_monstertruck_shell(&all_vertices)
         .expect("Failed to convert to monstertruck shell");
@@ -148,9 +147,9 @@ fn test_simple_plane_to_step() {
     let compressed = shell.compress();
 
     // Write to STEP file
-    let step_string = out::CompleteStepDisplay::new(
-        out::StepModel::from(&compressed),
-        out::StepHeaderDescriptor {
+    let step_string = CompleteStepDisplay::new(
+        StepModel::from(&compressed),
+        StepHeaderDescriptor {
             file_name: "simple_plane.step".to_owned(),
             ..Default::default()
         },
@@ -168,12 +167,6 @@ fn test_simple_plane_to_step() {
 #[cfg(feature = "monstertruck")]
 #[test]
 fn test_simple_cube_to_step() {
-    use monstertruck_step::out;
-    use opensubdiv_petite::far::{
-        AdaptiveRefinementOptions, PatchTable, PatchTableOptions, PrimvarRefiner,
-        TopologyDescriptor, TopologyRefiner, TopologyRefinerOptions,
-    };
-
     // Simple cube vertices
     let vertex_positions = vec![
         [-0.5, -0.5, -0.5],
@@ -288,8 +281,6 @@ fn test_simple_cube_to_step() {
     }
 
     // Convert patches to monstertruck shell
-    use opensubdiv_petite::monstertruck::PatchTableExt;
-
     let shell = patch_table
         .to_monstertruck_shell(&all_vertices)
         .expect("Failed to convert to monstertruck shell");
@@ -298,9 +289,9 @@ fn test_simple_cube_to_step() {
     let compressed = shell.compress();
 
     // Write to STEP file
-    let step_string = out::CompleteStepDisplay::new(
-        out::StepModel::from(&compressed),
-        out::StepHeaderDescriptor {
+    let step_string = CompleteStepDisplay::new(
+        StepModel::from(&compressed),
+        StepHeaderDescriptor {
             file_name: "simple_cube.step".to_owned(),
             ..Default::default()
         },
@@ -318,11 +309,6 @@ fn test_simple_cube_to_step() {
 #[cfg(feature = "monstertruck")]
 #[test]
 fn test_creased_cube_to_step() {
-    use monstertruck_step::out;
-    use opensubdiv_petite::far::{
-        PatchTable, TopologyDescriptor, TopologyRefiner, TopologyRefinerOptions,
-    };
-
     // Define the creased cube vertices
     let vertex_positions = vec![
         [-0.5, -0.5, 0.5],
@@ -372,7 +358,6 @@ fn test_creased_cube_to_step() {
     // Use adaptive refinement to generate B-spline patches
     // Based on OpenSubdiv docs, adaptive refinement isolates irregular features
     // and generates B-spline patches for regular regions
-    use opensubdiv_petite::far::AdaptiveRefinementOptions;
     let adaptive_options = AdaptiveRefinementOptions {
         isolation_level: 2,
         ..Default::default()
@@ -381,13 +366,11 @@ fn test_creased_cube_to_step() {
     refiner.refine_adaptive(adaptive_options, &[]);
 
     // Create patch table with B-spline patches for higher-order surfaces
-    use opensubdiv_petite::far::PatchTableOptions;
     let patch_options = PatchTableOptions::new().end_cap_type(default_end_cap_type());
     let patch_table =
         PatchTable::new(&refiner, Some(patch_options)).expect("Failed to create patch table");
 
     // Build complete vertex buffer including all refinement levels
-    use opensubdiv_petite::far::PrimvarRefiner;
     let primvar_refiner = PrimvarRefiner::new(&refiner).expect("Failed to create primvar refiner");
     let total_vertices = refiner.vertex_count_all_levels();
 
@@ -456,8 +439,6 @@ fn test_creased_cube_to_step() {
     }
 
     // Convert patches to monstertruck shell
-    use opensubdiv_petite::monstertruck::PatchTableExt;
-
     let shell = patch_table
         .to_monstertruck_shell(&all_vertices)
         .expect("Failed to convert to monstertruck shell");
@@ -466,9 +447,9 @@ fn test_creased_cube_to_step() {
     let compressed = shell.compress();
 
     // Write to STEP file
-    let step_string = out::CompleteStepDisplay::new(
-        out::StepModel::from(&compressed),
-        out::StepHeaderDescriptor {
+    let step_string = CompleteStepDisplay::new(
+        StepModel::from(&compressed),
+        StepHeaderDescriptor {
             file_name: "creased_cube.step".to_owned(),
             ..Default::default()
         },

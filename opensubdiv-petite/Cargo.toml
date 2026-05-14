@@ -75,7 +75,7 @@ topology_validation = []
 wgpu = ["dep:wgpu"]
 
 ## Enable `monstertruck` CAD kernel integration for B-rep export.
-monstertruck = ["monstertruck-geometry", "monstertruck-modeling"]
+monstertruck = ["dep:monstertruck"]
 
 ## Export boundary curves when using `monstertruck` integration.
 monstertruck_export_boundary = ["monstertruck"]
@@ -87,15 +87,14 @@ b_spline_end_caps = []
 bytemuck = { version = "1", features = ["derive"] }
 derive_more = { version = "2", features = ["full"] }
 document-features = "0.2"
-opensubdiv-petite-sys = { version = "0.3.0", path = "../opensubdiv-petite-sys" }
+opensubdiv-petite-sys = { version = "0.3.1", path = "../opensubdiv-petite-sys" }
 num_enum = "0.7"
 thiserror = "2"
 rayon = { version = "1", optional = true }
 itertools = { version = "0.14", optional = true }
 ultraviolet = { version = "0.10", optional = true }
 slice-of-array = { version = "0.3", optional = true }
-monstertruck-geometry = { git = "https://github.com/virtualritz/monstertruck-private.git", package = "monstertruck-geometry", optional = true }
-monstertruck-modeling = { git = "https://github.com/virtualritz/monstertruck-private.git", package = "monstertruck-modeling", optional = true }
+monstertruck = { version = "0.3", optional = true, default-features = false, features = ["modeling"] }
 bevy = { version = "0.16", optional = true, default-features = false, features = ["bevy_core_pipeline", "bevy_asset", "bevy_render", "bevy_pbr", "bevy_winit"] }
 smooth-bevy-cameras = { version = "0.14", optional = true }
 wgpu = { version = "28", optional = true }
@@ -107,7 +106,7 @@ features = ["x11", "wayland"]
 default-features = false
 
 [dev-dependencies]
-monstertruck-step = { git = "https://github.com/virtualritz/monstertruck-private.git", package = "monstertruck-step" }
+monstertruck = { version = "0.3", default-features = false, features = ["step"] }
 anyhow = "1.0"
 glam = "0.30"
 pollster = "0.3"

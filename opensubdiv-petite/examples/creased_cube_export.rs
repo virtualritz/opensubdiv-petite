@@ -1,5 +1,5 @@
 use anyhow::Result;
-use monstertruck_step::out::*;
+use monstertruck::step::save::*;
 use opensubdiv_petite::far::{
     AdaptiveRefinementOptions, EndCapType, PatchTable, PatchTableOptions, PrimvarRefiner,
     TopologyDescriptor, TopologyRefiner, TopologyRefinerOptions,
@@ -172,16 +172,16 @@ fn main() -> Result<()> {
             );
         }
     } else {
-        let faces: Vec<monstertruck_modeling::Face> = bfr_surfaces
+        let faces: Vec<monstertruck::modeling::Face> = bfr_surfaces
             .into_iter()
             .map(|s| {
-                monstertruck_modeling::Face::new(
+                monstertruck::modeling::Face::new(
                     vec![],
-                    monstertruck_modeling::Surface::BsplineSurface(s),
+                    monstertruck::modeling::Surface::BsplineSurface(s),
                 )
             })
             .collect();
-        let shell = monstertruck_modeling::Shell::from(faces);
+        let shell = monstertruck::modeling::Shell::from(faces);
         let compressed = shell.compress();
         let step_string =
             CompleteStepDisplay::new(StepModel::from(&compressed), Default::default()).to_string();
@@ -195,16 +195,16 @@ fn main() -> Result<()> {
     println!("Creased cube: BFR + PatchTable mixed surfaces...");
     match patch_table.to_monstertruck_surfaces_bfr_mixed(&refiner, &all_vertices, 0, approx_sharp) {
         Ok(surfaces) if !surfaces.is_empty() => {
-            let faces: Vec<monstertruck_modeling::Face> = surfaces
+            let faces: Vec<monstertruck::modeling::Face> = surfaces
                 .into_iter()
                 .map(|s| {
-                    monstertruck_modeling::Face::new(
+                    monstertruck::modeling::Face::new(
                         vec![],
-                        monstertruck_modeling::Surface::BsplineSurface(s),
+                        monstertruck::modeling::Surface::BsplineSurface(s),
                     )
                 })
                 .collect();
-            let shell = monstertruck_modeling::Shell::from(faces);
+            let shell = monstertruck::modeling::Shell::from(faces);
             let compressed = shell.compress();
             let step_string =
                 CompleteStepDisplay::new(StepModel::from(&compressed), Default::default())
@@ -233,16 +233,16 @@ fn main() -> Result<()> {
     println!("Creased cube: superpatch export...");
     match superpatch_surfaces(&patch_table, &all_vertices, 1.0e-6) {
         Ok(surfaces) if !surfaces.is_empty() => {
-            let faces: Vec<monstertruck_modeling::Face> = surfaces
+            let faces: Vec<monstertruck::modeling::Face> = surfaces
                 .into_iter()
                 .map(|s| {
-                    monstertruck_modeling::Face::new(
+                    monstertruck::modeling::Face::new(
                         vec![],
-                        monstertruck_modeling::Surface::BsplineSurface(s),
+                        monstertruck::modeling::Surface::BsplineSurface(s),
                     )
                 })
                 .collect();
-            let shell = monstertruck_modeling::Shell::from(faces);
+            let shell = monstertruck::modeling::Shell::from(faces);
             let compressed = shell.compress();
             let step_string =
                 CompleteStepDisplay::new(StepModel::from(&compressed), Default::default())
