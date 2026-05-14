@@ -8,7 +8,7 @@
 //! because they don't decay - the edge stays perfectly sharp forever.
 
 use anyhow::Result;
-use monstertruck_step::out::*;
+use monstertruck::step::save::*;
 use opensubdiv_petite::far::{
     AdaptiveRefinementOptions, EndCapType, PatchTable, PatchTableOptions, PrimvarRefiner,
     TopologyDescriptor, TopologyRefiner, TopologyRefinerOptions,

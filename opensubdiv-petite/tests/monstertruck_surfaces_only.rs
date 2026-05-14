@@ -1,19 +1,22 @@
 mod utils;
 
 #[cfg(feature = "monstertruck")]
+use monstertruck::modeling::*;
+#[cfg(feature = "monstertruck")]
+use monstertruck::step::save::{CompleteStepDisplay, StepHeaderDescriptor, StepModel};
+#[cfg(feature = "monstertruck")]
+use opensubdiv_petite::far::{
+    AdaptiveRefinementOptions, PatchTable, PatchTableOptions, PrimvarRefiner, TopologyDescriptor,
+    TopologyRefiner, TopologyRefinerOptions,
+};
+#[cfg(feature = "monstertruck")]
+use opensubdiv_petite::monstertruck::PatchTableExt;
+#[cfg(feature = "monstertruck")]
 use utils::*;
 
 #[cfg(feature = "monstertruck")]
 #[test]
 fn test_simple_plane_surfaces_only() -> anyhow::Result<()> {
-    use monstertruck_modeling::*;
-    use monstertruck_step::out;
-    use opensubdiv_petite::far::{
-        AdaptiveRefinementOptions, PatchTable, PatchTableOptions, PrimvarRefiner,
-        TopologyDescriptor, TopologyRefiner, TopologyRefinerOptions,
-    };
-    use opensubdiv_petite::monstertruck::PatchTableExt;
-
     // Create a 3x3 quad mesh (4x4 vertices)
     let mut vertex_positions = Vec::new();
     for y in 0..4 {
@@ -128,9 +131,9 @@ fn test_simple_plane_surfaces_only() -> anyhow::Result<()> {
     let compressed = shell.compress();
 
     // Write to STEP file
-    let step_string = out::CompleteStepDisplay::new(
-        out::StepModel::from(&compressed),
-        out::StepHeaderDescriptor {
+    let step_string = CompleteStepDisplay::new(
+        StepModel::from(&compressed),
+        StepHeaderDescriptor {
             file_name: "simple_plane_surfaces_only.step".to_owned(),
             ..Default::default()
         },

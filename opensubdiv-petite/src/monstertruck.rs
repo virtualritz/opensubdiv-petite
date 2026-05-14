@@ -6,12 +6,10 @@
 
 use crate::bfr::SurfaceFactory as BfrSurfaceFactory;
 use crate::far::{PatchEvalResult, PatchTable, PatchType, TopologyRefiner};
-use monstertruck_geometry::prelude::{
-    BsplineCurve, BsplineSurface, KnotVector, ParametricCurve, ParametricSurface,
-};
+use monstertruck::geometry::prelude::{BsplineCurve, BsplineSurface, KnotVector, ParametricCurve};
 #[cfg(feature = "monstertruck_export_boundary")]
-use monstertruck_modeling::{Curve, Edge, Vertex, Wire};
-use monstertruck_modeling::{
+use monstertruck::modeling::{Curve, Edge, Vertex, Wire};
+use monstertruck::modeling::{
     EuclideanSpace, Face, InnerSpace, MetricSpace, Point3, Shell, Surface, Vector3,
 };
 #[cfg(feature = "rayon")]
@@ -624,7 +622,7 @@ fn create_face_with_boundary(
     control_matrix: &[Vec<Point3>],
     surface: BsplineSurface<Point3>,
 ) -> Face {
-    use monstertruck_geometry::prelude::BsplineCurve;
+    use monstertruck::geometry::prelude::BsplineCurve;
 
     // AIDEV-NOTE: Boundary control point extraction.
     // For OpenSubdiv B-spline patches with uniform knot vectors,
@@ -1347,7 +1345,7 @@ impl<'a> TryFrom<PatchTableWithControlPointsRef<'a>> for Shell {
         let surfaces: Vec<BsplineSurface<Point3>> = patches.try_into()?;
 
         use std::collections::HashMap;
-        use monstertruck_geometry::prelude::BsplineCurve;
+        use monstertruck::geometry::prelude::BsplineCurve;
 
         // AIDEV-NOTE: Create proper B-rep with shared vertices and edges
         // Following the pattern from monstertruck-topology's cube example, we need to:
@@ -2088,7 +2086,7 @@ impl PatchTableExt for PatchTable {
         #[derive(Clone)]
         struct EdgeEntry {
             samples: EdgeSamples,
-            edge: monstertruck_modeling::Edge,
+            edge: monstertruck::modeling::Edge,
         }
 
         enum OrientationMatch {
@@ -2145,7 +2143,7 @@ impl PatchTableExt for PatchTable {
             entries: &[EdgeEntry],
             candidate: &EdgeSamples,
             tol_sq: f64,
-        ) -> Option<(monstertruck_modeling::Edge, OrientationMatch)> {
+        ) -> Option<(monstertruck::modeling::Edge, OrientationMatch)> {
             entries.iter().find_map(|entry| {
                 if samples_match(&entry.samples, candidate, tol_sq, false) {
                     Some((entry.edge.clone(), OrientationMatch::Aligned))
@@ -2159,7 +2157,7 @@ impl PatchTableExt for PatchTable {
 
         let mut faces = Vec::new();
         let mut patch_index = 0usize;
-        let mut vertex_pool: Vec<(Point3, monstertruck_modeling::Vertex)> = Vec::new();
+        let mut vertex_pool: Vec<(Point3, monstertruck::modeling::Vertex)> = Vec::new();
         let mut edge_entries: Vec<EdgeEntry> = Vec::new();
         let tol_sq = STITCH_TOL * STITCH_TOL;
         let mut invalid_count = 0usize;
@@ -2197,14 +2195,14 @@ impl PatchTableExt for PatchTable {
                         }
                     };
 
-                    let find_vertex = |pool: &mut Vec<(Point3, monstertruck_modeling::Vertex)>,
+                    let find_vertex = |pool: &mut Vec<(Point3, monstertruck::modeling::Vertex)>,
                                        p: Point3| {
                         if let Some((_, v)) =
                             pool.iter().find(|(pos, _)| points_within(pos, &p, tol_sq))
                         {
                             v.clone()
                         } else {
-                            let v = monstertruck_modeling::Vertex::new(p);
+                            let v = monstertruck::modeling::Vertex::new(p);
                             pool.push((p, v.clone()));
                             v
                         }
@@ -2247,11 +2245,11 @@ impl PatchTableExt for PatchTable {
                     let left_samples = sample_curve_points(&left_curve, STITCH_SAMPLES);
 
                     let distinct_vertex =
-                        |pool: &mut Vec<(Point3, monstertruck_modeling::Vertex)>,
+                        |pool: &mut Vec<(Point3, monstertruck::modeling::Vertex)>,
                          p: Point3,
-                         avoid: &monstertruck_modeling::Vertex| {
+                         avoid: &monstertruck::modeling::Vertex| {
                             if points_within(&avoid.point(), &p, tol_sq) {
-                                let v = monstertruck_modeling::Vertex::new(p);
+                                let v = monstertruck::modeling::Vertex::new(p);
                                 pool.push((p, v.clone()));
                                 v
                             } else {
@@ -2325,27 +2323,27 @@ impl PatchTableExt for PatchTable {
                     let edge_count = edges.len();
                     let edges = edges.into_iter().collect::<Vec<_>>();
                     let mut wire_edges = Vec::with_capacity(4);
-                    let mut first_front: Option<monstertruck_modeling::Vertex> = None;
-                    let mut prev_end: Option<monstertruck_modeling::Vertex> = None;
+                    let mut first_front: Option<monstertruck::modeling::Vertex> = None;
+                    let mut prev_end: Option<monstertruck::modeling::Vertex> = None;
 
-                    let linear_curve = |v0: &monstertruck_modeling::Vertex,
-                                        v1: &monstertruck_modeling::Vertex|
-                     -> monstertruck_modeling::Curve {
-                        monstertruck_modeling::Curve::BsplineCurve(BsplineCurve::new(
+                    let linear_curve = |v0: &monstertruck::modeling::Vertex,
+                                        v1: &monstertruck::modeling::Vertex|
+                     -> monstertruck::modeling::Curve {
+                        monstertruck::modeling::Curve::BsplineCurve(BsplineCurve::new(
                             KnotVector::bezier_knot(1),
                             vec![v0.point(), v1.point()],
                         ))
                     };
 
-                    let build_edge = |v0: &monstertruck_modeling::Vertex,
-                                      v1: &monstertruck_modeling::Vertex,
-                                      curve: monstertruck_modeling::Curve|
-                     -> monstertruck_modeling::Edge {
+                    let build_edge = |v0: &monstertruck::modeling::Vertex,
+                                      v1: &monstertruck::modeling::Vertex,
+                                      curve: monstertruck::modeling::Curve|
+                     -> monstertruck::modeling::Edge {
                         if v0.id() == v1.id() {
-                            let dup = monstertruck_modeling::Vertex::new(v1.point());
-                            monstertruck_modeling::Edge::new(v0, &dup, curve)
+                            let dup = monstertruck::modeling::Vertex::new(v1.point());
+                            monstertruck::modeling::Edge::new(v0, &dup, curve)
                         } else {
-                            monstertruck_modeling::Edge::new(v0, v1, curve)
+                            monstertruck::modeling::Edge::new(v0, v1, curve)
                         }
                     };
 
@@ -2365,7 +2363,7 @@ impl PatchTableExt for PatchTable {
 
                         let end_vertex =
                             if points_within(&start_vertex.point(), &candidate.end, tol_sq) {
-                                monstertruck_modeling::Vertex::new(candidate.end)
+                                monstertruck::modeling::Vertex::new(candidate.end)
                             } else {
                                 end_vertex
                             };
@@ -2440,7 +2438,7 @@ impl PatchTableExt for PatchTable {
                     }
 
                     let surface_clone = surface.clone();
-                    let enforce_continuity = |edges: Vec<monstertruck_modeling::Edge>| {
+                    let enforce_continuity = |edges: Vec<monstertruck::modeling::Edge>| {
                         if edges.is_empty() {
                             return edges;
                         }
@@ -2494,7 +2492,7 @@ impl PatchTableExt for PatchTable {
                     };
 
                     let validate_wire =
-                        |edges: &[monstertruck_modeling::Edge],
+                        |edges: &[monstertruck::modeling::Edge],
                          tol_sq: f64|
                          -> std::result::Result<(), &'static str> {
                             if edges.len() != 4 {
@@ -2535,7 +2533,7 @@ impl PatchTableExt for PatchTable {
                                 let next = (i + 1) % corners.len();
                                 if corners[i].id() == corners[next].id() {
                                     corners[next] =
-                                        monstertruck_modeling::Vertex::new(corners[next].point());
+                                        monstertruck::modeling::Vertex::new(corners[next].point());
                                 }
                             }
 
@@ -2580,7 +2578,7 @@ impl PatchTableExt for PatchTable {
                     match validate_wire(&wire_edges, tol_sq) {
                         Ok(()) => match panic::catch_unwind(panic::AssertUnwindSafe(|| {
                             Face::new(
-                                vec![monstertruck_modeling::Wire::from(wire_edges)],
+                                vec![monstertruck::modeling::Wire::from(wire_edges)],
                                 Surface::BsplineSurface(surface_clone),
                             )
                         })) {

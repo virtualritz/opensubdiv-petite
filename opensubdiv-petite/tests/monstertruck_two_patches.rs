@@ -1,17 +1,20 @@
 mod utils;
 
 #[cfg(feature = "monstertruck")]
+use monstertruck::step::save::{CompleteStepDisplay, StepHeaderDescriptor, StepModel};
+#[cfg(feature = "monstertruck")]
+use opensubdiv_petite::far::{
+    AdaptiveRefinementOptions, PatchTable, PatchTableOptions, PrimvarRefiner, TopologyDescriptor,
+    TopologyRefiner, TopologyRefinerOptions,
+};
+#[cfg(feature = "monstertruck")]
+use opensubdiv_petite::monstertruck::PatchTableExt;
+#[cfg(feature = "monstertruck")]
 use utils::*;
 
 #[cfg(feature = "monstertruck")]
 #[test]
 fn test_two_patches_surfaces_only() -> anyhow::Result<()> {
-    use opensubdiv_petite::far::{
-        AdaptiveRefinementOptions, PatchTable, PatchTableOptions, PrimvarRefiner,
-        TopologyDescriptor, TopologyRefiner, TopologyRefinerOptions,
-    };
-    use opensubdiv_petite::monstertruck::PatchTableExt;
-
     // Simple cube - same as in monstertruck.rs test
     let vertex_positions = vec![
         [-1.0, -1.0, -1.0],
@@ -117,11 +120,10 @@ fn test_two_patches_surfaces_only() -> anyhow::Result<()> {
     // Compress and export the shell as STEP - same as simple plane
     let compressed = shell.compress();
 
-    // Write to STEP file using monstertruck_step
-    use monstertruck_step::out;
-    let step_string = out::CompleteStepDisplay::new(
-        out::StepModel::from(&compressed),
-        out::StepHeaderDescriptor {
+    // Write to STEP file using monstertruck::step
+    let step_string = CompleteStepDisplay::new(
+        StepModel::from(&compressed),
+        StepHeaderDescriptor {
             file_name: "two_patches_surfaces_only.step".to_owned(),
             ..Default::default()
         },

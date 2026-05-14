@@ -185,7 +185,7 @@ impl Surface {
 }
 
 #[cfg(feature = "monstertruck")]
-use monstertruck_geometry::prelude::{BsplineSurface, KnotVector, Point3};
+use monstertruck::geometry::prelude::{BsplineSurface, KnotVector, Point3};
 
 #[cfg(feature = "monstertruck")]
 impl SurfaceFactory {
