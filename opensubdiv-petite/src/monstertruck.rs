@@ -6,17 +6,16 @@
 
 use crate::bfr::SurfaceFactory as BfrSurfaceFactory;
 use crate::far::{PatchEvalResult, PatchTable, PatchType, TopologyRefiner};
+use monstertruck_geometry::prelude::{BsplineCurve, BsplineSurface, KnotVector, ParametricCurve, ParametricSurface};
+#[cfg(feature = "monstertruck_export_boundary")]
+use monstertruck_modeling::{Curve, Edge, Vertex, Wire};
+use monstertruck_modeling::{
+    EuclideanSpace, Face, InnerSpace, MetricSpace, Point3, Shell, Surface, Vector3,
+};
 #[cfg(feature = "rayon")]
 use rayon::prelude::*;
 use std::{convert::TryFrom, panic};
 use thiserror::Error;
-use monstertruck_geometry::prelude::{BsplineCurve, BsplineSurface, KnotVector, ParametricCurve};
-use monstertruck_modeling::{
-    EuclideanSpace, InnerSpace, Point3, Vector3,
-    Face, MetricSpace, Shell, Surface,
-};
-#[cfg(feature = "monstertruck_export_boundary")]
-use monstertruck_modeling::{Curve, Edge, Vertex, Wire};
 
 /// Type alias for results in this module.
 pub type Result<T> = std::result::Result<T, MonstertruckError>;
@@ -69,10 +68,50 @@ pub enum GregoryAccuracy {
     HighPrecision,
 }
 
-/// Options for STEP export via monstertruck integration.
+/// Direct shell conversion mode for `OpenSubdiv -> monstertruck`.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub enum MonstertruckShellFlavor {
+    /// Merge adjacent regular patches into the coarsest shell possible and
+    /// append non-regular patch fallback surfaces.
+    #[default]
+    CoarseMerged,
+
+    /// Export disconnected per-patch faces.
+    DisconnectedPatches,
+
+    /// Build stitched shared-edge topology from the raw patch layout.
+    ///
+    /// This path does not yet honor [`GregoryAccuracy`].
+    StitchedPatches,
+}
+
+/// Options for direct `OpenSubdiv -> monstertruck` shell conversion.
+#[derive(Debug, Clone, Copy)]
+pub struct MonstertruckShellOptions {
+    /// How to handle extraordinary vertices.
+    pub gregory_accuracy: GregoryAccuracy,
+
+    /// Tolerance for coarse merged regular-patch joining.
+    pub stitch_tolerance: f64,
+
+    /// Which shell construction path to use.
+    pub flavor: MonstertruckShellFlavor,
+}
+
+impl Default for MonstertruckShellOptions {
+    fn default() -> Self {
+        Self {
+            gregory_accuracy: GregoryAccuracy::BSplineEndCaps,
+            stitch_tolerance: 1e-6,
+            flavor: MonstertruckShellFlavor::CoarseMerged,
+        }
+    }
+}
+
+/// Compatibility options for STEP-oriented callers.
 ///
-/// Controls how OpenSubdiv patches are converted to monstertruck B-spline surfaces
-/// for STEP file output.
+/// Controls how OpenSubdiv patches are converted to monstertruck B-spline
+/// surfaces for STEP file output.
 #[derive(Debug, Clone)]
 pub struct StepExportOptions {
     /// How to handle extraordinary vertices (default: BSplineEndCaps).
@@ -109,6 +148,24 @@ impl Default for StepExportOptions {
             stitch_tolerance: 1e-6,
             stitch_edges: false,
             use_superpatches: true,
+        }
+    }
+}
+
+impl From<StepExportOptions> for MonstertruckShellOptions {
+    fn from(options: StepExportOptions) -> Self {
+        let flavor = if options.use_superpatches {
+            MonstertruckShellFlavor::CoarseMerged
+        } else if options.stitch_edges {
+            MonstertruckShellFlavor::StitchedPatches
+        } else {
+            MonstertruckShellFlavor::DisconnectedPatches
+        };
+
+        Self {
+            gregory_accuracy: options.gregory_accuracy,
+            stitch_tolerance: options.stitch_tolerance,
+            flavor,
         }
     }
 }
@@ -687,6 +744,20 @@ pub fn patch_table_surfaces_non_regular(
     patch_table: &PatchTable,
     control_points: &[[f32; 3]],
 ) -> Result<Vec<BsplineSurface<Point3>>> {
+    patch_table_surfaces_non_regular_with_options(
+        patch_table,
+        control_points,
+        GregoryAccuracy::BSplineEndCaps,
+    )
+}
+
+/// Convert only non-regular patches to B-spline surfaces with configurable
+/// Gregory handling.
+pub fn patch_table_surfaces_non_regular_with_options(
+    patch_table: &PatchTable,
+    control_points: &[[f32; 3]],
+    gregory_accuracy: GregoryAccuracy,
+) -> Result<Vec<BsplineSurface<Point3>>> {
     let mut surfaces = Vec::new();
     let mut patch_index = 0;
 
@@ -710,7 +781,14 @@ pub fn patch_table_surfaces_non_regular(
             ) {
                 for _ in 0..num_patches {
                     let patch = PatchRef::new(patch_table, patch_index, control_points);
-                    match BsplineSurface::try_from(patch) {
+                    let surface = if patch.is_gregory()
+                        && gregory_accuracy == GregoryAccuracy::HighPrecision
+                    {
+                        patch.to_bspline_high_precision()
+                    } else {
+                        BsplineSurface::try_from(patch)
+                    };
+                    match surface {
                         Ok(surface) => surfaces.push(surface),
                         Err(e) => eprintln!(
                             "Failed to convert non-regular patch {} (type {:?}): {:?}",
@@ -742,7 +820,7 @@ pub fn superpatch_surfaces(
     struct RegPatch {
         _index: usize,
         control: Vec<Vec<Point3>>, // 4x4, row-major (v-major)
-        boundary_mask: i32,             // Boundary flags from PatchParam
+        boundary_mask: i32,        // Boundary flags from PatchParam
     }
 
     #[derive(Default, Clone)]
@@ -763,12 +841,7 @@ pub fn superpatch_surfaces(
     }
 
     /// Edge data from a superpatch: (left, right, bottom, top).
-    type SuperpatchEdges = (
-        Vec<Point3>,
-        Vec<Point3>,
-        Vec<Point3>,
-        Vec<Point3>,
-    );
+    type SuperpatchEdges = (Vec<Point3>, Vec<Point3>, Vec<Point3>, Vec<Point3>);
 
     fn edge_row(control: &[Vec<Point3>], edge: &str) -> [Point3; 4] {
         match edge {
@@ -1250,7 +1323,10 @@ pub fn superpatch_surfaces(
             let knot_v: Vec<f64> = (0..(ctrl_v + DEGREE + 1))
                 .map(|k| k as f64 - DEGREE as f64)
                 .collect();
-            BsplineSurface::new((KnotVector::from(knot_u), KnotVector::from(knot_v)), sp.control)
+            BsplineSurface::new(
+                (KnotVector::from(knot_u), KnotVector::from(knot_v)),
+                sp.control,
+            )
         })
         .collect();
 
@@ -1286,10 +1362,10 @@ impl<'a> TryFrom<PatchTableWithControlPointsRef<'a>> for Shell {
 
         for surface in &surfaces {
             // Get the four corner points
-            let p00 = surface.subs(0.0, 0.0);
-            let p10 = surface.subs(1.0, 0.0);
-            let p11 = surface.subs(1.0, 1.0);
-            let p01 = surface.subs(0.0, 1.0);
+            let p00 = surface.evaluate(0.0, 0.0);
+            let p10 = surface.evaluate(1.0, 0.0);
+            let p11 = surface.evaluate(1.0, 1.0);
+            let p01 = surface.evaluate(0.0, 1.0);
 
             // Get or create vertices
             let mut get_or_create_vertex = |point: Point3| -> Vertex {
@@ -1375,9 +1451,9 @@ impl<'a> TryFrom<PatchTableWithControlPointsRef<'a>> for Shell {
             // Calculate face normal at the center to determine proper orientation
             let center_u = 0.5;
             let center_v = 0.5;
-            let _center_pt = surface.subs(center_u, center_v);
-            let du = surface.uder(center_u, center_v);
-            let dv = surface.vder(center_u, center_v);
+            let _center_pt = surface.evaluate(center_u, center_v);
+            let du = surface.derivative_u(center_u, center_v);
+            let dv = surface.derivative_v(center_u, center_v);
             let normal = du.cross(dv);
 
             // Compute the expected outward normal based on corner points
@@ -1493,7 +1569,8 @@ impl<'a> TryFrom<PatchTableWithControlPointsRef<'a>> for Shell {
 
                         #[cfg(not(feature = "monstertruck_export_boundary"))]
                         {
-                            // Create face without explicit boundary - let monstertruck determine it.
+                            // Create face without explicit boundary - let monstertruck determine
+                            // it.
                             let face = Face::new(vec![], Surface::BsplineSurface(surface));
                             faces.push(face);
                         }
@@ -1579,6 +1656,80 @@ pub fn array_to_vector3(v: &[f32; 3]) -> Vector3 {
     Vector3::new(v[0] as f64, v[1] as f64, v[2] as f64)
 }
 
+fn base_quad_shell_from_inf_sharp_edges(
+    refiner: &crate::far::TopologyRefiner,
+    control_points: &[[f32; 3]],
+) -> Option<Shell> {
+    const INF_SHARP_THRESHOLD: f32 = 10.0;
+    let base = refiner.level(0)?;
+
+    if base
+        .face_vertices_iter()
+        .any(|face_vertices| face_vertices.len() != 4)
+    {
+        return None;
+    }
+
+    if (0..base.edge_count()).any(|edge_index| {
+        base.edge_sharpness(crate::Index::from(edge_index as u32)) < INF_SHARP_THRESHOLD
+    }) {
+        return None;
+    }
+
+    if control_points.len() < base.vertex_count() {
+        return None;
+    }
+
+    let knot_vector = KnotVector::from(vec![-3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0, 4.0]);
+    let params = [0.0, 1.0 / 3.0, 2.0 / 3.0, 1.0];
+    let base_points: Vec<Point3> = control_points[..base.vertex_count()]
+        .iter()
+        .map(|point| Point3::new(point[0] as f64, point[1] as f64, point[2] as f64))
+        .collect();
+
+    let faces: Vec<_> = base
+        .face_vertices_iter()
+        .map(|face_vertices| {
+            let corners: Vec<Point3> = face_vertices
+                .iter()
+                .map(|&index| base_points[usize::from(index)])
+                .collect();
+            let p00 = corners[0];
+            let p10 = corners[1];
+            let p11 = corners[2];
+            let p01 = corners[3];
+            let control_matrix: Vec<Vec<_>> = params
+                .iter()
+                .map(|&v| {
+                    params
+                        .iter()
+                        .map(|&u| {
+                            let u0 = 1.0 - u;
+                            let v0 = 1.0 - v;
+                            Point3::from_vec(
+                                p00.to_vec() * (u0 * v0)
+                                    + p10.to_vec() * (u * v0)
+                                    + p11.to_vec() * (u * v)
+                                    + p01.to_vec() * (u0 * v),
+                            )
+                        })
+                        .collect()
+                })
+                .collect();
+
+            Face::new(
+                vec![],
+                Surface::BsplineSurface(BsplineSurface::new(
+                    (knot_vector.clone(), knot_vector.clone()),
+                    control_matrix,
+                )),
+            )
+        })
+        .collect();
+
+    Some(Shell::from(faces))
+}
+
 /// Build B-spline surfaces for regular faces using BFR (avoids
 /// over-refinement). Irregular faces are skipped.
 pub fn bfr_regular_surfaces(
@@ -1587,69 +1738,13 @@ pub fn bfr_regular_surfaces(
     approx_smooth: i32,
     approx_sharp: i32,
 ) -> Result<Vec<BsplineSurface<Point3>>> {
-    const PLANAR_ABS_TOL: f64 = 1.0e-8;
-    const PLANAR_REL_SCALE: f64 = 1.0e-3;
-
     let factory = BfrSurfaceFactory::new(refiner, approx_smooth, approx_sharp).map_err(|e| {
         MonstertruckError::BfrConversionFailed(format!("factory creation failed: {:?}", e))
     })?;
 
-    let mut surfaces = factory
+    factory
         .build_regular_surfaces(refiner, control_points)
-        .map_err(|e| MonstertruckError::BfrConversionFailed(format!("{:?}", e)))?
-        .into_iter()
-        .collect::<Vec<_>>();
-
-    // Drop effectively planar surfaces; this indicates BFR failed to produce
-    // curvature and callers should fall back to PatchTable conversion.
-    surfaces.retain(|surface| {
-        let cps = surface.control_points();
-        if cps.is_empty() || cps[0].is_empty() {
-            return false;
-        }
-
-        // Compute a loose relative tolerance based on the control net diagonal.
-        let mut min = cps[0][0];
-        let mut max = cps[0][0];
-        for row in cps.iter() {
-            for &p in row {
-                min.x = min.x.min(p.x);
-                min.y = min.y.min(p.y);
-                min.z = min.z.min(p.z);
-                max.x = max.x.max(p.x);
-                max.y = max.y.max(p.y);
-                max.z = max.z.max(p.z);
-            }
-        }
-        let diag = (max - min).magnitude();
-        let tol = (diag * PLANAR_REL_SCALE).max(PLANAR_ABS_TOL);
-
-        let p00 = cps[0][0];
-        let p10 = cps.get(1).and_then(|r| r.first()).copied().unwrap_or(p00);
-        let p01 = cps.first().and_then(|r| r.get(1)).copied().unwrap_or(p00);
-        let n = (p10 - p00).cross(p01 - p00);
-        let n_norm2 = n.magnitude2();
-        if n_norm2 < tol * tol {
-            return false;
-        }
-        let n_unit = n / n_norm2.sqrt();
-        let max_dist = cps
-            .iter()
-            .flat_map(|row| row.iter())
-            .map(|p| (p - p00).dot(n_unit).abs())
-            .fold(0.0f64, f64::max);
-        if max_dist <= tol {
-            eprintln!(
-                "BFR regular surface dropped: control net planar (max deviation {:.3e})",
-                max_dist
-            );
-            false
-        } else {
-            true
-        }
-    });
-
-    Ok(surfaces)
+        .map_err(|e| MonstertruckError::BfrConversionFailed(format!("{:?}", e)))
 }
 
 /// Create a triangular patch as a degenerate quad B-spline surface
@@ -1724,7 +1819,8 @@ pub trait PatchTableExt {
         control_points: &[[f32; 3]],
     ) -> Result<Vec<BsplineSurface<Point3>>>;
 
-    /// Convert patches to monstertruck surfaces with configurable Gregory accuracy.
+    /// Convert patches to monstertruck surfaces with configurable Gregory
+    /// accuracy.
     ///
     /// This method allows specifying how Gregory patches (at extraordinary
     /// vertices) should be converted:
@@ -1747,6 +1843,17 @@ pub trait PatchTableExt {
         approx_sharp: i32,
     ) -> Result<Vec<BsplineSurface<Point3>>>;
 
+    /// Build the coarsest direct `monstertruck` shell practical for
+    /// interactive consumers.
+    ///
+    /// This uses BFR for regular regions and patch-table fallback for
+    /// extraordinary regions with zero additional approximation refinement.
+    fn to_monstertruck_shell_coarse(
+        &self,
+        refiner: &TopologyRefiner,
+        control_points: &[[f32; 3]],
+    ) -> Result<Shell>;
+
     /// Build a shell using BFR for regular faces and PatchTable for irregular
     /// patches.
     fn to_monstertruck_shell_bfr_mixed(
@@ -1760,6 +1867,16 @@ pub trait PatchTableExt {
     /// Build a stitched B-rep shell with shared vertices/edges between patches.
     fn to_monstertruck_shell_stitched(&self, control_points: &[[f32; 3]]) -> Result<Shell>;
 
+    /// Build a `monstertruck` shell with explicit conversion options.
+    ///
+    /// This is the direct conversion entry point for consumers such as Akatela.
+    /// STEP export should use this path and serialize the returned shell.
+    fn to_monstertruck_shell_with_options(
+        &self,
+        control_points: &[[f32; 3]],
+        options: MonstertruckShellOptions,
+    ) -> Result<Shell>;
+
     /// Convert patches to individual shells (one per patch) for disconnected
     /// export
     fn to_monstertruck_shells(&self, control_points: &[[f32; 3]]) -> Result<Vec<Shell>>;
@@ -1767,15 +1884,10 @@ pub trait PatchTableExt {
     /// Convert patches to a shell with gap filling for extraordinary vertices
     fn to_monstertruck_shell_with_gap_filling(&self, control_points: &[[f32; 3]]) -> Result<Shell>;
 
-    /// Export patches to a monstertruck Shell for STEP output with configurable
-    /// options.
+    /// Export patches to a `monstertruck` shell for STEP output.
     ///
-    /// This is the recommended entry point for STEP export. It consolidates
-    /// various export strategies based on the provided options:
-    ///
-    /// - `gregory_accuracy`: Controls how extraordinary vertices are handled
-    /// - `stitch_edges`: Whether to create shared edges between patches
-    /// - `use_superpatches`: Whether to merge adjacent regular patches
+    /// This is a compatibility wrapper over
+    /// [`PatchTableExt::to_monstertruck_shell_with_options`].
     ///
     /// # Example
     ///
@@ -1803,8 +1915,7 @@ pub trait PatchTableExt {
         options: StepExportOptions,
     ) -> Result<Shell>;
 
-    /// Internal fallback for to_step_shell when superpatches are disabled or
-    /// fail.
+    /// Internal fallback for `to_step_shell`.
     #[doc(hidden)]
     fn to_step_shell_fallback(
         &self,
@@ -1909,6 +2020,18 @@ impl PatchTableExt for PatchTable {
         }
     }
 
+    fn to_monstertruck_shell_coarse(
+        &self,
+        refiner: &TopologyRefiner,
+        control_points: &[[f32; 3]],
+    ) -> Result<Shell> {
+        if let Some(shell) = base_quad_shell_from_inf_sharp_edges(refiner, control_points) {
+            Ok(shell)
+        } else {
+            self.to_monstertruck_shell_bfr_mixed(refiner, control_points, 0, 0)
+        }
+    }
+
     fn to_monstertruck_shells(&self, control_points: &[[f32; 3]]) -> Result<Vec<Shell>> {
         let wrapper = self.with_control_points(control_points);
         Vec::<Shell>::try_from(wrapper)
@@ -1934,8 +2057,12 @@ impl PatchTableExt for PatchTable {
         approx_smooth: i32,
         approx_sharp: i32,
     ) -> Result<Shell> {
-        let surfaces =
-            self.to_monstertruck_surfaces_bfr_mixed(refiner, control_points, approx_smooth, approx_sharp)?;
+        let surfaces = self.to_monstertruck_surfaces_bfr_mixed(
+            refiner,
+            control_points,
+            approx_smooth,
+            approx_sharp,
+        )?;
         let faces: Vec<Face> = surfaces
             .into_iter()
             .map(|s| Face::new(vec![], Surface::BsplineSurface(s)))
@@ -1971,20 +2098,17 @@ impl PatchTableExt for PatchTable {
             a.distance2(*b) <= tol_sq
         }
 
-        fn sample_curve_points(
-            curve: &BsplineCurve<Point3>,
-            sample_count: usize,
-        ) -> Vec<Point3> {
+        fn sample_curve_points(curve: &BsplineCurve<Point3>, sample_count: usize) -> Vec<Point3> {
             let start = curve.knot(0);
-            let end = curve.knot(curve.knot_vec().len() - 1);
+            let end = curve.knot(curve.knot_vector().len() - 1);
 
             if sample_count <= 1 {
-                return vec![curve.subs((start + end) * 0.5)];
+                return vec![curve.evaluate((start + end) * 0.5)];
             }
 
             let step = (end - start) / (sample_count as f64 - 1.0);
             (0..sample_count)
-                .map(|i| curve.subs(start + step * i as f64))
+                .map(|i| curve.evaluate(start + step * i as f64))
                 .collect()
         }
 
@@ -2510,76 +2634,195 @@ impl PatchTableExt for PatchTable {
         }
     }
 
+    fn to_monstertruck_shell_with_options(
+        &self,
+        control_points: &[[f32; 3]],
+        options: MonstertruckShellOptions,
+    ) -> Result<Shell> {
+        match options.flavor {
+            MonstertruckShellFlavor::CoarseMerged => {
+                let mut surfaces =
+                    superpatch_surfaces(self, control_points, options.stitch_tolerance)
+                        .unwrap_or_default();
+                let mut fallback = patch_table_surfaces_non_regular_with_options(
+                    self,
+                    control_points,
+                    options.gregory_accuracy,
+                )
+                .unwrap_or_default();
+                surfaces.append(&mut fallback);
+
+                let surfaces = if surfaces.is_empty() {
+                    self.to_monstertruck_surfaces_with_options(
+                        control_points,
+                        options.gregory_accuracy,
+                    )?
+                } else {
+                    surfaces
+                };
+
+                let faces: Vec<_> = surfaces
+                    .into_iter()
+                    .map(|surface| Face::new(vec![], Surface::BsplineSurface(surface)))
+                    .collect();
+                Ok(Shell::from(faces))
+            }
+            MonstertruckShellFlavor::DisconnectedPatches => {
+                let surfaces = self.to_monstertruck_surfaces_with_options(
+                    control_points,
+                    options.gregory_accuracy,
+                )?;
+                let faces: Vec<_> = surfaces
+                    .into_iter()
+                    .map(|surface| Face::new(vec![], Surface::BsplineSurface(surface)))
+                    .collect();
+                Ok(Shell::from(faces))
+            }
+            MonstertruckShellFlavor::StitchedPatches => {
+                self.to_monstertruck_shell_stitched(control_points)
+            }
+        }
+    }
+
     fn to_step_shell(
         &self,
         control_points: &[[f32; 3]],
         options: StepExportOptions,
     ) -> Result<Shell> {
-        // AIDEV-NOTE: Consolidated STEP export entry point.
-        // Routes to appropriate implementation based on options.
-        //
-        // Current routing:
-        // - stitch_edges: true  -> to_monstertruck_shell_stitched (shared vertices/edges)
-        // - stitch_edges: false -> to_monstertruck_shell (disconnected faces)
-        // - use_superpatches: true -> superpatch_surfaces (merged regular patches)
-        //
-        if options.use_superpatches {
-            // Use superpatch merging for efficiency.
-            // Note: superpatch_surfaces handles regular patches; Gregory patches
-            // at extraordinary vertices are not merged.
-            match superpatch_surfaces(self, control_points, options.stitch_tolerance) {
-                Ok(surfaces) if !surfaces.is_empty() => {
-                    let faces: Vec<Face> = surfaces
-                        .into_iter()
-                        .map(|s| Face::new(vec![], Surface::BsplineSurface(s)))
-                        .collect();
-
-                    if options.stitch_edges {
-                        // Build shell then attempt stitching.
-                        // For now, superpatch + stitch is not fully implemented;
-                        // fall back to simple shell.
-                        // TODO: Implement proper stitching for superpatches.
-                        Ok(Shell::from(faces))
-                    } else {
-                        Ok(Shell::from(faces))
-                    }
-                }
-                _ => {
-                    // Superpatch failed, fall back to standard export with options.
-                    self.to_step_shell_fallback(control_points, &options)
-                }
-            }
-        } else {
-            self.to_step_shell_fallback(control_points, &options)
-        }
+        self.to_monstertruck_shell_with_options(control_points, options.into())
     }
 
-    /// Internal fallback for to_step_shell when superpatches are disabled or
-    /// fail.
     fn to_step_shell_fallback(
         &self,
         control_points: &[[f32; 3]],
         options: &StepExportOptions,
     ) -> Result<Shell> {
-        if options.stitch_edges {
-            // Stitched shell doesn't currently support gregory accuracy option.
-            // TODO: Integrate gregory accuracy into stitched export.
-            self.to_monstertruck_shell_stitched(control_points)
-        } else {
-            // Use surfaces with gregory accuracy option.
-            let surfaces =
-                self.to_monstertruck_surfaces_with_options(control_points, options.gregory_accuracy)?;
-            let faces: Vec<Face> = surfaces
-                .into_iter()
-                .map(|s| Face::new(vec![], Surface::BsplineSurface(s)))
-                .collect();
-            Ok(Shell::from(faces))
-        }
+        self.to_monstertruck_shell_with_options(control_points, options.clone().into())
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+    use crate::far::{
+        AdaptiveRefinementOptions, EndCapType, PatchTable, PatchTableOptions, PrimvarRefiner,
+        TopologyDescriptor, TopologyRefiner, TopologyRefinerOptions,
+    };
+
+    fn creased_cube_patch_table() -> (TopologyRefiner, PatchTable, Vec<[f32; 3]>) {
+        let vertex_positions = vec![
+            [-0.5, -0.5, 0.5],
+            [0.5, -0.5, 0.5],
+            [-0.5, 0.5, 0.5],
+            [0.5, 0.5, 0.5],
+            [-0.5, 0.5, -0.5],
+            [0.5, 0.5, -0.5],
+            [-0.5, -0.5, -0.5],
+            [0.5, -0.5, -0.5],
+        ];
+
+        let face_vertex_counts = vec![4, 4, 4, 4, 4, 4];
+        let face_vertex_indices = vec![
+            0, 1, 3, 2, //
+            2, 3, 5, 4, //
+            4, 5, 7, 6, //
+            6, 7, 1, 0, //
+            0, 2, 4, 6, //
+            1, 7, 5, 3, //
+        ];
+        let crease_indices = vec![
+            0, 1, //
+            1, 3, //
+            3, 2, //
+            2, 0, //
+            2, 4, //
+            4, 6, //
+            6, 0, //
+            1, 7, //
+            7, 5, //
+            5, 3, //
+            4, 5, //
+            6, 7, //
+        ];
+        let crease_weights = vec![10.0; crease_indices.len() / 2];
+
+        let mut descriptor = TopologyDescriptor::new(
+            vertex_positions.len(),
+            &face_vertex_counts,
+            &face_vertex_indices,
+        )
+        .expect("Failed to create topology descriptor.");
+        descriptor.creases(&crease_indices, &crease_weights);
+
+        let mut refiner = TopologyRefiner::new(descriptor, TopologyRefinerOptions::default())
+            .expect("Failed to create topology refiner.");
+        refiner.refine_adaptive(
+            AdaptiveRefinementOptions {
+                isolation_level: 3,
+                ..Default::default()
+            },
+            &[],
+        );
+
+        let patch_table = PatchTable::new(
+            &refiner,
+            Some(
+                PatchTableOptions::new()
+                    .end_cap_type(EndCapType::GregoryBasis)
+                    .use_inf_sharp_patch(true),
+            ),
+        )
+        .expect("Failed to create patch table.");
+
+        let primvar_refiner =
+            PrimvarRefiner::new(&refiner).expect("Failed to create primvar refiner.");
+        let mut all_vertices = vertex_positions.clone();
+        let mut level_start = 0usize;
+
+        (1..refiner.refinement_levels()).for_each(|level| {
+            let prev_level_count = refiner
+                .level(level - 1)
+                .map(|topology_level| topology_level.vertex_count())
+                .unwrap_or(0);
+            let src_data: Vec<f32> = all_vertices[level_start..level_start + prev_level_count]
+                .iter()
+                .flat_map(|vertex| vertex.iter().copied())
+                .collect();
+
+            if let Some(refined) = primvar_refiner.interpolate(level, 3, &src_data) {
+                let level_vertices: Vec<[f32; 3]> = refined
+                    .chunks_exact(3)
+                    .map(|chunk| [chunk[0], chunk[1], chunk[2]])
+                    .collect();
+                all_vertices.extend_from_slice(&level_vertices);
+            }
+
+            level_start += prev_level_count;
+        });
+
+        if let Some(stencil_table) = patch_table.local_point_stencil_table() {
+            let mut local_points = Vec::with_capacity(patch_table.local_point_count());
+
+            (0..3).for_each(|dim| {
+                let src_dim: Vec<f32> = all_vertices.iter().map(|vertex| vertex[dim]).collect();
+                let dst_dim = stencil_table.update_values(&src_dim, None, None);
+
+                dst_dim.iter().enumerate().for_each(|(index, &value)| {
+                    if dim == 0 {
+                        local_points.push([value, 0.0, 0.0]);
+                    } else {
+                        local_points[index][dim] = value;
+                    }
+                });
+            });
+
+            all_vertices.extend_from_slice(&local_points);
+        }
+
+        drop(primvar_refiner);
+        (refiner, patch_table, all_vertices)
+    }
+
     #[test]
     fn test_from_traits() {
         // This would require a proper patch table setup
@@ -2598,5 +2841,15 @@ mod tests {
         // // Convert to shell
         // let shell: Shell =
         // patch_table.with_control_points(&control_points).try_into()?;
+    }
+
+    #[test]
+    fn coarse_monstertruck_shell_keeps_cube_as_six_faces() -> Result<()> {
+        let (refiner, patch_table, all_vertices) = creased_cube_patch_table();
+        let shell = patch_table.to_monstertruck_shell_coarse(&refiner, &all_vertices)?;
+
+        assert_eq!(shell.face_iter().count(), 6);
+
+        Ok(())
     }
 }
