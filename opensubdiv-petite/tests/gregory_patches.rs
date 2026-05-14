@@ -182,9 +182,9 @@ mod monstertruck_tests {
         // at extraordinary vertices"); }
 
         // Export to STEP file
+        use monstertruck_modeling::Shell;
         use opensubdiv_petite::monstertruck::PatchTableWithControlPointsRef;
         use std::convert::TryFrom;
-        use monstertruck_modeling::Shell;
 
         // Build complete vertex buffer
         let mut all_vertices = build_vertex_buffer(&refiner, &vertex_positions);

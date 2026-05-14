@@ -104,7 +104,8 @@ fn main() -> Result<()> {
         println!("BFR produced {} coarse B-spline surfaces", bfr_surfaces);
 
         // Convert all patches to B-spline surfaces (PatchTable + BFR mixed)
-        let surfaces = patch_table.to_monstertruck_surfaces_bfr_mixed(&refiner, &all_vertices, 0, 0)?;
+        let surfaces =
+            patch_table.to_monstertruck_surfaces_bfr_mixed(&refiner, &all_vertices, 0, 0)?;
         println!(
             "Converted {} patches to B-spline surfaces (mixed BFR/PatchTable)",
             surfaces.len()

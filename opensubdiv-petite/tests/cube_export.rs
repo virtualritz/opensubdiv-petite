@@ -1,12 +1,12 @@
 use anyhow::Result;
+use monstertruck_modeling::{Face, Shell, Surface};
+use monstertruck_step::out::{CompleteStepDisplay, StepModel};
 use opensubdiv_petite::far::{
     AdaptiveRefinementOptions, EndCapType, PatchTable, PatchTableOptions, PrimvarRefiner,
     TopologyDescriptor, TopologyRefiner, TopologyRefinerOptions,
 };
 use opensubdiv_petite::monstertruck::{bfr_regular_surfaces, PatchTableExt};
 use opensubdiv_petite::Index;
-use monstertruck_modeling::{Face, Shell, Surface};
-use monstertruck_step::out::{CompleteStepDisplay, StepModel};
 
 fn main() -> Result<()> {
     // Create a simple cube mesh

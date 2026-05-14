@@ -13,8 +13,8 @@ mod tests {
 
     #[test]
     fn test_simple_cube_single_patch() -> anyhow::Result<()> {
-        use opensubdiv_petite::monstertruck::PatchTableExt;
         use monstertruck_step::out;
+        use opensubdiv_petite::monstertruck::PatchTableExt;
 
         // Define simple cube vertices
         let vertex_positions = vec![
@@ -137,22 +137,34 @@ mod tests {
         let e0 = Edge::new(
             &v00,
             &v10,
-            Curve::BsplineCurve(BsplineCurve::new(KnotVector::bezier_knot(1), vec![p00, p10])),
+            Curve::BsplineCurve(BsplineCurve::new(
+                KnotVector::bezier_knot(1),
+                vec![p00, p10],
+            )),
         );
         let e1 = Edge::new(
             &v10,
             &v11,
-            Curve::BsplineCurve(BsplineCurve::new(KnotVector::bezier_knot(1), vec![p10, p11])),
+            Curve::BsplineCurve(BsplineCurve::new(
+                KnotVector::bezier_knot(1),
+                vec![p10, p11],
+            )),
         );
         let e2 = Edge::new(
             &v11,
             &v01,
-            Curve::BsplineCurve(BsplineCurve::new(KnotVector::bezier_knot(1), vec![p11, p01])),
+            Curve::BsplineCurve(BsplineCurve::new(
+                KnotVector::bezier_knot(1),
+                vec![p11, p01],
+            )),
         );
         let e3 = Edge::new(
             &v01,
             &v00,
-            Curve::BsplineCurve(BsplineCurve::new(KnotVector::bezier_knot(1), vec![p01, p00])),
+            Curve::BsplineCurve(BsplineCurve::new(
+                KnotVector::bezier_knot(1),
+                vec![p01, p00],
+            )),
         );
 
         // Create wire and face

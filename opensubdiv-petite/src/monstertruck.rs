@@ -6,7 +6,9 @@
 
 use crate::bfr::SurfaceFactory as BfrSurfaceFactory;
 use crate::far::{PatchEvalResult, PatchTable, PatchType, TopologyRefiner};
-use monstertruck_geometry::prelude::{BsplineCurve, BsplineSurface, KnotVector, ParametricCurve, ParametricSurface};
+use monstertruck_geometry::prelude::{
+    BsplineCurve, BsplineSurface, KnotVector, ParametricCurve, ParametricSurface,
+};
 #[cfg(feature = "monstertruck_export_boundary")]
 use monstertruck_modeling::{Curve, Edge, Vertex, Wire};
 use monstertruck_modeling::{
