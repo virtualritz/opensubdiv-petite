@@ -97,7 +97,7 @@ slice-of-array = { version = "0.3", optional = true }
 monstertruck = { version = "0.3", optional = true, default-features = false, features = ["modeling"] }
 bevy = { version = "0.16", optional = true, default-features = false, features = ["bevy_core_pipeline", "bevy_asset", "bevy_render", "bevy_pbr", "bevy_winit"] }
 smooth-bevy-cameras = { version = "0.14", optional = true }
-wgpu = { version = "28", optional = true }
+wgpu = { version = "29", optional = true }
 
 [target.'cfg(target_os = "linux")'.dependencies.bevy]
 version = "0.16"
@@ -108,8 +108,8 @@ default-features = false
 [dev-dependencies]
 monstertruck = { version = "0.3", default-features = false, features = ["step"] }
 anyhow = "1.0"
-glam = "0.30"
-pollster = "0.3"
+glam = "0.32"
+pollster = "0.4"
 
 [[example]]
 path = "examples/osd_tutorial_0_cuda.rs"
