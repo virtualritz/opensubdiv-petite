@@ -1,11 +1,9 @@
+use bevy::asset::RenderAssetUsages;
+use bevy::mesh::Indices;
 use bevy::prelude::*;
-use bevy::render::mesh::{Indices, PrimitiveTopology};
-use bevy::render::render_asset::RenderAssetUsages;
+use bevy::render::render_resource::PrimitiveTopology;
+use bevy_panorbit_camera::{PanOrbitCamera, PanOrbitCameraPlugin};
 use opensubdiv_petite::{far, tri_mesh_buffers};
-use smooth_bevy_cameras::{
-    controllers::orbit::{OrbitCameraBundle, OrbitCameraController, OrbitCameraPlugin},
-    LookTransformPlugin,
-};
 
 // Uniformly refine up to 'max level' of 3.
 static MAX_LEVEL: usize = 3;
@@ -13,8 +11,7 @@ static MAX_LEVEL: usize = 3;
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .add_plugins(LookTransformPlugin)
-        .add_plugins(OrbitCameraPlugin::default())
+        .add_plugins(PanOrbitCameraPlugin)
         .add_systems(Startup, setup)
         .add_systems(Update, (rotator_system, close_on_esc))
         .run();
@@ -31,7 +28,7 @@ fn rotator_system(time: Res<Time>, mut query: Query<&mut Transform, With<Rotator
     }
 }
 
-fn close_on_esc(mut exit: EventWriter<AppExit>, keyboard: Res<ButtonInput<KeyCode>>) {
+fn close_on_esc(mut exit: MessageWriter<AppExit>, keyboard: Res<ButtonInput<KeyCode>>) {
     if keyboard.just_pressed(KeyCode::Escape) {
         exit.write(AppExit::Success);
     }
@@ -42,13 +39,13 @@ fn setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    mut ambient_light: ResMut<AmbientLight>,
+    mut ambient_light: ResMut<GlobalAmbientLight>,
 ) {
     // Add ambient light so materials are visible
     ambient_light.brightness = 300.0;
     ambient_light.color = Color::WHITE;
-    // chamfered_tetrahedron
 
+    // chamfered_tetrahedron
     commands.spawn((
         Mesh3d(meshes.add(subdivided_chamfered_tetrahedron())),
         MeshMaterial3d(materials.add(Color::srgb(0.8, 0.7, 0.6))),
@@ -73,17 +70,10 @@ fn setup(
     ));
 
     // camera
-    commands
-        .spawn((
-            Camera3d::default(),
-            Transform::from_xyz(-2.0, 2.5, 5.0).looking_at(Vec3::ZERO, Vec3::Y),
-        ))
-        .insert(OrbitCameraBundle::new(
-            OrbitCameraController::default(),
-            Vec3::new(-2.0, 2.5, 5.0),
-            Vec3::new(0., 0., 0.),
-            Vec3::new(0., -1., 0.),
-        ));
+    commands.spawn((
+        Transform::from_xyz(-2.0, 2.5, 5.0).looking_at(Vec3::ZERO, Vec3::Y),
+        PanOrbitCamera::default(),
+    ));
 }
 
 fn subdivided_chamfered_tetrahedron() -> Mesh {
@@ -176,7 +166,7 @@ fn subdivided_chamfered_tetrahedron() -> Mesh {
     )
     .expect("Could not create TopologyRefiner");
 
-    // Refine (subdivice) the topology uniformy MAX_LEVEL times.
+    // Refine (subdivide) the topology uniformly MAX_LEVEL times.
     refiner.refine_uniform(far::topology_refiner::UniformRefinementOptions {
         refinement_level: MAX_LEVEL,
         ..Default::default()
@@ -190,7 +180,7 @@ fn subdivided_chamfered_tetrahedron() -> Mesh {
     let mut refined_vertices = vertices.to_vec();
 
     // Subdivide MAX_LEVEL times.
-    // Note how the refined_vertices from the previous refinenemnet step become
+    // Note how the refined_vertices from the previous refinement step become
     // the base for the next.
     for level in 1..=MAX_LEVEL {
         refined_vertices = primvar_refiner
@@ -202,7 +192,7 @@ fn subdivided_chamfered_tetrahedron() -> Mesh {
             .unwrap();
     }
 
-    // Convert the subdivison mesh (all quads by now) into disconnected
+    // Convert the subdivision mesh (all quads by now) into disconnected
     // triangles.
     let (index, points, normals) = tri_mesh_buffers::to_triangle_mesh_buffers(
         &refined_vertices,
