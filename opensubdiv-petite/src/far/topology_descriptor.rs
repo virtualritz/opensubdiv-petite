@@ -58,7 +58,7 @@ use std::marker::PhantomData;
 ///
 /// See the [module level documentation](crate::far::topology_descriptor) for
 /// an example.
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
 pub struct TopologyDescriptor<'a> {
     pub(crate) descriptor: sys::OpenSubdiv_v3_7_0_Far_TopologyDescriptor,
     // _marker needs to be invariant in 'a.
