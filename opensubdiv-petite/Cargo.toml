@@ -127,7 +127,7 @@ path = "examples/patch_table_example.rs"
 name = "patch_table_example"
 
 [[example]]
-path = "examples/truck_integration_example.rs"
+path = "examples/monstertruck_integration_example.rs"
 name = "monstertruck_integration_example"
 required-features = ["monstertruck"]
 
