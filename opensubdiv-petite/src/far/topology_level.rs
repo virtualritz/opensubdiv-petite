@@ -124,15 +124,21 @@ impl<'a> TopologyLevel<'a> {
 impl<'a> TopologyLevel<'a> {
     /// Returns the vertices incident to a given face.
     pub fn face_vertices(&self, face: Index) -> Option<&[Index]> {
-        unsafe {
-            let arr = sys::far::TopologyLevel_GetFaceVertices(self.ptr, face.into());
-            if 0 == arr.size() || arr.begin().is_null() || self.face_count() <= face.into() {
-                None
-            } else {
-                Some(std::slice::from_raw_parts(
-                    arr.begin() as *const Index,
-                    arr.size() as _,
-                ))
+        // AIDEV-NOTE: Validate the face index before the FFI call -- C++
+        // GetFaceVertices indexes a vector unchecked and aborts on OOB.
+        if self.face_count() <= face.into() {
+            None
+        } else {
+            unsafe {
+                let arr = sys::far::TopologyLevel_GetFaceVertices(self.ptr, face.into());
+                if 0 == arr.size() || arr.begin().is_null() {
+                    None
+                } else {
+                    Some(std::slice::from_raw_parts(
+                        arr.begin() as *const Index,
+                        arr.size() as _,
+                    ))
+                }
             }
         }
     }
