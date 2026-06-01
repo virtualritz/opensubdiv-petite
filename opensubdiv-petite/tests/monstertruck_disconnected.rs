@@ -5,10 +5,12 @@ mod utils;
 #[cfg(feature = "monstertruck")]
 mod tests {
     use crate::utils::default_end_cap_type;
+    use monstertruck::step::save::{CompleteStepDisplay, StepHeaderDescriptor, StepModel};
     use opensubdiv_petite::far::{
         PatchTable, PatchTableOptions, PrimvarRefiner, TopologyDescriptor, TopologyRefiner,
         TopologyRefinerOptions, UniformRefinementOptions,
     };
+    use opensubdiv_petite::monstertruck::PatchTableExt;
     use opensubdiv_petite::Index;
     use std::path::PathBuf;
 
@@ -91,9 +93,6 @@ mod tests {
     // #[test]
     #[allow(dead_code)]
     fn test_simple_cube_disconnected_patches() -> anyhow::Result<()> {
-        use monstertruck_step::save;
-        use opensubdiv_petite::monstertruck::PatchTableExt;
-
         // Define simple cube vertices
         let vertex_positions = vec![
             [-0.5, -0.5, 0.5],
@@ -179,12 +178,12 @@ mod tests {
             .iter()
             .enumerate()
             .map(|(i, shell)| {
-                let model = save::StepModel::from(shell);
+                let model = StepModel::from(shell);
                 if i == 0 {
                     // First shell includes the header
-                    save::CompleteStepDisplay::new(
+                    CompleteStepDisplay::new(
                         model,
-                        save::StepHeaderDescriptor {
+                        StepHeaderDescriptor {
                             file_name: "simple_cube_disconnected.step".to_owned(),
                             ..Default::default()
                         },

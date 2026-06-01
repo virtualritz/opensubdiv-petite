@@ -1,8 +1,9 @@
 #[cfg(feature = "monstertruck")]
+use monstertruck::geometry::prelude::*;
+
+#[cfg(feature = "monstertruck")]
 #[test]
 fn test_monstertruck_bspline_matrix_ordering() {
-    use monstertruck_geometry::prelude::*;
-
     // Create a simple B-spline surface with known control points
     // to understand monstertruck's expected ordering
 
@@ -55,7 +56,7 @@ fn test_monstertruck_bspline_matrix_ordering() {
         (0.5, 1.0),
         (1.0, 1.0),
     ] {
-        let point = surface.subs(*u, *v);
+        let point = surface.evaluate(*u, *v);
         println!(
             "  Surface at ({:.1}, {:.1}) = [{:.3}, {:.3}, {:.3}]",
             u, v, point.x, point.y, point.z
@@ -107,7 +108,7 @@ fn test_monstertruck_bspline_matrix_ordering() {
         (0.5, 1.0),
         (1.0, 1.0),
     ] {
-        let point = surface_transposed.subs(*u, *v);
+        let point = surface_transposed.evaluate(*u, *v);
         println!(
             "  Surface at ({:.1}, {:.1}) = [{:.3}, {:.3}, {:.3}]",
             u, v, point.x, point.y, point.z

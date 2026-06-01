@@ -5,10 +5,12 @@ mod utils;
 #[cfg(feature = "monstertruck")]
 mod tests {
     use crate::utils::*;
+    use monstertruck::step::save::{CompleteStepDisplay, StepHeaderDescriptor, StepModel};
     use opensubdiv_petite::far::{
         AdaptiveRefinementOptions, PatchTable, PatchTableOptions, PrimvarRefiner,
         TopologyDescriptor, TopologyRefiner, TopologyRefinerOptions,
     };
+    use opensubdiv_petite::monstertruck::PatchTableExt;
     use std::f32::consts::PI;
 
     /// Create vertices for an icosahedron.
@@ -130,9 +132,6 @@ mod tests {
 
     #[test]
     fn test_complex_polyhedron_to_step() {
-        use monstertruck_step::save;
-        use opensubdiv_petite::monstertruck::PatchTableExt;
-
         // Create icosahedron base geometry
         let mut vertex_positions = create_icosahedron_vertices();
         let (face_vertex_counts, face_vertex_indices) = create_icosahedron_faces();
@@ -257,9 +256,9 @@ mod tests {
         let compressed = shell.compress();
 
         // Write to STEP file
-        let step_string = save::CompleteStepDisplay::new(
-            save::StepModel::from(&compressed),
-            save::StepHeaderDescriptor {
+        let step_string = CompleteStepDisplay::new(
+            StepModel::from(&compressed),
+            StepHeaderDescriptor {
                 file_name: "complex_polyhedron_crease4.step".to_owned(),
                 ..Default::default()
             },

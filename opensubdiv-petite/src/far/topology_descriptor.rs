@@ -7,7 +7,7 @@
 //! let vertices = [1, 1, 1, 1, -1, -1, -1, 1, -1, -1, -1, 1];
 //!
 //! // Describe the basic topology of our tetrahedron.
-//! let mut tetrahedron = TopologyDescriptor::new(
+//! let tetrahedron = TopologyDescriptor::new(
 //!     vertices.len() / 3,
 //!     // Four triangles.
 //!     &[3; 4],
@@ -17,7 +17,9 @@
 //! .expect("Failed to create topology descriptor");
 //!
 //! // Make all edges creased with sharpness 8.0.
-//! tetrahedron.creases(&[0, 2, 0, 3, 1, 3, 0, 1, 2, 3, 1, 2], &[8.0; 6]);
+//! tetrahedron
+//!     .creases(&[0, 2, 0, 3, 1, 3, 0, 1, 2, 3, 1, 2], &[8.0; 6])
+//!     .expect("Failed to add creases");
 //! ```
 //!
 //! ## Semi-Sharp Creases
@@ -58,7 +60,7 @@ use std::marker::PhantomData;
 ///
 /// See the [module level documentation](crate::far::topology_descriptor) for
 /// an example.
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
 pub struct TopologyDescriptor<'a> {
     pub(crate) descriptor: sys::OpenSubdiv_v3_7_0_Far_TopologyDescriptor,
     // _marker needs to be invariant in 'a.

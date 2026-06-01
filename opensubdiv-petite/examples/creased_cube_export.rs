@@ -1,5 +1,5 @@
 use anyhow::Result;
-use monstertruck_step::save::*;
+use monstertruck::step::save::*;
 use opensubdiv_petite::far::{
     AdaptiveRefinementOptions, EndCapType, PatchTable, PatchTableOptions, PrimvarRefiner,
     TopologyDescriptor, TopologyRefiner, TopologyRefinerOptions,
@@ -158,7 +158,7 @@ fn main() -> Result<()> {
     // BFR regular-only surfaces (crease-aware approx_sharp)
     println!("Creased cube: BFR regular surfaces...");
     let bfr_surfaces =
-        bfr_regular_surfaces(&refiner, &all_vertices, 0, approx_sharp).unwrap_or_default();
+        bfr_regular_surfaces(&refiner, &all_vertices, 0, approx_sharp as i32).unwrap_or_default();
 
     if bfr_surfaces.is_empty() {
         eprintln!("BFR produced no regular surfaces; falling back to PatchTable shell.");
@@ -175,16 +175,16 @@ fn main() -> Result<()> {
             );
         }
     } else {
-        let faces: Vec<monstertruck_modeling::Face> = bfr_surfaces
+        let faces: Vec<monstertruck::modeling::Face> = bfr_surfaces
             .into_iter()
             .map(|s| {
-                monstertruck_modeling::Face::new(
+                monstertruck::modeling::Face::new(
                     vec![],
-                    monstertruck_modeling::Surface::BsplineSurface(s),
+                    monstertruck::modeling::Surface::BsplineSurface(s),
                 )
             })
             .collect();
-        let shell = monstertruck_modeling::Shell::from(faces);
+        let shell = monstertruck::modeling::Shell::from(faces);
         let compressed = shell.compress();
         let step_string =
             CompleteStepDisplay::new(StepModel::from(&compressed), Default::default()).to_string();
@@ -196,18 +196,23 @@ fn main() -> Result<()> {
     // irregular ones so every patch carries a full 4x4 control net instead of
     // the coarse, planar fallback shell.
     println!("Creased cube: BFR + PatchTable mixed surfaces...");
-    match patch_table.to_monstertruck_surfaces_bfr_mixed(&refiner, &all_vertices, 0, approx_sharp) {
+    match patch_table.to_monstertruck_surfaces_bfr_mixed(
+        &refiner,
+        &all_vertices,
+        0,
+        approx_sharp as i32,
+    ) {
         Ok(surfaces) if !surfaces.is_empty() => {
-            let faces: Vec<monstertruck_modeling::Face> = surfaces
+            let faces: Vec<monstertruck::modeling::Face> = surfaces
                 .into_iter()
                 .map(|s| {
-                    monstertruck_modeling::Face::new(
+                    monstertruck::modeling::Face::new(
                         vec![],
-                        monstertruck_modeling::Surface::BsplineSurface(s),
+                        monstertruck::modeling::Surface::BsplineSurface(s),
                     )
                 })
                 .collect();
-            let shell = monstertruck_modeling::Shell::from(faces);
+            let shell = monstertruck::modeling::Shell::from(faces);
             let compressed = shell.compress();
             let step_string =
                 CompleteStepDisplay::new(StepModel::from(&compressed), Default::default())
@@ -236,16 +241,16 @@ fn main() -> Result<()> {
     println!("Creased cube: superpatch export...");
     match superpatch_surfaces(&patch_table, &all_vertices, 1.0e-6) {
         Ok(surfaces) if !surfaces.is_empty() => {
-            let faces: Vec<monstertruck_modeling::Face> = surfaces
+            let faces: Vec<monstertruck::modeling::Face> = surfaces
                 .into_iter()
                 .map(|s| {
-                    monstertruck_modeling::Face::new(
+                    monstertruck::modeling::Face::new(
                         vec![],
-                        monstertruck_modeling::Surface::BsplineSurface(s),
+                        monstertruck::modeling::Surface::BsplineSurface(s),
                     )
                 })
                 .collect();
-            let shell = monstertruck_modeling::Shell::from(faces);
+            let shell = monstertruck::modeling::Shell::from(faces);
             let compressed = shell.compress();
             let step_string =
                 CompleteStepDisplay::new(StepModel::from(&compressed), Default::default())

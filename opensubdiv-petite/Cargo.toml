@@ -17,7 +17,7 @@ repository = "https://github.com/virtualritz/opensubdiv-petite/"
 default = ["topology_validation"]
 
 ## Integration with Bevy game engine.
-bevy = ["dep:bevy", "dep:smooth-bevy-cameras", "tri_mesh_buffers"]
+bevy = ["dep:bevy", "dep:bevy_panorbit_camera", "tri_mesh_buffers"]
 
 ## Use CLEW for OpenCL runtime loading.
 clew = ["opensubdiv-petite-sys/clew"]
@@ -75,7 +75,7 @@ topology_validation = []
 wgpu = ["dep:wgpu"]
 
 ## Enable `monstertruck` CAD kernel integration for B-rep export.
-monstertruck = ["monstertruck-geometry", "monstertruck-modeling"]
+monstertruck = ["dep:monstertruck"]
 
 ## Export boundary curves when using `monstertruck` integration.
 monstertruck_export_boundary = ["monstertruck"]
@@ -87,30 +87,29 @@ b_spline_end_caps = []
 bytemuck = { version = "1", features = ["derive"] }
 derive_more = { version = "2", features = ["full"] }
 document-features = "0.2"
-opensubdiv-petite-sys = { version = "0.3.0", path = "../opensubdiv-petite-sys" }
+opensubdiv-petite-sys = { version = "0.3.1", path = "../opensubdiv-petite-sys" }
 num_enum = "0.7"
 thiserror = "2"
 rayon = { version = "1", optional = true }
 itertools = { version = "0.14", optional = true }
 ultraviolet = { version = "0.10", optional = true }
 slice-of-array = { version = "0.3", optional = true }
-monstertruck-geometry = { git = "https://github.com/virtualritz/monstertruck.git", package = "monstertruck-geometry", optional = true }
-monstertruck-modeling = { git = "https://github.com/virtualritz/monstertruck.git", package = "monstertruck-modeling", optional = true }
-bevy = { version = "0.16", optional = true, default-features = false, features = ["bevy_core_pipeline", "bevy_asset", "bevy_render", "bevy_pbr", "bevy_winit"] }
-smooth-bevy-cameras = { version = "0.14", optional = true }
-wgpu = { version = "28", optional = true }
+monstertruck = { version = "0.3", optional = true, default-features = false, features = ["modeling"] }
+bevy = { version = "0.18", optional = true, default-features = false, features = ["bevy_core_pipeline", "bevy_asset", "bevy_render", "bevy_pbr", "bevy_winit", "bevy_window", "bevy_log", "tonemapping_luts", "default_font", "zstd_rust"] }
+bevy_panorbit_camera = { version = "0.34", optional = true, default-features = false }
+wgpu = { version = "29", optional = true }
 
 [target.'cfg(target_os = "linux")'.dependencies.bevy]
-version = "0.16"
+version = "0.18"
 optional = true
 features = ["x11", "wayland"]
 default-features = false
 
 [dev-dependencies]
-monstertruck-step = { git = "https://github.com/virtualritz/monstertruck.git", package = "monstertruck-step" }
+monstertruck = { version = "0.3", default-features = false, features = ["step"] }
 anyhow = "1.0"
-glam = "0.30"
-pollster = "0.3"
+glam = "0.32"
+pollster = "0.4"
 
 [[example]]
 path = "examples/osd_tutorial_0_cuda.rs"

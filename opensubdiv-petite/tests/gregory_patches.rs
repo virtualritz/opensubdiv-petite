@@ -9,8 +9,12 @@ use opensubdiv_petite::far::{
 #[cfg(feature = "monstertruck")]
 mod monstertruck_tests {
     use super::*;
+    use monstertruck::modeling::Shell;
+    use monstertruck::step::save::{CompleteStepDisplay, StepHeaderDescriptor, StepModel};
     use opensubdiv_petite::far::PrimvarRefiner;
+    use opensubdiv_petite::monstertruck::PatchTableWithControlPointsRef;
     use opensubdiv_petite::Index;
+    use std::convert::TryFrom;
     use utils::{assert_file_matches, test_output_path};
 
     /// Build complete vertex buffer including all refinement levels
@@ -181,11 +185,7 @@ mod monstertruck_tests {
         // gregory_triangle_count > 0,             "Should have Gregory patches
         // at extraordinary vertices"); }
 
-        // Export to STEP file
-        use monstertruck_modeling::Shell;
-        use opensubdiv_petite::monstertruck::PatchTableWithControlPointsRef;
-        use std::convert::TryFrom;
-
+        // Export to STEP file.
         // Build complete vertex buffer
         let mut all_vertices = build_vertex_buffer(&refiner, &vertex_positions);
 
@@ -277,9 +277,9 @@ mod monstertruck_tests {
 
         // Compress and export the shell as STEP
         let compressed = shell.compress();
-        let step_string = monstertruck_step::save::CompleteStepDisplay::new(
-            monstertruck_step::save::StepModel::from(&compressed),
-            monstertruck_step::save::StepHeaderDescriptor {
+        let step_string = CompleteStepDisplay::new(
+            StepModel::from(&compressed),
+            StepHeaderDescriptor {
                 file_name: "simple_cube_gregory.step".to_owned(),
                 ..Default::default()
             },

@@ -1,13 +1,14 @@
+#[cfg(feature = "monstertruck")]
+use monstertruck::step::save::*;
 use opensubdiv_petite::far::{
     AdaptiveRefinementOptions, EndCapType, PatchTable, PatchTableOptions, PrimvarRefiner,
     TopologyDescriptor, TopologyRefiner, TopologyRefinerOptions,
 };
+#[cfg(feature = "monstertruck")]
+use opensubdiv_petite::monstertruck::PatchTableExt;
 
 #[cfg(feature = "monstertruck")]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    use monstertruck_step::save::*;
-    use opensubdiv_petite::monstertruck::PatchTableExt;
-
     // Create a simple cube mesh
     let vertex_positions = vec![
         [-0.5, -0.5, -0.5], // 0

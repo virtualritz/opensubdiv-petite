@@ -9,7 +9,7 @@ use opensubdiv_petite::far::{
 use opensubdiv_petite::monstertruck::{bfr_regular_surfaces, PatchTableExt};
 
 #[cfg(feature = "monstertruck")]
-use monstertruck_step::r#save::{CompleteStepDisplay, StepModel};
+use monstertruck::step::save::{CompleteStepDisplay, StepModel};
 
 fn main() -> Result<()> {
     #[cfg(not(feature = "monstertruck"))]

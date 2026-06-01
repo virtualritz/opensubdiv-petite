@@ -10,7 +10,7 @@ mod tests {
     use opensubdiv_petite::monstertruck::PatchTableExt;
     use std::fs;
 
-    use monstertruck_step::save::{CompleteStepDisplay, StepHeaderDescriptor, StepModel};
+    use monstertruck::step::save::{CompleteStepDisplay, StepHeaderDescriptor, StepModel};
 
     #[test]
     fn test_cube_boundary_fix() -> Result<()> {

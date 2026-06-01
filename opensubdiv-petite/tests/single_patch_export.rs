@@ -6,16 +6,17 @@ mod utils;
 mod tests {
     use crate::utils::default_end_cap_type;
     use crate::utils::{assert_file_matches, test_output_path};
+    use monstertruck::geometry::prelude::{BsplineCurve, KnotVector, ParametricSurface};
+    use monstertruck::modeling::{Curve, Edge, Face, Shell, Surface, Vertex, Wire};
+    use monstertruck::step::save::{CompleteStepDisplay, StepHeaderDescriptor, StepModel};
     use opensubdiv_petite::far::{
-        PatchTable, PatchTableOptions, PrimvarRefiner, TopologyDescriptor, TopologyRefiner,
-        TopologyRefinerOptions,
+        AdaptiveRefinementOptions, PatchTable, PatchTableOptions, PrimvarRefiner,
+        TopologyDescriptor, TopologyRefiner, TopologyRefinerOptions,
     };
+    use opensubdiv_petite::monstertruck::PatchTableExt;
 
     #[test]
     fn test_simple_cube_single_patch() -> anyhow::Result<()> {
-        use monstertruck_step::save;
-        use opensubdiv_petite::monstertruck::PatchTableExt;
-
         // Define simple cube vertices
         let vertex_positions = vec![
             [-0.5, -0.5, 0.5],
@@ -58,7 +59,6 @@ mod tests {
         let mut refiner = TopologyRefiner::new(descriptor, refiner_options)?;
 
         // Use adaptive refinement to get Regular patches
-        use opensubdiv_petite::far::AdaptiveRefinementOptions;
         let adaptive_options = AdaptiveRefinementOptions {
             isolation_level: 3,
             ..Default::default()
@@ -115,17 +115,13 @@ mod tests {
         // Get the first surface
         let first_surface = surfaces.into_iter().next().unwrap();
 
-        // Create a face from this single surface
-        use monstertruck_geometry::prelude::BsplineCurve;
-        use monstertruck_geometry::prelude::{KnotVector, ParametricSurface};
-        use monstertruck_modeling::{Curve, Edge, Face, Shell, Surface, Vertex, Wire};
-
+        // Create a face from this single surface.
         // Get the four corner points - for this knot configuration,
         // the valid surface is in the [1/3, 2/3] parameter range
-        let p00 = first_surface.subs(1.0 / 3.0, 1.0 / 3.0);
-        let p10 = first_surface.subs(2.0 / 3.0, 1.0 / 3.0);
-        let p11 = first_surface.subs(2.0 / 3.0, 2.0 / 3.0);
-        let p01 = first_surface.subs(1.0 / 3.0, 2.0 / 3.0);
+        let p00 = first_surface.evaluate(1.0 / 3.0, 1.0 / 3.0);
+        let p10 = first_surface.evaluate(2.0 / 3.0, 1.0 / 3.0);
+        let p11 = first_surface.evaluate(2.0 / 3.0, 2.0 / 3.0);
+        let p01 = first_surface.evaluate(1.0 / 3.0, 2.0 / 3.0);
 
         // Create vertices
         let v00 = Vertex::new(p00);
@@ -178,9 +174,9 @@ mod tests {
         let compressed = shell.compress();
 
         // Write to STEP file
-        let step_string = save::CompleteStepDisplay::new(
-            save::StepModel::from(&compressed),
-            save::StepHeaderDescriptor {
+        let step_string = CompleteStepDisplay::new(
+            StepModel::from(&compressed),
+            StepHeaderDescriptor {
                 file_name: "simple_cube_single_patch.step".to_owned(),
                 ..Default::default()
             },
