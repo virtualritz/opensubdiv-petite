@@ -9,7 +9,7 @@ use opensubdiv_petite::far::{
 use opensubdiv_petite::monstertruck::{bfr_regular_surfaces, PatchTableExt};
 
 #[cfg(feature = "monstertruck")]
-use monstertruck_step::r#out::{CompleteStepDisplay, StepModel};
+use monstertruck_step::r#save::{CompleteStepDisplay, StepModel};
 
 fn main() -> Result<()> {
     #[cfg(not(feature = "monstertruck"))]
@@ -104,7 +104,8 @@ fn main() -> Result<()> {
         println!("BFR produced {} coarse B-spline surfaces", bfr_surfaces);
 
         // Convert all patches to B-spline surfaces (PatchTable + BFR mixed)
-        let surfaces = patch_table.to_monstertruck_surfaces_bfr_mixed(&refiner, &all_vertices, 0, 0)?;
+        let surfaces =
+            patch_table.to_monstertruck_surfaces_bfr_mixed(&refiner, &all_vertices, 0, 0)?;
         println!(
             "Converted {} patches to B-spline surfaces (mixed BFR/PatchTable)",
             surfaces.len()

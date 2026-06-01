@@ -159,11 +159,12 @@ fn subdivided_chamfered_tetrahedron() -> Mesh {
 
     // Create a refiner (a subdivider) from a topology descriptor.
     eprintln!("Creating TopologyDescriptor");
-    let mut descriptor =
+    let descriptor =
         far::TopologyDescriptor::new(vertices.len() / 3, &face_arities, &face_vertices)
-            .expect("Could not create TopologyDescriptor");
-    descriptor.creases(&creases, &crease_weights);
-    descriptor.left_handed(true);
+            .expect("Could not create TopologyDescriptor")
+            .creases(&creases, &crease_weights)
+            .expect("Failed to add creases")
+            .left_handed(true);
 
     eprintln!("Creating TopologyRefiner");
     let mut refiner = far::TopologyRefiner::new(

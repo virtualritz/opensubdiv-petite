@@ -271,18 +271,20 @@ impl TopologyRefiner {
 
     /// Refine the topology adaptively.
     ///
-    /// This method applies uniform refinement to the level specified in the
-    /// given [`AdaptiveRefinementOptions`]s.
+    /// This method applies adaptive refinement to the level specified in the
+    /// given [`AdaptiveRefinementOptions`].
     ///
     /// # Arguments
     ///
     /// * `options` - Options controlling adaptive refinement.
-    /// * `selected_faces` - Indices of faces to refine adaptively.
+    /// * `selected_faces` - Optional indices of faces to refine adaptively.
+    ///   Pass `None` to refine all faces, or `Some(&[...])` to refine only
+    ///   specific faces.
     #[inline]
     pub fn refine_adaptive(
         &mut self,
         options: AdaptiveRefinementOptions,
-        selected_faces: &[Index],
+        selected_faces: Option<&[Index]>,
     ) {
         let mut sys_options: sys::far::topology_refiner::AdaptiveRefinementOptions =
             unsafe { std::mem::zeroed() };
@@ -297,9 +299,10 @@ impl TopologyRefiner {
                 options.order_vertices_from_faces_first as _,
             );
 
+        let faces = selected_faces.unwrap_or(&[]);
         let const_array = sys::topology_refiner::ConstIndexArray {
-            _begin: selected_faces.as_ptr() as _,
-            _size: selected_faces.len().min(i32::MAX as usize) as i32,
+            _begin: faces.as_ptr() as _,
+            _size: faces.len().min(i32::MAX as usize) as i32,
             _phantom_0: std::marker::PhantomData,
         };
 

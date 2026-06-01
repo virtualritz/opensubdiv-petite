@@ -17,11 +17,11 @@ fn test_monstertruck_integration_compiles() {
 #[cfg(feature = "monstertruck")]
 #[test]
 fn test_simple_plane_to_step() {
+    use monstertruck_step::save;
     use opensubdiv_petite::far::{
         AdaptiveRefinementOptions, PatchTable, PatchTableOptions, PrimvarRefiner,
         TopologyDescriptor, TopologyRefiner, TopologyRefinerOptions,
     };
-    use monstertruck_step::out;
 
     // Create a 3x3 quad mesh (4x4 vertices)
     let mut vertex_positions = Vec::new();
@@ -62,7 +62,7 @@ fn test_simple_plane_to_step() {
         isolation_level: 3,
         ..Default::default()
     };
-    refiner.refine_adaptive(adaptive_options, &[]);
+    refiner.refine_adaptive(adaptive_options, None);
 
     // Create patch table
     let patch_options = PatchTableOptions::new().end_cap_type(default_end_cap_type());
@@ -148,9 +148,9 @@ fn test_simple_plane_to_step() {
     let compressed = shell.compress();
 
     // Write to STEP file
-    let step_string = out::CompleteStepDisplay::new(
-        out::StepModel::from(&compressed),
-        out::StepHeaderDescriptor {
+    let step_string = save::CompleteStepDisplay::new(
+        save::StepModel::from(&compressed),
+        save::StepHeaderDescriptor {
             file_name: "simple_plane.step".to_owned(),
             ..Default::default()
         },
@@ -168,11 +168,11 @@ fn test_simple_plane_to_step() {
 #[cfg(feature = "monstertruck")]
 #[test]
 fn test_simple_cube_to_step() {
+    use monstertruck_step::save;
     use opensubdiv_petite::far::{
         AdaptiveRefinementOptions, PatchTable, PatchTableOptions, PrimvarRefiner,
         TopologyDescriptor, TopologyRefiner, TopologyRefinerOptions,
     };
-    use monstertruck_step::out;
 
     // Simple cube vertices
     let vertex_positions = vec![
@@ -212,7 +212,7 @@ fn test_simple_cube_to_step() {
         isolation_level: 3,
         ..Default::default()
     };
-    refiner.refine_adaptive(adaptive_options, &[]);
+    refiner.refine_adaptive(adaptive_options, None);
 
     // Create patch table
     let patch_options = PatchTableOptions::new().end_cap_type(default_end_cap_type());
@@ -298,9 +298,9 @@ fn test_simple_cube_to_step() {
     let compressed = shell.compress();
 
     // Write to STEP file
-    let step_string = out::CompleteStepDisplay::new(
-        out::StepModel::from(&compressed),
-        out::StepHeaderDescriptor {
+    let step_string = save::CompleteStepDisplay::new(
+        save::StepModel::from(&compressed),
+        save::StepHeaderDescriptor {
             file_name: "simple_cube.step".to_owned(),
             ..Default::default()
         },
@@ -318,10 +318,10 @@ fn test_simple_cube_to_step() {
 #[cfg(feature = "monstertruck")]
 #[test]
 fn test_creased_cube_to_step() {
+    use monstertruck_step::save;
     use opensubdiv_petite::far::{
         PatchTable, TopologyDescriptor, TopologyRefiner, TopologyRefinerOptions,
     };
-    use monstertruck_step::out;
 
     // Define the creased cube vertices
     let vertex_positions = vec![
@@ -361,7 +361,9 @@ fn test_creased_cube_to_step() {
         &face_vertex_indices,
     )
     .expect("Failed to create topology descriptor");
-    descriptor.creases(&crease_indices, &crease_weights);
+    descriptor = descriptor
+        .creases(&crease_indices, &crease_weights)
+        .expect("Failed to add creases");
 
     // Create topology refiner
     let refiner_options = TopologyRefinerOptions::default();
@@ -378,7 +380,7 @@ fn test_creased_cube_to_step() {
         ..Default::default()
     }; // Refine to isolate irregular vertices
 
-    refiner.refine_adaptive(adaptive_options, &[]);
+    refiner.refine_adaptive(adaptive_options, None);
 
     // Create patch table with B-spline patches for higher-order surfaces
     use opensubdiv_petite::far::PatchTableOptions;
@@ -466,9 +468,9 @@ fn test_creased_cube_to_step() {
     let compressed = shell.compress();
 
     // Write to STEP file
-    let step_string = out::CompleteStepDisplay::new(
-        out::StepModel::from(&compressed),
-        out::StepHeaderDescriptor {
+    let step_string = save::CompleteStepDisplay::new(
+        save::StepModel::from(&compressed),
+        save::StepHeaderDescriptor {
             file_name: "creased_cube.step".to_owned(),
             ..Default::default()
         },

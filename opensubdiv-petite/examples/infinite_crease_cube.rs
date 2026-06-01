@@ -8,12 +8,12 @@
 //! because they don't decay - the edge stays perfectly sharp forever.
 
 use anyhow::Result;
+use monstertruck_step::save::*;
 use opensubdiv_petite::far::{
     AdaptiveRefinementOptions, EndCapType, PatchTable, PatchTableOptions, PrimvarRefiner,
     TopologyDescriptor, TopologyRefiner, TopologyRefinerOptions,
 };
 use opensubdiv_petite::monstertruck::PatchTableExt;
-use monstertruck_step::out::*;
 
 /// Export a cube with all 12 edges creased at the given sharpness.
 fn export_infinite_crease_cube(sharpness: f32, filename: &str) -> Result<()> {
@@ -52,7 +52,9 @@ fn export_infinite_crease_cube(sharpness: f32, filename: &str) -> Result<()> {
 
     let mut descriptor =
         TopologyDescriptor::new(vertices.len(), &face_vertex_counts, &face_vertex_indices)?;
-    descriptor.creases(&crease_indices, &crease_sharpness);
+    descriptor = descriptor
+        .creases(&crease_indices, &crease_sharpness)
+        .expect("Failed to add creases");
 
     let refiner_options = TopologyRefinerOptions::default();
     let mut refiner = TopologyRefiner::new(descriptor, refiner_options)?;
@@ -75,7 +77,7 @@ fn export_infinite_crease_cube(sharpness: f32, filename: &str) -> Result<()> {
 
     let mut adaptive_options = AdaptiveRefinementOptions::default();
     adaptive_options.isolation_level = isolation_level;
-    refiner.refine_adaptive(adaptive_options, &[]);
+    refiner.refine_adaptive(adaptive_options, None);
 
     // Create patch table with inf_sharp_patch enabled for infinite creases.
     let patch_options = PatchTableOptions::new()

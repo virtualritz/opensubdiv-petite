@@ -119,42 +119,54 @@ impl<'a> TopologyDescriptor<'a> {
 
     /// Add creases as vertex index pairs with corresponding sharpness.
     #[inline]
-    pub fn creases(&mut self, creases: &'a [u32], sharpness: &'a [f32]) -> &mut Self {
-        assert!(creases.len().is_multiple_of(2));
-        assert!(creases.len() / 2 <= sharpness.len());
+    pub fn creases(mut self, creases: &'a [u32], sharpness: &'a [f32]) -> crate::Result<Self> {
+        if !creases.len().is_multiple_of(2) {
+            return Err(crate::Error::InvalidTopology(
+                "Crease index list must contain vertex index pairs.".to_string(),
+            ));
+        }
+        let pair_count = creases.len() / 2;
+        if sharpness.len() != pair_count {
+            return Err(crate::Error::InvalidTopology(
+                "Crease sharpness list length must match crease pair count.".to_string(),
+            ));
+        }
 
         #[cfg(feature = "topology_validation")]
         {
             for (i, &crease_vertex) in creases.iter().enumerate() {
                 if self.descriptor.numVertices as u32 <= crease_vertex {
-                    // In builder pattern, we can't return Result, so we panic with a clear message
-                    panic!(
+                    return Err(crate::Error::InvalidTopology(format!(
                         "Crease index[{}] = {} is out of range (should be < {}).",
                         i, crease_vertex, self.descriptor.numVertices
-                    );
+                    )));
                 }
             }
         }
 
-        self.descriptor.numCreases = sharpness.len().min(i32::MAX as usize) as i32;
+        self.descriptor.numCreases = pair_count.min(i32::MAX as usize) as i32;
         self.descriptor.creaseVertexIndexPairs = creases.as_ptr() as _;
         self.descriptor.creaseWeights = sharpness.as_ptr();
-        self
+        Ok(self)
     }
 
     /// Add corners as vertex indices with corresponding sharpness.
     #[inline]
-    pub fn corners(&mut self, corners: &'a [u32], sharpness: &'a [f32]) -> &mut Self {
-        assert!(corners.len() <= sharpness.len());
+    pub fn corners(mut self, corners: &'a [u32], sharpness: &'a [f32]) -> crate::Result<Self> {
+        if corners.len() > sharpness.len() {
+            return Err(crate::Error::InvalidTopology(
+                "Corner sharpness list must be at least as long as corner index list.".to_string(),
+            ));
+        }
 
         #[cfg(feature = "topology_validation")]
         {
-            for corner in corners.iter().enumerate() {
-                if self.descriptor.numVertices as u32 <= *corner.1 {
-                    panic!(
+            for (i, &corner_vertex) in corners.iter().enumerate() {
+                if self.descriptor.numVertices as u32 <= corner_vertex {
+                    return Err(crate::Error::InvalidTopology(format!(
                         "Corner index[{}] = {} is out of range (should be < {}).",
-                        corner.0, *corner.1, self.descriptor.numVertices
-                    );
+                        i, corner_vertex, self.descriptor.numVertices
+                    )));
                 }
             }
         }
@@ -162,33 +174,33 @@ impl<'a> TopologyDescriptor<'a> {
         self.descriptor.numCorners = sharpness.len().min(i32::MAX as usize) as i32;
         self.descriptor.cornerVertexIndices = corners.as_ptr() as _;
         self.descriptor.cornerWeights = sharpness.as_ptr();
-        self
+        Ok(self)
     }
 
     /// Add holes as face indices.
     #[inline]
-    pub fn holes(&mut self, holes: &'a [u32]) -> &mut Self {
+    pub fn holes(mut self, holes: &'a [u32]) -> crate::Result<Self> {
         #[cfg(feature = "topology_validation")]
         {
-            for hole in holes.iter().enumerate() {
-                if self.descriptor.numVertices as u32 <= *hole.1 {
-                    panic!(
+            for (i, &hole_index) in holes.iter().enumerate() {
+                if self.descriptor.numVertices as u32 <= hole_index {
+                    return Err(crate::Error::InvalidTopology(format!(
                         "Hole index[{}] = {} is out of range (should be < {}).",
-                        hole.0, *hole.1, self.descriptor.numVertices
-                    );
+                        i, hole_index, self.descriptor.numVertices
+                    )));
                 }
             }
         }
 
         self.descriptor.numHoles = holes.len().min(i32::MAX as usize) as i32;
         self.descriptor.holeIndices = holes.as_ptr() as _;
-        self
+        Ok(self)
     }
 
     /// Set if the topology describes faces with left handed (counter-clockwise)
     /// winding.
     #[inline]
-    pub fn left_handed(&mut self, left_handed: bool) -> &mut Self {
+    pub fn left_handed(mut self, left_handed: bool) -> Self {
         self.descriptor.isLeftHanded = left_handed;
         self
     }

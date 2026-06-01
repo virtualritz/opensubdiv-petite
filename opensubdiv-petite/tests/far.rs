@@ -30,7 +30,9 @@ fn topology_descriptor_with_creases() -> Result<()> {
     let crease_weights = [10.0, 10.0, 10.0, 10.0];
 
     let mut descriptor = TopologyDescriptor::new(8, &vertices_per_face, &face_vertices)?;
-    descriptor.creases(&crease_vertices, &crease_weights);
+    descriptor = descriptor
+        .creases(&crease_vertices, &crease_weights)
+        .expect("Failed to add creases");
 
     // Test that descriptor can be used (moved)
     let _moved = descriptor;

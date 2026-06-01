@@ -90,7 +90,7 @@ fn test_simple_plane_bspline_obj() -> Result<(), Box<dyn std::error::Error>> {
         isolation_level: 3,
         ..Default::default()
     };
-    refiner.refine_adaptive(adaptive_options, &[]);
+    refiner.refine_adaptive(adaptive_options, None);
 
     // Create patch table
     let patch_options = PatchTableOptions::new();
@@ -156,7 +156,7 @@ fn test_simple_cube_bspline_obj() -> Result<(), Box<dyn std::error::Error>> {
         isolation_level: 3,
         ..Default::default()
     };
-    refiner.refine_adaptive(adaptive_options, &[]);
+    refiner.refine_adaptive(adaptive_options, None);
 
     // Create patch table
     let patch_options = PatchTableOptions::new();
@@ -221,7 +221,9 @@ fn test_creased_cube_bspline_obj() -> Result<(), Box<dyn std::error::Error>> {
         &face_vertex_counts,
         &face_vertex_indices,
     )?;
-    descriptor.creases(&crease_indices, &crease_weights);
+    descriptor = descriptor
+        .creases(&crease_indices, &crease_weights)
+        .expect("Failed to add creases");
 
     let refiner_options = TopologyRefinerOptions::default();
     let mut refiner = TopologyRefiner::new(descriptor, refiner_options)
@@ -232,7 +234,7 @@ fn test_creased_cube_bspline_obj() -> Result<(), Box<dyn std::error::Error>> {
         isolation_level: 3,
         ..Default::default()
     };
-    refiner.refine_adaptive(adaptive_options, &[]);
+    refiner.refine_adaptive(adaptive_options, None);
 
     // Create patch table
     let patch_options = PatchTableOptions::new();
@@ -298,7 +300,7 @@ fn test_two_patches_bspline_obj() -> Result<(), Box<dyn std::error::Error>> {
         isolation_level: 3,
         ..Default::default()
     };
-    refiner.refine_adaptive(adaptive_options, &[]);
+    refiner.refine_adaptive(adaptive_options, None);
 
     // Create patch table
     let patch_options = PatchTableOptions::new();

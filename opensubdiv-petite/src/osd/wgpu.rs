@@ -57,10 +57,6 @@ pub enum WgpuError {
     #[error("Primvar length {length} exceeds WGSL kernel capacity ({max})")]
     PrimvarLengthExceeded { length: u32, max: u32 },
 
-    /// Unsupported negative sizes/indices coming from the stencil table.
-    #[error("Stencil table contains negative entries")]
-    NegativeStencilEntry,
-
     /// Stencil table values exceed 32-bit limits.
     #[error("Stencil table entry {value} exceeds u32 capacity")]
     StencilEntryTooLarge { value: usize },
@@ -91,22 +87,17 @@ impl StencilTableGpu {
         let indices = table.control_indices();
         let weights = table.weights();
 
-        if sizes.iter().any(|s| *s < 0) {
-            return Err(WgpuError::NegativeStencilEntry);
-        }
-
         if offsets.is_empty() {
             return Err(WgpuError::MissingOffsets);
         }
 
-        let sizes_u32: Vec<u32> = sizes.iter().map(|v| *v as u32).collect();
         // AIDEV-NOTE: offsets and indices are Index(u32), already non-negative.
         let offsets_u32: Vec<u32> = offsets.iter().map(|v| v.0).collect();
         let indices_u32: Vec<u32> = indices.iter().map(|v| v.0).collect();
 
         let sizes_buf = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("opensubdiv-petite::stencil_sizes"),
-            contents: bytemuck::cast_slice(&sizes_u32),
+            contents: bytemuck::cast_slice(sizes),
             usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_DST,
         });
         let offsets_buf = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
@@ -177,21 +168,16 @@ impl LimitStencilTableGpu {
         let indices = table.control_indices();
         let weights = table.weights();
 
-        if sizes.iter().any(|s| *s < 0) {
-            return Err(WgpuError::NegativeStencilEntry);
-        }
-
         if offsets.is_empty() {
             return Err(WgpuError::MissingOffsets);
         }
 
-        let sizes_u32: Vec<u32> = sizes.iter().map(|v| *v as u32).collect();
         let offsets_u32: Vec<u32> = offsets.iter().map(|v| v.0).collect();
         let indices_u32: Vec<u32> = indices.iter().map(|v| v.0).collect();
 
         let sizes_buf = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("opensubdiv-petite::limit_stencil_sizes"),
-            contents: bytemuck::cast_slice(&sizes_u32),
+            contents: bytemuck::cast_slice(sizes),
             usage: wgpu::BufferUsages::STORAGE | wgpu::BufferUsages::COPY_DST,
         });
         let offsets_buf = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {

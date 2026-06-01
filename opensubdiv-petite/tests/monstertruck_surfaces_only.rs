@@ -6,13 +6,13 @@ use utils::*;
 #[cfg(feature = "monstertruck")]
 #[test]
 fn test_simple_plane_surfaces_only() -> anyhow::Result<()> {
+    use monstertruck_modeling::*;
+    use monstertruck_step::save;
     use opensubdiv_petite::far::{
         AdaptiveRefinementOptions, PatchTable, PatchTableOptions, PrimvarRefiner,
         TopologyDescriptor, TopologyRefiner, TopologyRefinerOptions,
     };
     use opensubdiv_petite::monstertruck::PatchTableExt;
-    use monstertruck_modeling::*;
-    use monstertruck_step::out;
 
     // Create a 3x3 quad mesh (4x4 vertices)
     let mut vertex_positions = Vec::new();
@@ -51,7 +51,7 @@ fn test_simple_plane_surfaces_only() -> anyhow::Result<()> {
         isolation_level: 3,
         ..Default::default()
     };
-    refiner.refine_adaptive(adaptive_options, &[]);
+    refiner.refine_adaptive(adaptive_options, None);
 
     // Create patch table
     let patch_options = PatchTableOptions::new().end_cap_type(default_end_cap_type());
@@ -128,9 +128,9 @@ fn test_simple_plane_surfaces_only() -> anyhow::Result<()> {
     let compressed = shell.compress();
 
     // Write to STEP file
-    let step_string = out::CompleteStepDisplay::new(
-        out::StepModel::from(&compressed),
-        out::StepHeaderDescriptor {
+    let step_string = save::CompleteStepDisplay::new(
+        save::StepModel::from(&compressed),
+        save::StepHeaderDescriptor {
             file_name: "simple_plane_surfaces_only.step".to_owned(),
             ..Default::default()
         },

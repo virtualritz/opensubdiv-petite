@@ -10,7 +10,7 @@ fn cube_refiner() -> far::TopologyRefiner {
     let options = far::TopologyRefinerOptions::default();
     let mut refiner = far::TopologyRefiner::new(descriptor, options).unwrap();
 
-    refiner.refine_adaptive(far::AdaptiveRefinementOptions::default(), &[]);
+    refiner.refine_adaptive(far::AdaptiveRefinementOptions::default(), None);
     refiner
 }
 

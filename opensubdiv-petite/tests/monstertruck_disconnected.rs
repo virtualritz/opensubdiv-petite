@@ -91,8 +91,8 @@ mod tests {
     // #[test]
     #[allow(dead_code)]
     fn test_simple_cube_disconnected_patches() -> anyhow::Result<()> {
+        use monstertruck_step::save;
         use opensubdiv_petite::monstertruck::PatchTableExt;
-        use monstertruck_step::out;
 
         // Define simple cube vertices
         let vertex_positions = vec![
@@ -179,12 +179,12 @@ mod tests {
             .iter()
             .enumerate()
             .map(|(i, shell)| {
-                let model = out::StepModel::from(shell);
+                let model = save::StepModel::from(shell);
                 if i == 0 {
                     // First shell includes the header
-                    out::CompleteStepDisplay::new(
+                    save::CompleteStepDisplay::new(
                         model,
-                        out::StepHeaderDescriptor {
+                        save::StepHeaderDescriptor {
                             file_name: "simple_cube_disconnected.step".to_owned(),
                             ..Default::default()
                         },

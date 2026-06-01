@@ -87,12 +87,12 @@ impl PatchTableOptions {
         self
     }
 
-    /// Set the number of legacy Gregory patches
-    pub fn num_legacy_gregory_patches(mut self, num_patches: i32) -> Self {
+    /// Set the number of legacy Gregory patches.
+    pub fn legacy_gregory_patch_count(mut self, count: usize) -> Self {
         unsafe {
             sys::far::PatchTableFactory_Options_SetNumLegacyGregoryPatches(
                 self.inner.as_mut().get_unchecked_mut(),
-                num_patches,
+                count as _,
             );
         }
         self

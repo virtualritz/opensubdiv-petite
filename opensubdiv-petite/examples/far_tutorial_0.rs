@@ -23,7 +23,9 @@ fn main() {
     let mut descriptor =
         far::TopologyDescriptor::new(num_vertices as _, &verts_per_face, &vert_indices)
             .expect("Could not create TopologyDescriptor");
-    descriptor.creases(&creases, &crease_weights);
+    descriptor = descriptor
+        .creases(&creases, &crease_weights)
+        .expect("Failed to add creases");
 
     let mut refiner = far::TopologyRefiner::new(
         descriptor,

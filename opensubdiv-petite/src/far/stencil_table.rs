@@ -124,10 +124,10 @@ impl StencilTable {
 
     /// Returns the number of control vertices of each stencil in the table.
     #[inline]
-    pub fn sizes(&self) -> &[i32] {
+    pub fn sizes(&self) -> &[u32] {
         unsafe {
             let vr = sys::far::stencil_table::StencilTable_GetSizes(self.0);
-            std::slice::from_raw_parts(vr.data() as _, vr.size())
+            std::slice::from_raw_parts(vr.data(), vr.size())
         }
     }
 

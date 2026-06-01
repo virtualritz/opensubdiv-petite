@@ -1,4 +1,5 @@
 use anyhow::Result;
+use monstertruck_step::save::*;
 use opensubdiv_petite::far::{
     AdaptiveRefinementOptions, EndCapType, PatchTable, PatchTableOptions, PrimvarRefiner,
     TopologyDescriptor, TopologyRefiner, TopologyRefinerOptions,
@@ -7,7 +8,6 @@ use opensubdiv_petite::monstertruck::{
     bfr_regular_surfaces, superpatch_surfaces, GregoryAccuracy, PatchTableExt, StepExportOptions,
 };
 use opensubdiv_petite::Index;
-use monstertruck_step::out::*;
 
 fn main() -> Result<()> {
     // Creased cube: all edges sharpness 8.0
@@ -45,7 +45,9 @@ fn main() -> Result<()> {
         0, 6, // edge 0-6
     ];
     let crease_sharpness = [5.0f32; 3];
-    descriptor.creases(&crease_indices, &crease_sharpness);
+    descriptor = descriptor
+        .creases(&crease_indices, &crease_sharpness)
+        .expect("Failed to add creases");
 
     let refiner_options = TopologyRefinerOptions::default();
     let mut refiner = TopologyRefiner::new(descriptor, refiner_options)?;
@@ -87,15 +89,16 @@ fn main() -> Result<()> {
         }
         // BFR uses an isolation depth; push one level beyond max crease to
         // capture the full profile.
-        let approx_sharp = (max_sharpness.ceil() as i32 + 1).max(0);
+        let approx_sharp = (max_sharpness.ceil() as usize + 1).max(0);
 
         (selected_faces, approx_sharp, max_sharpness > 0.0)
     };
 
-    let mut adaptive_options = AdaptiveRefinementOptions::default();
-    // Refine enough to isolate sharp edges; push one level beyond max sharpness.
-    adaptive_options.isolation_level = (approx_sharp + 1).max(1) as usize;
-    refiner.refine_adaptive(adaptive_options, &selected_faces);
+    let adaptive_options = AdaptiveRefinementOptions {
+        isolation_level: (approx_sharp + 1).max(1),
+        ..Default::default()
+    };
+    refiner.refine_adaptive(adaptive_options, Some(&selected_faces));
 
     // Patch table with Gregory basis end cap
     let patch_options = PatchTableOptions::new()
@@ -174,7 +177,12 @@ fn main() -> Result<()> {
     } else {
         let faces: Vec<monstertruck_modeling::Face> = bfr_surfaces
             .into_iter()
-            .map(|s| monstertruck_modeling::Face::new(vec![], monstertruck_modeling::Surface::BsplineSurface(s)))
+            .map(|s| {
+                monstertruck_modeling::Face::new(
+                    vec![],
+                    monstertruck_modeling::Surface::BsplineSurface(s),
+                )
+            })
             .collect();
         let shell = monstertruck_modeling::Shell::from(faces);
         let compressed = shell.compress();
@@ -193,7 +201,10 @@ fn main() -> Result<()> {
             let faces: Vec<monstertruck_modeling::Face> = surfaces
                 .into_iter()
                 .map(|s| {
-                    monstertruck_modeling::Face::new(vec![], monstertruck_modeling::Surface::BsplineSurface(s))
+                    monstertruck_modeling::Face::new(
+                        vec![],
+                        monstertruck_modeling::Surface::BsplineSurface(s),
+                    )
                 })
                 .collect();
             let shell = monstertruck_modeling::Shell::from(faces);
@@ -228,7 +239,10 @@ fn main() -> Result<()> {
             let faces: Vec<monstertruck_modeling::Face> = surfaces
                 .into_iter()
                 .map(|s| {
-                    monstertruck_modeling::Face::new(vec![], monstertruck_modeling::Surface::BsplineSurface(s))
+                    monstertruck_modeling::Face::new(
+                        vec![],
+                        monstertruck_modeling::Surface::BsplineSurface(s),
+                    )
                 })
                 .collect();
             let shell = monstertruck_modeling::Shell::from(faces);

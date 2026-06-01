@@ -29,14 +29,14 @@ impl SurfaceFactory {
     /// smooth and sharp features.
     pub fn new(
         refiner: &crate::far::TopologyRefiner,
-        approx_smooth: i32,
-        approx_sharp: i32,
+        approx_smooth: usize,
+        approx_sharp: usize,
     ) -> Result<Self, Error> {
         unsafe {
             let ptr = sys::bfr::surface_factory::Bfr_SurfaceFactory_Create(
                 refiner.as_ptr(),
-                approx_smooth,
-                approx_sharp,
+                approx_smooth as _,
+                approx_sharp as _,
             );
 
             if ptr.is_null() {
@@ -185,7 +185,7 @@ impl Surface {
 }
 
 #[cfg(feature = "monstertruck")]
-use monstertruck_geometry::prelude::{BsplineSurface, KnotVectortor, Point3};
+use monstertruck_geometry::prelude::{BsplineSurface, KnotVector, Point3};
 
 #[cfg(feature = "monstertruck")]
 impl SurfaceFactory {

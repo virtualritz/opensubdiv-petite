@@ -174,12 +174,12 @@ impl LimitStencilTable {
 
     /// Returns the number of control vertices of each stencil in the table.
     #[inline]
-    pub fn sizes(&self) -> &[i32] {
+    pub fn sizes(&self) -> &[u32] {
         let vr = unsafe { sys::far::stencil_table::StencilTable_GetSizes(self.as_base_ptr()) };
         if vr.data().is_null() || vr.size() == 0 {
             &[]
         } else {
-            unsafe { std::slice::from_raw_parts(vr.data() as _, vr.size()) }
+            unsafe { std::slice::from_raw_parts(vr.data(), vr.size()) }
         }
     }
 

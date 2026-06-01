@@ -48,7 +48,7 @@ fn test_two_patches_surfaces_only() -> anyhow::Result<()> {
         isolation_level: 3,
         ..Default::default()
     };
-    refiner.refine_adaptive(adaptive_options, &[]);
+    refiner.refine_adaptive(adaptive_options, None);
 
     // Create patch table
     let patch_options = PatchTableOptions::new().end_cap_type(default_end_cap_type());
@@ -118,10 +118,10 @@ fn test_two_patches_surfaces_only() -> anyhow::Result<()> {
     let compressed = shell.compress();
 
     // Write to STEP file using monstertruck_step
-    use monstertruck_step::out;
-    let step_string = out::CompleteStepDisplay::new(
-        out::StepModel::from(&compressed),
-        out::StepHeaderDescriptor {
+    use monstertruck_step::save;
+    let step_string = save::CompleteStepDisplay::new(
+        save::StepModel::from(&compressed),
+        save::StepHeaderDescriptor {
             file_name: "two_patches_surfaces_only.step".to_owned(),
             ..Default::default()
         },

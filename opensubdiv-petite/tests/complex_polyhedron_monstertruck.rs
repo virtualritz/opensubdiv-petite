@@ -130,8 +130,8 @@ mod tests {
 
     #[test]
     fn test_complex_polyhedron_to_step() {
+        use monstertruck_step::save;
         use opensubdiv_petite::monstertruck::PatchTableExt;
-        use monstertruck_step::out;
 
         // Create icosahedron base geometry
         let mut vertex_positions = create_icosahedron_vertices();
@@ -178,7 +178,9 @@ mod tests {
             &face_vertex_indices,
         )
         .expect("Failed to create topology descriptor");
-        descriptor.creases(&crease_indices, &crease_weights);
+        descriptor = descriptor
+            .creases(&crease_indices, &crease_weights)
+            .expect("Failed to add creases");
 
         // Create topology refiner
         let refiner_options = TopologyRefinerOptions::default();
@@ -190,7 +192,7 @@ mod tests {
             isolation_level: 3,
             ..Default::default()
         };
-        refiner.refine_adaptive(adaptive_options, &[]);
+        refiner.refine_adaptive(adaptive_options, None);
 
         // Create patch table
         let patch_options = PatchTableOptions::new().end_cap_type(default_end_cap_type());
@@ -255,9 +257,9 @@ mod tests {
         let compressed = shell.compress();
 
         // Write to STEP file
-        let step_string = out::CompleteStepDisplay::new(
-            out::StepModel::from(&compressed),
-            out::StepHeaderDescriptor {
+        let step_string = save::CompleteStepDisplay::new(
+            save::StepModel::from(&compressed),
+            save::StepHeaderDescriptor {
                 file_name: "complex_polyhedron_crease4.step".to_owned(),
                 ..Default::default()
             },

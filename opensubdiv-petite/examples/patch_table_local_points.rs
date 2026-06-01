@@ -50,7 +50,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Refine adaptively
     let mut adaptive_options = AdaptiveRefinementOptions::default();
     adaptive_options.isolation_level = 3;
-    refiner.refine_adaptive(adaptive_options, &[]);
+    refiner.refine_adaptive(adaptive_options, None);
 
     println!("Refinement complete. Max level: {}", refiner.max_level());
 

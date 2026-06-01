@@ -48,7 +48,7 @@ fn test_simple_plane_cv_ordering() -> anyhow::Result<()> {
         isolation_level: 2,
         ..Default::default()
     };
-    refiner.refine_adaptive(adaptive_options, &[]);
+    refiner.refine_adaptive(adaptive_options, None);
 
     // Create patch table
     let patch_options = PatchTableOptions::new().end_cap_type(default_end_cap_type());

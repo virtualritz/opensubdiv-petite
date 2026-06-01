@@ -176,7 +176,7 @@ fn test_export_simple_plane_patches() -> Result<()> {
         isolation_level: 2,
         ..Default::default()
     };
-    refiner.refine_adaptive(adaptive_options, &[]);
+    refiner.refine_adaptive(adaptive_options, None);
 
     // Create patch table
     let patch_options =
@@ -237,7 +237,7 @@ fn test_export_simple_cube_patches() -> Result<()> {
         isolation_level: 2,
         ..Default::default()
     };
-    refiner.refine_adaptive(adaptive_options, &[]);
+    refiner.refine_adaptive(adaptive_options, None);
 
     // Create patch table
     let patch_options =
@@ -297,7 +297,9 @@ fn test_export_creased_cube_patches() -> Result<()> {
         &face_vertex_counts,
         &face_vertex_indices,
     )?;
-    descriptor.creases(&crease_indices, &crease_weights);
+    descriptor = descriptor
+        .creases(&crease_indices, &crease_weights)
+        .expect("Failed to add creases");
 
     let refiner_options = TopologyRefinerOptions::default();
     let mut refiner = TopologyRefiner::new(descriptor, refiner_options)
@@ -308,7 +310,7 @@ fn test_export_creased_cube_patches() -> Result<()> {
         isolation_level: 2,
         ..Default::default()
     };
-    refiner.refine_adaptive(adaptive_options, &[]);
+    refiner.refine_adaptive(adaptive_options, None);
 
     // Create patch table
     let patch_options =

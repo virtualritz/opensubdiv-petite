@@ -10,7 +10,7 @@ mod tests {
     use opensubdiv_petite::monstertruck::PatchTableExt;
     use std::fs;
 
-    use monstertruck_step::out::{CompleteStepDisplay, StepHeaderDescriptor, StepModel};
+    use monstertruck_step::save::{CompleteStepDisplay, StepHeaderDescriptor, StepModel};
 
     #[test]
     fn test_cube_boundary_fix() -> Result<()> {
@@ -51,7 +51,7 @@ mod tests {
             isolation_level: 3,
             ..Default::default()
         };
-        refiner.refine_adaptive(adaptive_options, &[]);
+        refiner.refine_adaptive(adaptive_options, None);
 
         // Create patch table
         let patch_options = PatchTableOptions::new().end_cap_type(EndCapType::BSplineBasis);

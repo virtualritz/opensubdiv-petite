@@ -4,10 +4,10 @@
 
 ## Pixar OpenSubdiv Wrapper
 
-This is a safe Rust wrapper around parts of [*Pixar's
-OpenSubdiv*](https://graphics.pixar.com/opensubdiv/).
+This is a safe Rust wrapper around parts of [_Pixar's
+OpenSubdiv_](https://graphics.pixar.com/opensubdiv/).
 
-*OpenSubdiv* is a set of open source libraries that implement high
+_OpenSubdiv_ is a set of open source libraries that implement high
 performance/parallel [subdivision surface](https://en.wikipedia.org/wiki/Subdivision_surface)
 (subdiv) evaluation on CPU and GPU architectures.
 
@@ -27,44 +27,45 @@ struct that mirrors the class the C++ factory was building.
 Many methods have slightly different names on the Rust side.
 
 Renaming was done considering these constraints:
-* Be verbose consistently (the original API is quite verbose but does make
+
+- Be verbose consistently (the original API is quite verbose but does make
   use of abbreviations in some surprising places).
-* Use canonical Rust naming  – (`num_vertices()` becomes `vertex_count()`).
-* Use canonically Rust constructs.  Most option/configuration `struct`s use the
+- Use canonical Rust naming – (`num_vertices()` becomes `vertex_count()`).
+- Use canonically Rust constructs. Most option/configuration `struct`s use the
   [init-`struct` pattern](https://xaeroxe.github.io/init-struct-pattern/). In
   places where it’s not possible to easily map to a Rust `struct`, the builder
   pattern (or anti-pattern, depending whom you ask) is used.
-* Be brief when possible. Example: `StencilTable::numStencils()` in C++
+- Be brief when possible. Example: `StencilTable::numStencils()` in C++
   becomes `StencilTable::len()` in Rust.
-* Use unsigned integer types, specifically `usize` and `u32`, instead of
+- Use unsigned integer types, specifically `usize` and `u32`, instead of
   signed ones (`i32`) for anything that can only contain positive values
-  (indices, sizes/lengths/counts, valences, arities, etc.).  Types should
-  express intent.  See also
+  (indices, sizes/lengths/counts, valences, arities, etc.). Types should
+  express intent. See also
   [here](https://github.com/PixarAnimationStudios/OpenSubdiv/issues/1222).
 
 ### OpenSubdiv Backend Support
 
-*OpenSubdiv* exposes several optional backends via CMake flags. The table
+_OpenSubdiv_ exposes several optional backends via CMake flags. The table
 below shows which ones this wrapper supports today.
 
-| Backend | Feature flag | Status |
-|---------|-------------|--------|
-| CPU (single-threaded) | — | Always enabled |
-| TBB (CPU parallel) | `tbb` | Supported |
-| CUDA (NVIDIA GPU) | `cuda` | Supported |
-| Metal (Apple GPU) | `metal` | Supported |
-| OpenCL | `opencl` | Supported |
-| wgpu/WGSL (compute) | `wgpu` | Supported (Rust-native, not from C++) |
-| OpenMP (CPU parallel) | `omp` | Supported (broken on macOS) |
-| CLEW (OpenCL loader) | `clew` | Build flag only — no Rust API |
-| PTex | `ptex` | Build flag only — no Rust API |
-| OpenGL | — | Not yet supported |
-| DirectX 11 | — | Not yet supported |
+| Backend               | Feature flag | Status                                |
+| --------------------- | ------------ | ------------------------------------- |
+| CPU (single-threaded) | —            | Always enabled                        |
+| TBB (CPU parallel)    | `tbb`        | Supported                             |
+| CUDA (NVIDIA GPU)     | `cuda`       | Supported                             |
+| Metal (Apple GPU)     | `metal`      | Supported                             |
+| OpenCL                | `opencl`     | Supported                             |
+| wgpu/WGSL (compute)   | `wgpu`       | Supported (Rust-native, not from C++) |
+| OpenMP (CPU parallel) | `omp`        | Supported (broken on macOS)           |
+| CLEW (OpenCL loader)  | `clew`       | Build flag only — no Rust API         |
+| PTex                  | `ptex`       | Build flag only — no Rust API         |
+| OpenGL                | —            | Not yet supported                     |
+| DirectX 11            | —            | Not yet supported                     |
 
 #### wgpu
 
 The `wgpu` feature enables a **pure-Rust** GPU compute path for stencil
-evaluation using WGSL shaders.  This is not an *OpenSubdiv* backend —
+evaluation using WGSL shaders. This is not an _OpenSubdiv_ backend —
 it uploads `StencilTable` data to `wgpu` storage buffers and
 dispatches a WGSL compute shader.
 
@@ -90,11 +91,11 @@ evaluate_stencils(
 ### Versions
 
 For now crate versions reflect code maturity on the Rust side. They are not
-in any way related to the *OpenSubdiv* version that is wrapped.
+in any way related to the _OpenSubdiv_ version that is wrapped.
 
-- `v0.3.x` – *OpenSubdiv* `v3.7.x`
-- `v0.2.x` – *OpenSubdiv* `v3.5.x`
-- `v0.1.x` – *OpenSubdiv* `v3.4.x`
+- `v0.3.x` – _OpenSubdiv_ `v3.7.x`
+- `v0.2.x` – _OpenSubdiv_ `v3.5.x`
+- `v0.1.x` – _OpenSubdiv_ `v3.4.x`
 
 <!-- cargo-rdme end -->
 

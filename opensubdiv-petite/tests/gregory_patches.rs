@@ -122,7 +122,7 @@ mod monstertruck_tests {
             ..Default::default()
         };
 
-        refiner.refine_adaptive(adaptive_options, &[]);
+        refiner.refine_adaptive(adaptive_options, None);
 
         eprintln!("Refinement complete. Max level: {}", refiner.max_level());
         eprintln!(
@@ -182,9 +182,9 @@ mod monstertruck_tests {
         // at extraordinary vertices"); }
 
         // Export to STEP file
+        use monstertruck_modeling::Shell;
         use opensubdiv_petite::monstertruck::PatchTableWithControlPointsRef;
         use std::convert::TryFrom;
-        use monstertruck_modeling::Shell;
 
         // Build complete vertex buffer
         let mut all_vertices = build_vertex_buffer(&refiner, &vertex_positions);
@@ -277,9 +277,9 @@ mod monstertruck_tests {
 
         // Compress and export the shell as STEP
         let compressed = shell.compress();
-        let step_string = monstertruck_step::out::CompleteStepDisplay::new(
-            monstertruck_step::out::StepModel::from(&compressed),
-            monstertruck_step::out::StepHeaderDescriptor {
+        let step_string = monstertruck_step::save::CompleteStepDisplay::new(
+            monstertruck_step::save::StepModel::from(&compressed),
+            monstertruck_step::save::StepHeaderDescriptor {
                 file_name: "simple_cube_gregory.step".to_owned(),
                 ..Default::default()
             },
@@ -342,7 +342,7 @@ fn test_gregory_triangle_patches() -> Result<()> {
         isolation_level: 3,
         ..Default::default()
     };
-    refiner.refine_adaptive(adaptive_options, &[]);
+    refiner.refine_adaptive(adaptive_options, None);
 
     // Create patch table with triangle subdivision
     let patch_options = PatchTableOptions::new()

@@ -1,12 +1,12 @@
 use anyhow::Result;
+use monstertruck_modeling::{Face, Shell, Surface};
+use monstertruck_step::save::{CompleteStepDisplay, StepModel};
 use opensubdiv_petite::far::{
     AdaptiveRefinementOptions, EndCapType, PatchTable, PatchTableOptions, PrimvarRefiner,
     TopologyDescriptor, TopologyRefiner, TopologyRefinerOptions,
 };
 use opensubdiv_petite::monstertruck::{bfr_regular_surfaces, PatchTableExt};
 use opensubdiv_petite::Index;
-use monstertruck_modeling::{Face, Shell, Surface};
-use monstertruck_step::out::{CompleteStepDisplay, StepModel};
 
 fn main() -> Result<()> {
     // Create a simple cube mesh
@@ -78,7 +78,7 @@ fn main() -> Result<()> {
         isolation_level: 1,
         ..Default::default()
     };
-    refiner.refine_adaptive(adaptive_options, &selected_faces);
+    refiner.refine_adaptive(adaptive_options, Some(&selected_faces));
 
     // Try with Gregory basis end cap
     let patch_options = PatchTableOptions::new()

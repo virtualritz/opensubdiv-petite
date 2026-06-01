@@ -5,8 +5,8 @@ use opensubdiv_petite::far::{
 
 #[cfg(feature = "monstertruck")]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    use monstertruck_step::save::*;
     use opensubdiv_petite::monstertruck::PatchTableExt;
-    use monstertruck_step::out::*;
 
     // Create a simple cube mesh
     let vertex_positions = vec![
@@ -41,7 +41,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut adaptive_options = AdaptiveRefinementOptions::default();
     adaptive_options.isolation_level = 3;
-    refiner.refine_adaptive(adaptive_options, &[]);
+    refiner.refine_adaptive(adaptive_options, None);
 
     // Try with Gregory basis end cap
     let patch_options = PatchTableOptions::new()

@@ -246,7 +246,7 @@ fn wgpu_limit_stencil_positions_match_cpu() -> Result<(), Box<dyn std::error::Er
     let descriptor = far::TopologyDescriptor::new(8, &vertices_per_face, &face_vertices)?;
     let mut refiner =
         far::TopologyRefiner::new(descriptor, far::TopologyRefinerOptions::default())?;
-    refiner.refine_adaptive(far::AdaptiveRefinementOptions::default(), &[]);
+    refiner.refine_adaptive(far::AdaptiveRefinementOptions::default(), None);
 
     let s = [0.25_f32, 0.5, 0.75];
     let t = [0.25_f32, 0.5, 0.75];
