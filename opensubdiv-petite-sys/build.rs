@@ -125,8 +125,15 @@ pub fn main() {
         .include(&osd_inlude_path)
         .include("OpenSubdiv") // Add source directory for headers like patchBasis.h
         .cpp(true)
-        .flag("-std=c++14")
-        .flag("-Wno-return-type-c-linkage")
+        // `.std()` emits `-std=c++14` for clang/gcc and `/std:c++14` for MSVC.
+        .std("c++14")
+        // MSVC's `<cmath>` only defines `M_PI` and friends when this is set;
+        // the transitively-included OpenSubdiv headers rely on them. Defining
+        // it on clang/gcc is harmless.
+        .define("_USE_MATH_DEFINES", None)
+        // `-Wno-return-type-c-linkage` is a clang/gcc warning flag; MSVC does
+        // not understand it, so only pass it where the compiler accepts it.
+        .flag_if_supported("-Wno-return-type-c-linkage")
         .file("c-api/far/primvar_refiner.cpp")
         .file("c-api/far/stencil_table.cpp")
         .file("c-api/far/stencil_table_factory.cpp")
