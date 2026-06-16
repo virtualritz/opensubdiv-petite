@@ -68,8 +68,8 @@ This is a "petite" wrapper -- it doesn't expose the entire OpenSubdiv API. Focus
 
 - `topology_validation` -- Enable expensive validation (default on).
 - `cuda` -- NVIDIA CUDA backend support.
-- `metal` -- Apple Metal backend (TODO).
-- `opencl` -- OpenCL backend (TODO).
+- `metal` -- Apple Metal backend.
+- `opencl` -- OpenCL backend.
 - `ptex` -- PTex texture support (TODO).
 - `tri_mesh_buffers` -- Integration with mesh buffer types.
 
@@ -186,9 +186,6 @@ fd "\.rs$"
 
 ## Known Issues and TODOs
 
-- [ ] PatchTable support not yet implemented.
-- [ ] Metal backend pending implementation.
-- [ ] OpenCL backend pending implementation.
 - [ ] PTex support pending implementation.
 - [ ] OpenMP detection broken on macOS.
 - [ ] CUDA build configuration needs automation.
