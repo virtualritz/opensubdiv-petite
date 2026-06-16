@@ -60,7 +60,14 @@ use std::marker::PhantomData;
 ///
 /// See the [module level documentation](crate::far::topology_descriptor) for
 /// an example.
-#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
+// NOT `Copy`: `creases`/`corners` are consuming builders (`mut self ->
+// Result<Self>`). With `Copy`, a bare `descriptor.creases(..)` would
+// mutate a discarded copy and silently drop the creases while the
+// original stays usable -- a latent footgun that already caused a
+// silent oracle regression downstream. Without `Copy`, that misuse is a
+// `use-after-move` compile error; the correct `descriptor =
+// descriptor.creases(..)?` pattern is unaffected.
+#[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct TopologyDescriptor<'a> {
     pub(crate) descriptor: sys::OpenSubdiv_v3_7_0_Far_TopologyDescriptor,
     // _marker needs to be invariant in 'a.
