@@ -3,7 +3,7 @@ use bevy::mesh::Indices;
 use bevy::prelude::*;
 use bevy::render::render_resource::PrimitiveTopology;
 use bevy_panorbit_camera::{PanOrbitCamera, PanOrbitCameraPlugin};
-use opensubdiv_petite::{far, tri_mesh_buffers};
+use opensubdiv_petite::far;
 
 // Uniformly refine the dodecahedron this many levels.
 const SUBDIVISION_LEVEL: usize = 6;
@@ -18,13 +18,14 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugins(PanOrbitCameraPlugin)
         .add_systems(Startup, setup)
-        .add_systems(Update, (rotator_system, close_on_esc))
+        .add_systems(Update, close_on_esc)
         .run();
 }
 
 #[derive(Component)]
 struct Rotator;
 
+#[allow(dead_code)]
 fn rotator_system(time: Res<Time>, mut query: Query<&mut Transform, With<Rotator>>) {
     for mut transform in &mut query {
         transform.rotate_x(1.5 * time.delta_secs());
@@ -55,10 +56,10 @@ fn setup(
 
     commands.spawn((
         DirectionalLight {
-            shadows_enabled: true,
+            shadow_maps_enabled: true,
             ..default()
         },
-        Transform::from_xyz(4.0, 8.0, 4.0).looking_at(Vec3::ZERO, Vec3::Y),
+        Transform::from_xyz(4.0, -8.0, 4.0).looking_at(Vec3::ZERO, Vec3::Y),
     ));
 
     commands.spawn((
@@ -169,18 +170,54 @@ fn subdivided_creased_dodecahedron() -> Mesh {
             .expect("primvar interpolation failed");
     }
 
-    // Build a disconnected triangle mesh. At level 6 the per-corner normals
-    // computed within each face look smooth. We don't use bevy's
-    // compute_smooth_normals here because averaging triangle normals at
-    // extraordinary vertices (valence-3 corners with mixed-sharpness creases)
-    // produces wrong tangent planes and leaves visible dark spots.
-    let (indices, positions, normals) = tri_mesh_buffers::to_triangle_mesh_buffers(
-        &refined_vertices,
-        refiner
-            .level(SUBDIVISION_LEVEL)
-            .expect("missing refinement level")
-            .face_vertices_iter(),
-    );
+    // Build an indexed (shared-vertex) triangle list with manual smooth
+    // normals: accumulate the *face* normal of each incident quad at every
+    // corner vertex (uniform weight per face), then normalize.
+    //
+    // Bevy's `compute_smooth_normals` accumulates *triangle* normals weighted
+    // by the triangle's corner angle. At valence-3 corners of the
+    // dodecahedron with mixed-sharpness creases, sliver microtriangles get
+    // near-zero weight and the average is dominated by larger triangles
+    // whose normals point off-axis — producing visible dark spots at every
+    // extraordinary vertex. Per-quad-uniform face-normal averaging avoids
+    // that and gives the smooth shading the user expects.
+    let final_level = refiner
+        .level(SUBDIVISION_LEVEL)
+        .expect("missing refinement level");
+
+    let positions: Vec<[f32; 3]> = refined_vertices
+        .chunks_exact(3)
+        .map(|c| [c[0], c[1], c[2]])
+        .collect();
+
+    let mut normals_acc: Vec<Vec3> = vec![Vec3::ZERO; positions.len()];
+    let mut indices: Vec<u32> = Vec::with_capacity(final_level.face_count() * 6);
+
+    for face in final_level.face_vertices_iter() {
+        // After Catmull-Clark every face at this level is a quad.
+        let v: [u32; 4] = [face[0].0, face[1].0, face[2].0, face[3].0];
+        let p: [Vec3; 4] = [
+            Vec3::from(positions[v[0] as usize]),
+            Vec3::from(positions[v[1] as usize]),
+            Vec3::from(positions[v[2] as usize]),
+            Vec3::from(positions[v[3] as usize]),
+        ];
+        // Face normal from the cross product of the quad's diagonals — robust
+        // for slightly non-planar quads near extraordinary vertices.
+        let face_normal = (p[2] - p[0]).cross(p[3] - p[1]).normalize_or_zero();
+        for &vi in &v {
+            normals_acc[vi as usize] += face_normal;
+        }
+        indices.extend_from_slice(&[v[0], v[1], v[2], v[0], v[2], v[3]]);
+    }
+
+    let normals: Vec<[f32; 3]> = normals_acc
+        .into_iter()
+        .map(|n| {
+            let n = n.normalize_or_zero();
+            [n.x, n.y, n.z]
+        })
+        .collect();
 
     let mut mesh = Mesh::new(
         PrimitiveTopology::TriangleList,
