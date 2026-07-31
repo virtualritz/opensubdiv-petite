@@ -72,7 +72,12 @@ impl TopologyRefiner {
     pub fn options(&self) -> TopologyRefinerOptions {
         let options = unsafe { &(*self.0)._subdivOptions };
         TopologyRefinerOptions {
-            scheme: unsafe { (*self.0)._subdivType }
+            // Cast: bindgen's signedness for the C++ enum field varies by
+            // platform/version (MSVC enums come through as `i32`), while
+            // `Scheme` is `repr(u32)` with `TryFromPrimitive` -- so route
+            // through `u32` explicitly. Invalid discriminants still fail in
+            // `try_into`.
+            scheme: (unsafe { (*self.0)._subdivType } as u32)
                 .try_into()
                 .expect("invalid subdivision scheme from C++"),
             boundary_interpolation: if options._vtxBoundInterp

@@ -1,6 +1,6 @@
 [package]
 name = "opensubdiv-petite-sys"
-version = "0.3.1"
+version = "0.3.2"
 authors = ["Anders Langlands <anderslanglands@gmail.com>", "Moritz Moeller <virtualritz@protonmail.com>"]
 edition = "2024"
 keywords = ["graphics", "rendering", "3d", "subdivision-surface", "polygon-mesh"]

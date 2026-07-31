@@ -34,6 +34,16 @@ pub fn main() {
         .define("NO_DX", "1") // Disable DirectX
         .define("CMAKE_CXX_STANDARD", "14");
 
+    // The `cc`-derived default flags REPLACE MSVC's defaults, dropping
+    // `/EHsc` -- and MSVC 14.44's STL hard-errors without it (C4530
+    // escalated by C2220 "warning treated as error", first surfacing in
+    // `regression/common/shape_utils.cpp`, which is compiled despite
+    // `NO_REGRESSION=1`). Exception unwind semantics were always assumed by
+    // OpenSubdiv's use of the STL; older MSVC merely warned.
+    if env::var("CARGO_CFG_TARGET_ENV").as_deref() == Ok("msvc") {
+        open_subdiv.cxxflag("/EHsc");
+    }
+
     // Always disable CUDA unless explicitly enabled
     #[cfg(not(feature = "cuda"))]
     open_subdiv.define("NO_CUDA", "1");
